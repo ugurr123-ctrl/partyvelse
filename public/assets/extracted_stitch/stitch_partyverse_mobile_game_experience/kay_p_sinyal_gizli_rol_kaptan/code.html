@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="tr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>Kayıp Sinyal — Gizli Rol: Kaptan</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            space: {
+              950: '#070913',
+              900: '#0c0f1d',
+              850: '#11162b',
+              800: '#161c36',
+              700: '#1e264a',
+            },
+            amber: {
+              glow: '#ffaa00',
+              deep: '#d97706',
+              light: '#fde047',
+            },
+            cyan: {
+              glow: '#00f0ff',
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+          },
+          boxShadow: {
+            'gold-glow': '0 0 25px rgba(245, 158, 11, 0.45)',
+            'cyan-glow': '0 0 16px rgba(6, 182, 212, 0.35)',
+            'inner-bevel': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.25), inset 0 -2px 4px 0 rgba(0, 0, 0, 0.4)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom CSS for Sci-Fi Gradients and HUD Elements -->
+<style data-purpose="custom-styling">
+    /* Subtle custom scrollbar hiding for clean app view */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    
+    /* Metallic Golden Title Text Treatment */
+    .golden-title-gradient {
+      background: linear-gradient(180deg, #FFF6C4 0%, #FFD043 38%, #F59E0B 70%, #B45309 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.45));
+    }
+
+    /* Tactile Gold Arcade Button */
+    .arcade-button {
+      background: linear-gradient(180deg, #FFDD55 0%, #FFB020 40%, #EA580C 100%);
+      box-shadow: 
+        0 6px 0 #9A3412,
+        0 10px 25px rgba(249, 115, 22, 0.45),
+        inset 0 1px 2px rgba(255, 255, 255, 0.65),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+      transition: all 0.15s ease-out;
+    }
+    .arcade-button:active {
+      transform: translateY(4px);
+      box-shadow: 
+        0 2px 0 #9A3412,
+        0 4px 15px rgba(249, 115, 22, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Sci-Fi HUD Radar Circle Effect */
+    .hud-ring {
+      border: 1px dashed rgba(245, 158, 11, 0.35);
+      border-radius: 9999px;
+      animation: spinRing 28s linear infinite;
+    }
+    @keyframes spinRing {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Pulse animation for waiting engineer status */
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.3; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .dot-1 { animation: pulseDot 1.4s ease-in-out infinite 0s; }
+    .dot-2 { animation: pulseDot 1.4s ease-in-out infinite 0.25s; }
+    .dot-3 { animation: pulseDot 1.4s ease-in-out infinite 0.5s; }
+  </style>
+</head>
+<body class="bg-black text-slate-100 flex justify-center items-start min-h-screen antialiased p-0 sm:p-4">
+<!-- BEGIN: MobileDeviceFrame -->
+<main class="w-full max-w-[430px] min-h-screen sm:min-h-[920px] bg-[#0A0D18] relative flex flex-col justify-between overflow-hidden sm:rounded-[40px] shadow-2xl border border-slate-800/80">
+<!-- BEGIN: BackgroundGraphicHero -->
+<!-- Stylized background layers representing Captain Hero in cockpit with HUD -->
+<div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+<!-- Deep space ambient glow -->
+<div class="absolute -top-16 left-1/2 -translate-x-1/2 w-[520px] h-[480px] bg-gradient-to-b from-amber-600/25 via-blue-900/30 to-transparent blur-3xl"></div>
+<!-- Distant planetary orb & atmosphere -->
+<div class="absolute -top-24 right-[-10%] w-72 h-72 rounded-full bg-gradient-to-br from-cyan-500/20 to-indigo-800/40 blur-2xl"></div>
+<!-- Holographic Sci-Fi HUD rings & targeting reticles -->
+<div class="absolute top-28 -right-16 w-64 h-64 hud-ring"></div>
+<div class="absolute top-36 -right-8 w-48 h-48 rounded-full border border-amber-500/20"></div>
+<div class="absolute top-48 right-16 w-20 h-20 rounded-full border border-amber-400/30"></div>
+<!-- Hero Character Vector Silhouette & Flight Suit Glow Artwork -->
+<div class="absolute top-10 inset-x-0 h-[360px] flex flex-col justify-start items-center opacity-95 pointer-events-none"><div class="relative w-48 h-48 sm:w-56 sm:h-56 mt-2 rounded-full p-1 bg-gradient-to-b from-amber-400 via-amber-600/40 to-transparent shadow-[0_0_25px_rgba(245,158,11,0.45)] border border-amber-300/80"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLbCVA7kytNnSKo-gaPE6NKFjpPbQRs2t25Ai3LLzN9z6Rs1jEhpygEPnnSIHuuVKNygcTWw7VWm1YfzXqvbYdp_OiQgaVWlkvpQM_u5T136mUlSKgIyXW-cLODBk_uj5ROs4BYSAYZfWN01cu1lH-RjGhCz3Cb6kqMKU1dNETrWmg4gKa3ED9YpA3HwDUSxH7gHneqXsRfTAXrkkKQI1k8ooNGS7rglu29_COf2U" alt="Kaptan Portresi" class="w-full h-full object-cover rounded-full shadow-inner"><div class="absolute inset-0 rounded-full border border-amber-300/40 pointer-events-none"></div></div></div>
+<!-- Vignette and dark gradient bottom mask for content clarity -->
+<div class="absolute inset-0 bg-gradient-to-b from-[#070913]/30 via-[#0A0D18]/80 to-[#0A0D18]"></div>
+</div>
+<!-- END: BackgroundGraphicHero -->
+<!-- BEGIN: MainContentWrapper -->
+<div class="relative z-10 flex flex-col justify-between min-h-screen px-5 pt-3 pb-6">
+<!-- BEGIN: HeaderSection -->
+<header class="flex items-center justify-between w-full pt-1">
+<!-- Partyverse Logo Brand -->
+<div class="flex items-center gap-2">
+<!-- Stylized Saturn/Orbit Planet Icon -->
+<div class="relative w-7 h-7 flex items-center justify-center">
+<div class="w-4 h-4 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.8)]"></div>
+<div class="absolute inset-0 border border-amber-300/80 rounded-full rotate-[32deg] scale-x-125 scale-y-75"></div>
+</div>
+<span class="text-sm tracking-[0.2em] font-extrabold uppercase text-white drop-shadow">
+            PARTYVERSE
+          </span>
+</div>
+<!-- Gear / Settings Icon Button -->
+<button aria-label="Ayarlar" class="w-10 h-10 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-md flex items-center justify-center text-slate-300 active:scale-95 transition-transform hover:border-slate-500" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</header>
+<!-- END: HeaderSection -->
+<!-- BEGIN: HeroRoleDossier -->
+<section class="flex flex-col items-center text-center mt-36 sm:mt-40 mb-3" data-purpose="role-announcement">
+<!-- Private Pill Badge -->
+<div class="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#181C2E]/90 border border-amber-500/70 shadow-[0_0_14px_rgba(245,158,11,0.35)] backdrop-blur-md mb-2.5">
+<svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" fill-rule="evenodd"></path>
+</svg>
+<span class="text-xs font-bold tracking-wider text-amber-300 uppercase">Sana Özel</span>
+</div>
+<!-- Role Title Headline -->
+<h1 class="text-4xl sm:text-5xl font-black tracking-tight golden-title-gradient uppercase scale-y-105">
+          KAPTANSIN
+        </h1>
+<!-- Role Instruction Tagline -->
+<div class="mt-2 text-sm sm:text-base font-medium text-slate-300 leading-snug">
+<p class="">Prosedürler sende.</p>
+<p class="text-slate-400 font-normal">Ölçümler mühendiste.</p>
+</div>
+</section>
+<!-- END: HeroRoleDossier -->
+<!-- BEGIN: RoleActionCards -->
+<!-- 3 Tactical tasks for the Captain -->
+<section class="space-y-2.5 my-2" data-purpose="captain-instructions-list">
+<!-- Task Card 1: Diagnose -->
+<div class="group flex items-center gap-3.5 p-3 sm:p-3.5 rounded-2xl bg-[#0F1424]/90 border border-slate-800 hover:border-cyan-500/40 transition-all shadow-md backdrop-blur-sm">
+<!-- Cyan Radar Wave Circular Icon -->
+<div class="w-12 h-12 rounded-full bg-cyan-950/40 border border-cyan-500/40 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+<svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M12 6a6 6 0 0 1 6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="12" cy="12" fill="currentColor" r="2.5"></circle>
+<path d="M12 12L7 17" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div class="flex-1 text-left pr-1">
+<h2 class="text-sm font-semibold text-white tracking-wide">Arızayı yorumla</h2>
+<p class="text-xs text-slate-400 leading-normal mt-0.5">Gelen verileri değerlendir ve sorunun kaynağını bul.</p>
+</div>
+</div>
+<!-- Task Card 2: Confirm Energy -->
+<div class="group flex items-center gap-3.5 p-3 sm:p-3.5 rounded-2xl bg-[#0F1424]/90 border border-slate-800 hover:border-amber-500/40 transition-all shadow-md backdrop-blur-sm">
+<!-- Amber Bolt Circular Icon -->
+<div class="w-12 h-12 rounded-full bg-amber-950/30 border border-amber-500/40 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+<svg class="w-6 h-6 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+<path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"></path>
+</svg>
+</div>
+<div class="flex-1 text-left pr-1">
+<h2 class="text-sm font-semibold text-white tracking-wide">Enerjiyi onayla</h2>
+<p class="text-xs text-slate-400 leading-normal mt-0.5">Reaktör ayarlarını kontrol et ve onay ver.</p>
+</div>
+</div>
+<!-- Task Card 3: Route Selection -->
+<div class="group flex items-center gap-3.5 p-3 sm:p-3.5 rounded-2xl bg-[#0F1424]/90 border border-slate-800 hover:border-cyan-500/40 transition-all shadow-md backdrop-blur-sm">
+<!-- Direction Chevron Navigation Icon -->
+<div class="w-12 h-12 rounded-full bg-cyan-950/40 border border-cyan-500/40 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+<svg class="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2L3 20L12 16.5L21 20L12 2Z"></path>
+</svg>
+</div>
+<div class="flex-1 text-left pr-1">
+<h2 class="text-sm font-semibold text-white tracking-wide">Rotayı seç</h2>
+<p class="text-xs text-slate-400 leading-normal mt-0.5">İstasyonu güvenli bölgeye yönlendir.</p>
+</div>
+</div>
+</section>
+<!-- END: RoleActionCards -->
+<!-- BEGIN: PartnerStatusAndActionFooter -->
+<footer class="mt-2 space-y-3.5" data-purpose="coop-status-and-confirmation">
+<!-- Co-op Partner Status Banner -->
+<div class="flex items-center gap-3.5 p-3 rounded-2xl bg-[#0C101D] border border-slate-800/90 shadow-inner">
+<!-- Circular Astronaut Helmet Silhouette with indicator lights -->
+<div class="relative w-12 h-12 rounded-full bg-slate-900 border border-slate-700/80 flex flex-col items-center justify-center shrink-0">
+<!-- Space Helmet Icon -->
+<svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+<circle cx="12" cy="11" r="7" stroke-linecap="round"></circle>
+<path d="M7 11c0-2.8 2.2-5 5-5s5 2.2 5 5-2.2 4-5 4-5-1.2-5-4z" fill="#1E293B" stroke="none"></path>
+<path d="M6 18c0-1.8 2.7-3 6-3s6 1.2 6 3" stroke-linecap="round"></path>
+</svg>
+<!-- 3 Small pulsating status dots under avatar -->
+<div class="absolute -bottom-1 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 dot-1"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-amber-400 dot-2"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-slate-600 dot-3"></span>
+</div>
+</div>
+<!-- Status Message Text -->
+<div class="flex-1 text-left">
+<div class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+<span class="">Mühendisin hazırlanıyor.</span>
+</div>
+<p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              Kısa süre içinde görevi birlikte başlatacaksınız.
+            </p>
+</div>
+</div>
+<!-- Arcade Primary Action Button -->
+<button aria-label="Rolümü Anladım" class="arcade-button w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-2 cursor-pointer group" type="button">
+<span class="text-slate-950 font-black tracking-wide text-base sm:text-lg uppercase">
+            Rolümü anladım
+          </span>
+<!-- Bold Chevron Right Indicator -->
+<svg class="w-5 h-5 text-slate-950 font-black transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" viewBox="0 0 24 24">
+<polyline points="9 18 15 12 9 6"></polyline>
+</svg>
+</button>
+</footer>
+<!-- END: PartnerStatusAndActionFooter -->
+</div>
+<!-- END: MainContentWrapper -->
+</main>
+<!-- END: MobileDeviceFrame -->
+<!-- BEGIN: InteractiveScripts -->
+<script data-purpose="button-feedback">
+    document.addEventListener('DOMContentLoaded', () => {
+      const confirmButton = document.querySelector('.arcade-button');
+      if (confirmButton) {
+        confirmButton.addEventListener('click', () => {
+          // Provide tactile micro-interaction
+          confirmButton.classList.add('opacity-90');
+          setTimeout(() => {
+            confirmButton.classList.remove('opacity-90');
+          }, 150);
+        });
+      }
+    });
+  </script>
+<!-- END: InteractiveScripts -->
+
+
+</body></html>

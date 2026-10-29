@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sora: 'Sora', sans-serif;
+    --font-manrope: 'Manrope', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-manrope);
+    background-color: #0b081a;
+    color: #e6dff9;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sora);
+  }
+}
+
+/* Custom Tactical 2.5D Arcade & Space Console Utilities */
+.font-sora {
+  font-family: var(--font-sora);
+}
+
+.font-manrope {
+  font-family: var(--font-manrope);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* 2.5D Push Buttons with Physical Depth */
+.btn-3d-gold {
+  background: linear-gradient(180deg, #ffc933 0%, #ff9e00 100%);
+  border-bottom: 4px solid #b26a00;
+  box-shadow: 0 4px 16px rgba(255, 183, 3, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.08s ease-in-out;
+}
+.btn-3d-gold:hover {
+  filter: brightness(1.06);
+}
+.btn-3d-gold:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  box-shadow: 0 1px 6px rgba(255, 183, 3, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-3d-cyan {
+  background: linear-gradient(180deg, #33f6ff 0%, #00c8d6 100%);
+  border-bottom: 4px solid #00818a;
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.08s ease-in-out;
+}
+.btn-3d-cyan:hover {
+  filter: brightness(1.06);
+}
+.btn-3d-cyan:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  box-shadow: 0 1px 6px rgba(0, 240, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-3d-danger {
+  background: linear-gradient(180deg, #ff4d6d 0%, #d90429 100%);
+  border-bottom: 4px solid #800016;
+  box-shadow: 0 4px 16px rgba(255, 0, 85, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.08s ease-in-out;
+}
+.btn-3d-danger:hover {
+  filter: brightness(1.08);
+}
+.btn-3d-danger:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  box-shadow: 0 1px 6px rgba(255, 0, 85, 0.3);
+}
+
+.btn-3d-panel {
+  background: linear-gradient(180deg, #201a3d 0%, #16122c 100%);
+  border-bottom: 3px solid #090616;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.08s ease-in-out;
+}
+.btn-3d-panel:hover {
+  background: linear-gradient(180deg, #29224d 0%, #1c1737 100%);
+}
+.btn-3d-panel:active {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+}
+
+/* Console Metal Panel Surface */
+.metal-panel {
+  background: linear-gradient(145deg, rgba(26, 22, 59, 0.95) 0%, rgba(18, 15, 45, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(5, 3, 14, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+.metal-panel-glow-gold {
+  border: 1px solid rgba(255, 183, 3, 0.35);
+  box-shadow: 0 0 20px rgba(255, 183, 3, 0.15), 0 8px 24px rgba(5, 3, 14, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.metal-panel-glow-cyan {
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), 0 8px 24px rgba(5, 3, 14, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Custom Scanlines & Grid Texture */
+.bg-radar-grid {
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-matrix {
+  background-image: radial-gradient(rgba(255, 183, 3, 0.15) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Radar Sweep Animation */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+}
+
+/* Pulse Glows */
+@keyframes neon-glow-cyan {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.6)); }
+  50% { filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.9)); }
+}
+
+.animate-neon-cyan {
+  animation: neon-glow-cyan 2.5s ease-in-out infinite;
+}
+
+/* Ultra-Bright Neon Launch Button Styles */
+@keyframes neon-pulse-gold {
+  0%, 100% {
+    box-shadow: 
+      0 0 25px rgba(255, 183, 3, 0.6),
+      0 0 50px rgba(255, 140, 0, 0.35),
+      inset 0 3px 5px rgba(255, 255, 255, 0.9),
+      inset 0 -6px 14px rgba(120, 40, 0, 0.9);
+    filter: drop-shadow(0 0 16px rgba(255, 183, 3, 0.8));
+  }
+  50% {
+    box-shadow: 
+      0 0 45px rgba(255, 200, 30, 0.9),
+      0 0 90px rgba(255, 140, 0, 0.6),
+      inset 0 4px 8px rgba(255, 255, 255, 1),
+      inset 0 -8px 18px rgba(140, 45, 0, 0.95);
+    filter: drop-shadow(0 0 28px rgba(255, 200, 30, 1));
+  }
+}
+
+.launch-btn-neon-active {
+  background: radial-gradient(circle at 40% 30%, #fffde6 0%, #ffe066 20%, #ffaa00 45%, #e67300 75%, #8a2e00 100%);
+  animation: neon-pulse-gold 2s ease-in-out infinite;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.launch-btn-neon-active:active {
+  transform: scale(0.95) translateY(3px);
+  filter: brightness(1.15);
+}
+
+@keyframes energy-ring-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-energy-ring {
+  animation: energy-ring-spin 12s linear infinite;
+}
+
+@keyframes energy-ring-reverse {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.animate-energy-ring-reverse {
+  animation: energy-ring-reverse 8s linear infinite;
+}
+
+/* Hide scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b081a;
+}
+::-webkit-scrollbar-thumb {
+  background: #231e48;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ffb703;
+}

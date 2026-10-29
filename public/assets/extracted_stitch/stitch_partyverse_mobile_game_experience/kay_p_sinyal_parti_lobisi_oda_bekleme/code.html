@@ -1,0 +1,310 @@
+<!DOCTYPE html><html lang="tr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>Partyverse - Parti Lobisi</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter & Chakra Petch / Outfit for Sci-Fi Gaming feel -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&amp;family=Outfit:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            spaceDark: '#090812',
+            spaceSurface: '#121021',
+            spaceCard: '#151428',
+            cyanGlow: '#00eefc',
+            amberGold: '#f59e0b',
+            amberGlow: '#fbbf24',
+            amberDeep: '#b45309',
+            emeraldGreen: '#10b981',
+          },
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            display: ['Chakra Petch', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS Styling -->
+<style data-purpose="custom-cyber-effects">
+    /* Custom Scrollbar prevention for native App look */
+    body {
+      touch-action: pan-y;
+      -webkit-font-smoothing: antialiased;
+      background-color: #07060d;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Ambient Background Glows */
+    .bg-nebula {
+      background: radial-gradient(circle at 50% 15%, rgba(0, 238, 252, 0.12) 0%, transparent 55%),
+                  radial-gradient(circle at 50% 85%, rgba(245, 158, 11, 0.1) 0%, transparent 60%),
+                  #0a0815;
+    }
+
+    /* Hero Background Art using CSS layered gradients + deep space elements */
+    .hero-art-window {
+      background: linear-gradient(180deg, rgba(8, 12, 33, 0.2) 0%, rgba(10, 8, 21, 0.95) 85%, #0d0c1c 100%),
+                  radial-gradient(ellipse at 70% 30%, rgba(0, 238, 252, 0.35) 0%, transparent 45%),
+                  radial-gradient(circle at 10% 20%, rgba(110, 50, 220, 0.25) 0%, transparent 40%),
+                  linear-gradient(135deg, #090e24 0%, #060511 100%);
+    }
+
+    /* Futuristic HUD & Border bevels */
+    .tech-border {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 4px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .card-bevel {
+      background: linear-gradient(180deg, rgba(29, 26, 52, 0.7) 0%, rgba(17, 15, 34, 0.85) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    /* Tactile 3D Circular Launch Button Styling */
+    .launch-btn-housing {
+      background: radial-gradient(circle, #25233c 30%, #110f22 75%, #0a0914 100%);
+      box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.15), 
+                  inset 0 -6px 12px rgba(0, 0, 0, 0.8),
+                  0 12px 28px rgba(0, 0, 0, 0.7),
+                  0 0 30px rgba(245, 158, 11, 0.15);
+    }
+
+    .launch-core-button {
+      background: radial-gradient(circle at 45% 35%, #ffe685 0%, #ffaa00 35%, #db7700 70%, #873800 100%);
+      box-shadow: inset 0 3px 4px rgba(255, 255, 255, 0.8),
+                  inset 0 -5px 10px rgba(90, 30, 0, 0.9),
+                  0 6px 18px rgba(245, 158, 11, 0.55),
+                  0 0 25px rgba(255, 170, 0, 0.35);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    .launch-core-button:active {
+      transform: scale(0.96);
+      box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.6),
+                  inset 0 4px 12px rgba(90, 30, 0, 0.95),
+                  0 2px 8px rgba(245, 158, 11, 0.35);
+    }
+  </style>
+<!-- END: Custom CSS Styling -->
+</head>
+<body class="flex justify-center items-center min-h-screen text-white select-none">
+<!-- BEGIN: Mobile Device Frame -->
+<div class="relative w-full max-w-[420px] min-h-[915px] bg-nebula overflow-hidden flex flex-col justify-between pb-6 shadow-2xl border border-white/5 rounded-[42px]">
+<!-- Ambient background glows -->
+<div class="absolute -top-24 -left-24 w-80 h-80 bg-cyanGlow/10 rounded-full blur-[80px] pointer-events-none"></div>
+<div class="absolute -bottom-24 -right-24 w-80 h-80 bg-amberGold/15 rounded-full blur-[90px] pointer-events-none"></div>
+<!-- BEGIN: TopBar / Header -->
+<header class="relative z-30 flex items-center justify-between px-5 pt-7 pb-2" data-purpose="top-navigation-bar">
+<!-- Left: Brand Logo & Title -->
+<div class="flex items-center space-x-2" data-purpose="brand-logo">
+<div class="relative flex items-center justify-center w-7 h-7">
+<!-- Stylized Planet Orbit Emblem -->
+<svg class="w-6 h-6 text-amberGold" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24">
+<ellipse cx="12" cy="12" rx="9" ry="4.5" stroke="url(#goldGrad)" stroke-width="2" transform="rotate(-30 12 12)"></ellipse>
+<circle cx="12" cy="12" fill="none" r="5.5" stroke="url(#goldGrad)" stroke-width="2.2"></circle>
+<defs>
+<linearGradient id="goldGrad" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ffdd55"></stop>
+<stop offset="100%" stop-color="#f59e0b"></stop>
+</linearGradient>
+</defs>
+</svg>
+</div>
+<span class="font-extrabold tracking-wider text-[15px] text-white/95 uppercase font-display">PARTYVERSE</span>
+</div>
+<!-- Right: Navigation Action Buttons -->
+<div class="flex items-center space-x-2.5" data-purpose="header-action-buttons">
+<!-- Settings Button -->
+<button aria-label="Ayarlar" class="w-9 h-9 rounded-xl bg-[#1d1b32]/80 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white shadow-inner active:scale-95 transition-transform" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Friends/Lobby Status Button -->
+<button aria-label="Oyuncular" class="w-9 h-9 rounded-xl bg-[#1d1b32]/80 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white shadow-inner active:scale-95 transition-transform" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</header>
+<!-- END: TopBar / Header -->
+<!-- BEGIN: Main Scrollable Content Area -->
+<main class="relative z-10 flex-1 px-4 flex flex-col space-y-3.5 pt-1">
+<!-- BEGIN: Hero Section (Orbital Bay Station & Mission Heading) -->
+<section class="relative rounded-2xl overflow-hidden border border-white/10 hero-art-window min-h-[295px] flex flex-col justify-end p-4 shadow-xl" data-purpose="hero-mission-presentation">
+<!-- Background Orbital Station Graphic Art (CSS Vector Composite) -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCR0yjFbJiiqtroQLKV2y0sAgrkg4pcUvJIu15SqGHH0MXFUSvSjGsOl6o-iZITWJCdU0FJKV2zkv-KyVquO_n9tktiCkvF5thupF9E9jh03uATTeL12UqevQJh7RpGdIMWZ_KGFVL4j2Lf01YIGfvCn7FAUHMLy7u8pDbxfFEyWd2VR4JgoyGVjqsQx4-jlPS1YH9fxpr80PbwCMR3Z7Dkx49OgtbtuTFtHePdLM" alt="Uzay İstasyonu Hangar ve Reaktör Vitrini" class="w-full h-full object-cover object-center"><div class="absolute inset-0 bg-gradient-to-t from-[#0e0d1f] via-[#0e0d1f]/60 to-transparent"></div></div>
+<!-- Hero Typography & Mission Briefing Overlay -->
+<div class="relative z-10 pt-24">
+<h1 class="text-4xl leading-[1.05] font-black tracking-tight font-sans">
+<span class="block text-white drop-shadow-md">Kayıp</span>
+<span class="block text-cyanGlow drop-shadow-[0_0_16px_rgba(0,238,252,0.65)] font-display tracking-normal">Sinyal</span>
+</h1>
+<p class="text-[12.5px] leading-snug text-slate-300 font-normal mt-2 max-w-[275px]">
+            İstasyon sessiz. Reaktör dengesiz. Sinyali geri getirmek için birlikte çalışın.
+          </p>
+</div>
+</section>
+<!-- END: Hero Section -->
+<!-- BEGIN: Room Code Card ("ODA KODU") -->
+<section class="card-bevel rounded-2xl px-4 py-3 border border-white/10 shadow-lg" data-purpose="room-access-code-strip">
+<div class="flex items-center justify-between">
+<div>
+<span class="text-[10px] tracking-widest font-semibold uppercase text-slate-400">ODA KODU</span>
+<div class="text-[25px] font-black tracking-wider text-amberGlow font-display -mt-0.5 drop-shadow-[0_0_8px_rgba(245,158,11,0.35)]">
+              PV7K2M
+            </div>
+</div>
+<!-- Action Buttons: Copy and QR -->
+<div class="flex items-center space-x-2">
+<!-- Copy Button -->
+<button class="w-10 h-10 rounded-xl bg-[#1f1d38] border border-cyanGlow/30 hover:border-cyanGlow flex items-center justify-center text-cyan-300 active:scale-95 transition-all shadow-md shadow-cyan-950/40" title="Kodu Kopyala" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+</svg>
+</button>
+<!-- QR Code Button -->
+<button class="w-10 h-10 rounded-xl bg-[#1f1d38] border border-cyanGlow/30 hover:border-cyanGlow flex items-center justify-center text-cyan-300 active:scale-95 transition-all shadow-md shadow-cyan-950/40" title="QR Kodu Göster" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<rect height="7" rx="1" width="7" x="3" y="3"></rect>
+<rect height="7" rx="1" width="7" x="14" y="3"></rect>
+<rect height="7" rx="1" width="7" x="3" y="14"></rect>
+<path d="M14 14h3v3h-3z"></path>
+<path d="M19 14h2v2h-2z"></path>
+<path d="M14 19h2v2h-2z"></path>
+<path d="M19 19h2v2h-2z"></path>
+</svg>
+</button>
+</div>
+</div>
+<p class="text-[11px] text-slate-400 mt-1 font-medium leading-none">
+          Arkadaşın bu kodla katılabilir ya da QR kodu paylaşabilirsin.
+        </p>
+</section>
+<!-- END: Room Code Card -->
+<!-- BEGIN: Crew Lobby / Player Cards (Side-by-Side) -->
+<section class="grid grid-cols-2 gap-3" data-purpose="crew-selection-lobby">
+<!-- Player 1: Ece (Leader) -->
+<div class="relative rounded-2xl p-2.5 pb-2.5 bg-gradient-to-b from-[#241f42] to-[#121124] border-2 border-amberGold/80 shadow-[0_0_15px_rgba(245,158,11,0.2)] flex flex-col justify-between overflow-hidden group">
+<!-- Crown "Lider" Badge on top-left -->
+<div class="absolute top-2 left-2 z-20 flex items-center space-x-1 bg-amberGold text-[#2b1700] px-2.5 py-0.5 rounded-full shadow-md font-bold text-[10px]">
+<svg class="w-3 h-3 fill-current" viewBox="0 0 20 20">
+<path d="M10 2l2.5 5 4.5-3-1.5 8H4.5L3 4l4.5 3L10 2z"></path>
+</svg>
+<span class="">Lider</span>
+</div>
+<!-- Character Portrait Area (Female Commander) -->
+<div class="relative w-full h-32 rounded-xl overflow-hidden bg-slate-900 mb-2"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLbCVA7kytNnSKo-gaPE6NKFjpPbQRs2t25Ai3LLzN9z6Rs1jEhpygEPnnSIHuuVKNygcTWw7VWm1YfzXqvbYdp_OiQgaVWlkvpQM_u5T136mUlSKgIyXW-cLODBk_uj5ROs4BYSAYZfWN01cu1lH-RjGhCz3Cb6kqMKU1dNETrWmg4gKa3ED9YpA3HwDUSxH7gHneqXsRfTAXrkkKQI1k8ooNGS7rglu29_COf2U" alt="Kaptan Ece" class="w-full h-full object-cover object-top"><div class="absolute inset-0 bg-gradient-to-t from-[#121124] via-transparent to-transparent"></div></div>
+<!-- Player Name -->
+<h3 class="text-sm font-bold text-white px-1">Ece</h3>
+<!-- Ready Status Pill -->
+<div class="mt-1.5 w-full bg-[#0c1e1d] border border-emeraldGreen/50 rounded-xl py-1 flex items-center justify-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-emeraldGreen shadow-[0_0_6px_#10b981]"></span>
+<span class="text-[11px] font-semibold text-emerald-400">Hazır</span>
+</div>
+</div>
+<!-- Player 2: Mert -->
+<div class="relative rounded-2xl p-2.5 pb-2.5 bg-gradient-to-b from-[#1b1e3b] to-[#101021] border border-cyan-500/30 shadow-lg flex flex-col justify-between overflow-hidden">
+<!-- Character Portrait Area (Male Engineer/Pilot) -->
+<div class="relative w-full h-32 rounded-xl overflow-hidden bg-slate-900 mb-2"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoeQN2pLWf8Xj8TxKoQJTTjpc9CsSHTF5JxwfmESK0bsLl_Kyh6Iux2FofuEtAWJigxSdB3vVnrkTLj6hpBR59wJ-lzOi-ZYd2q6m5lU7yOlMZ6lvzGFY2r5Tp3yffa2XhDCZ2SykuiFajBooH6M_buYGjfh8bol08jD3Fc0bAjP_jT3sdW2u61qvqBk2uo1DrqLaecld0x7BSi6bHLhJudQW63uoFwue1Te-7sj8" alt="Mühendis Mert" class="w-full h-full object-cover object-top"><div class="absolute inset-0 bg-gradient-to-t from-[#101021] via-transparent to-transparent"></div></div>
+<!-- Player Name -->
+<h3 class="text-sm font-bold text-white px-1">Mert</h3>
+<!-- Ready Status Pill -->
+<div class="mt-1.5 w-full bg-[#0c1e1d] border border-emeraldGreen/50 rounded-xl py-1 flex items-center justify-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-emeraldGreen shadow-[0_0_6px_#10b981]"></span>
+<span class="text-[11px] font-semibold text-emerald-400">Hazır</span>
+</div>
+</div>
+</section>
+<!-- END: Crew Lobby / Player Cards -->
+<!-- BEGIN: Quick Facts Row (3 items in compact dark cards) -->
+<section class="grid grid-cols-3 gap-2" data-purpose="game-parameters-summary">
+<!-- Fact 1: Players -->
+<div class="bg-[#141329]/90 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center shadow-md">
+<div class="w-6 h-6 mb-1 text-cyan-300 flex items-center justify-center">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+<path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+</svg>
+</div>
+<span class="text-[11px] font-bold text-slate-100 leading-tight">2 oyuncu</span>
+<span class="text-[9px] text-slate-400 mt-0.5 leading-tight">Sadece siz için tasarlandı.</span>
+</div>
+<!-- Fact 2: Duration -->
+<div class="bg-[#141329]/90 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center shadow-md">
+<div class="w-6 h-6 mb-1 text-cyan-300 flex items-center justify-center">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+</div>
+<span class="text-[11px] font-bold text-slate-100 leading-tight">5 dakika</span>
+<span class="text-[9px] text-slate-400 mt-0.5 leading-tight">Kısa ve yoğun bir deneyim.</span>
+</div>
+<!-- Fact 3: Teamwork Mode -->
+<div class="bg-[#141329]/90 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center shadow-md">
+<div class="w-6 h-6 mb-1 text-cyan-300 flex items-center justify-center">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017a2 2 0 01-1.414-.586l-4.243-4.243a2 2 0 010-2.828l2.828-2.829a2 2 0 012.829 0l1.414 1.414m0-4.672V4a2 2 0 012-2 2 2 0 012 2v4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[11px] font-bold text-slate-100 leading-tight">İş birliği</span>
+<span class="text-[9px] text-slate-400 mt-0.5 leading-tight">Kazanmak için birlikte düşünün.</span>
+</div>
+</section>
+<!-- END: Quick Facts Row -->
+</main>
+<!-- END: Main Scrollable Content Area -->
+<!-- BEGIN: Bottom Interaction & Action Bar -->
+<footer class="relative z-20 px-4 pt-2 flex flex-col items-center space-y-3" data-purpose="primary-action-footer">
+<!-- Massive Tactile 3D Circular Launch Button ("Görevi başlat") -->
+<div class="relative flex items-center justify-center" data-purpose="mission-start-trigger">
+<!-- Outer Sci-Fi Mechanical Ring Housing -->
+<div class="launch-btn-housing w-36 h-36 rounded-full p-2.5 flex items-center justify-center relative">
+<!-- Outer Mechanical Bolt Accents -->
+<div class="absolute -top-1 w-2.5 h-1.5 bg-amberGold/80 rounded-sm shadow-[0_0_6px_#f59e0b]"></div>
+<div class="absolute -bottom-1 w-2.5 h-1.5 bg-amberGold/80 rounded-sm shadow-[0_0_6px_#f59e0b]"></div>
+<div class="absolute -left-1 w-1.5 h-2.5 bg-amberGold/80 rounded-sm shadow-[0_0_6px_#f59e0b]"></div>
+<div class="absolute -right-1 w-1.5 h-2.5 bg-amberGold/80 rounded-sm shadow-[0_0_6px_#f59e0b]"></div>
+<!-- Pulsing Radiant Glow Ring -->
+<div class="absolute inset-0 rounded-full border border-amberGold/40 animate-pulse pointer-events-none"></div>
+<!-- Central Round Golden Push Button -->
+<button aria-label="Görevi başlat" class="launch-core-button w-full h-full rounded-full flex flex-col items-center justify-center text-center cursor-pointer transition-transform duration-100 group focus:outline-none" type="button">
+<!-- Play Triangle Icon -->
+<div class="w-6 h-6 flex items-center justify-center mb-0.5 drop-shadow">
+<svg class="w-6 h-6 text-[#291400] fill-current transform translate-x-0.5" viewBox="0 0 24 24">
+<path d="M7 4.5v15l13-7.5-13-7.5z"></path>
+</svg>
+</div>
+<!-- Button Text -->
+<span class="text-[15px] font-black leading-tight text-[#2b1602] uppercase tracking-normal font-sans">
+              Görevi<br>başlat
+            </span>
+</button>
+</div>
+</div>
+<!-- Secondary Action: Invite Friend ("+ Arkadaşını davet et") -->
+<button class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#1c1a35] via-[#242145] to-[#1c1a35] border border-white/10 hover:border-cyanGlow/40 flex items-center justify-center space-x-2 text-slate-200 hover:text-white transition-all shadow-lg active:scale-[0.98]" data-purpose="invite-friend-button" type="button">
+<!-- Plus User Icon -->
+<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[13px] font-bold tracking-wide">Arkadaşını davet et</span>
+</button>
+</footer>
+<!-- END: Bottom Interaction & Action Bar -->
+<!-- iOS Home Indicator Pill Bar -->
+<div class="w-32 h-1 bg-white/20 rounded-full mx-auto mt-2 pointer-events-none"></div>
+</div>
+<!-- END: Mobile Device Frame -->
+
+
+</body></html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html><html lang="tr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<title>Partyverse - Gizli Rol: Mühendissin</title>
+<!-- Tailwind CSS CDN with forms & container queries plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            spaceDark: '#0c0a17',
+            spaceNavy: '#131127',
+            cardBg: '#15142a',
+            cyanGlow: '#00eefc',
+            amberGold: '#ffb703',
+            amberDark: '#ea580c'
+          },
+          fontFamily: {
+            sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            display: ['Impact', 'Trebuchet MS', 'Arial Black', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+<!-- Custom Styles: Typography & Arcade Aesthetics -->
+<style data-purpose="typography">
+    .font-header-metal {
+      font-family: 'Impact', 'Trebuchet MS', -apple-system, sans-serif;
+      letter-spacing: 0.04em;
+    }
+  </style>
+<!-- Custom Styles: Glowing Effects & Metallic Gradients -->
+<style data-purpose="glows-and-frames">
+    .glow-cyan-filter {
+      filter: drop-shadow(0 0 12px rgba(0, 238, 252, 0.45));
+    }
+    .badge-glow {
+      box-shadow: 0 0 16px rgba(255, 183, 3, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    }
+    .hero-text-shadow {
+      text-shadow: 0 4px 18px rgba(0, 238, 252, 0.55), 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .metal-border {
+      border: 1px solid rgba(0, 238, 252, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+    .status-border {
+      border: 1px solid rgba(255, 183, 3, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+    .arcade-btn-shadow {
+      box-shadow: 0 8px 0 #b45309, 0 12px 25px rgba(251, 191, 36, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.6);
+    }
+    .arcade-btn-shadow:active {
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 #b45309, 0 6px 15px rgba(251, 191, 36, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-[#07060e] text-white flex justify-center items-center min-h-screen p-0 sm:p-4 font-sans select-none antialiased">
+<!-- BEGIN: MobileContainer -->
+<!-- iPhone / Mobile Framed Aspect Ratio (Mirroring image 45 right screen) -->
+<main class="w-full max-w-[420px] bg-[#120f24] min-h-screen relative overflow-hidden flex flex-col justify-between shadow-2xl sm:rounded-[44px] border-0 sm:border-[5px] sm:border-[#272347]">
+<!-- Background Blueprint / Holo Grid Ambient Layer -->
+<div class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(#00eefc_1px,transparent_1px)] [background-size:24px_24px]"></div>
+<!-- Top Cyan Radial Atmospheric Glow -->
+<div class="absolute -top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#00eefc]/15 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col flex-1 pb-6">
+<!-- BEGIN: TopBar -->
+<header class="flex items-center justify-between px-6 pt-6 pb-2">
+<!-- Brand Logo & Orbital Glyph -->
+<div class="flex items-center space-x-2.5">
+<div class="w-7 h-7 flex items-center justify-center">
+<!-- Golden Saturn / Orbital Planet Icon -->
+<svg class="w-6 h-6 text-[#ffb703] drop-shadow-[0_0_8px_rgba(255,183,3,0.7)]" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<ellipse cx="12" cy="12" rx="7" ry="7"></ellipse>
+<ellipse cx="12" cy="12" rx="11" ry="3.8" transform="rotate(-30 12 12)"></ellipse>
+</svg>
+</div>
+<span class="font-black text-sm tracking-[0.2em] text-white uppercase drop-shadow-sm font-sans">PARTYVERSE</span>
+</div>
+<!-- Top Right Gear / Settings Icon -->
+<button aria-label="Ayarlar" class="w-9 h-9 rounded-xl bg-[#1d1938]/80 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white shadow-inner active:scale-95 transition-all" type="button">
+<svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+</svg>
+</button>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: HeroCharacterSection -->
+<section class="relative w-full h-[290px] flex items-center justify-center overflow-visible mt-1" data-purpose="hero-engineer-presentation">
+<!-- Deep Space Orbit Background & Holographic Diagrams -->
+<div class="absolute inset-0 mx-4 rounded-3xl overflow-hidden bg-gradient-to-b from-[#14122d] via-[#101c38] to-[#0c0a1a] border border-cyan-500/20">
+<!-- Background Celestial Earth/Moon Planet Arc -->
+<div class="absolute -top-12 -right-8 w-56 h-56 rounded-full bg-gradient-to-bl from-cyan-400/30 via-indigo-600/20 to-transparent blur-md"></div>
+<!-- Holographic Schematic HUD Rings -->
+<div class="absolute top-8 left-4 w-32 h-32 rounded-full border border-cyan-400/20 pointer-events-none"></div>
+<div class="absolute top-12 left-8 w-24 h-24 rounded-full border border-dashed border-cyan-400/30 animate-spin-slow pointer-events-none"></div>
+<!-- Holographic Circuit Vector Overlays -->
+<svg class="absolute top-2 right-2 w-44 h-44 text-cyan-400/30 pointer-events-none" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 200 200">
+<rect height="40" rx="4" stroke-dasharray="2 3" width="60" x="20" y="20"></rect>
+<circle cx="120" cy="50" r="28"></circle>
+<circle cx="120" cy="50" r="10"></circle>
+<path d="M 80 40 L 92 40 L 100 50 L 120 50"></path>
+<path d="M 120 78 L 120 110 L 150 110"></path>
+<circle cx="150" cy="110" fill="currentColor" r="3"></circle>
+<path d="M 40 60 L 40 100 L 70 130"></path>
+<circle cx="70" cy="130" fill="currentColor" r="2.5"></circle>
+</svg>
+<!-- Lighting flare gradients -->
+<div class="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-[#120f24] via-[#120f24]/85 to-transparent"></div>
+</div>
+<!-- Stylized Sci-Fi Engineer Illustration (Vector Render) -->
+<div class="relative z-10 w-56 h-56 flex items-center justify-center transform translate-y-1"><div class="relative w-full h-full rounded-3xl overflow-hidden border-2 border-cyan-400/50 glow-cyan-filter shadow-[0_0_25px_rgba(0,238,252,0.35)]"><img alt="Mühendis Karakteri" class="w-full h-full object-cover object-top select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoeQN2pLWf8Xj8TxKoQJTTjpc9CsSHTF5JxwfmESK0bsLl_Kyh6Iux2FofuEtAWJigxSdB3vVnrkTLj6hpBR59wJ-lzOi-ZYd2q6m5lU7yOlMZ6lvzGFY2r5Tp3yffa2XhDCZ2SykuiFajBooH6M_buYGjfh8bol08jD3Fc0bAjP_jT3sdW2u61qvqBk2uo1DrqLaecld0x7BSi6bHLhJudQW63uoFwue1Te-7sj8"><div class="absolute inset-0 bg-gradient-to-t from-[#120f24] via-transparent to-transparent opacity-60 pointer-events-none"></div><div class="absolute inset-0 border border-cyan-300/30 rounded-3xl pointer-events-none"></div></div></div>
+</section>
+<!-- END: HeroCharacterSection -->
+<!-- BEGIN: RoleIdentityTitleSection -->
+<section class="flex flex-col items-center text-center -mt-6 z-20 px-6" data-purpose="role-announcement">
+<!-- SANA ÖZEL Pill Badge (Gold Amber glowing capsule) -->
+<div class="inline-flex items-center space-x-1.5 px-4 py-1 rounded-full bg-gradient-to-r from-[#2a1d0f] via-[#452e0e] to-[#2a1d0f] border border-[#ffb703]/70 badge-glow mb-2">
+<!-- Small Lock Icon -->
+<svg class="w-3.5 h-3.5 text-[#ffb703]" fill="currentColor" viewBox="0 0 24 24">
+<path clip-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 00-7.5 0v3h7.5z" fill-rule="evenodd"></path>
+</svg>
+<span class="text-[11px] font-black tracking-widest text-[#ffb703] uppercase">SANA ÖZEL</span>
+</div>
+<!-- Role Main Header: MÜHENDİSSİN in Cyan-to-White Metallic Gradient -->
+<h1 class="text-4xl sm:text-[42px] font-header-metal font-extrabold uppercase tracking-wide bg-gradient-to-b from-[#f0fdff] via-[#8df9ff] to-[#00c8e0] bg-clip-text text-transparent hero-text-shadow leading-tight">
+          MÜHENDİSSİN
+        </h1>
+<!-- Subtext Instruction -->
+<p class="text-sm font-medium text-slate-300/95 tracking-wide mt-1">
+          Ölçümler sende. Prosedürler kaptanda.
+        </p>
+</section>
+<!-- END: RoleIdentityTitleSection -->
+<!-- BEGIN: ResponsibilitiesList -->
+<!-- 3 Structured Responsibility Cards with Glowing Cyan Circular Icons -->
+<section class="mt-4 px-5 space-y-2.5" data-purpose="mission-responsibilities">
+<!-- Responsibility Item 1: Ölçümleri oku -->
+<div class="flex items-center space-x-3.5 p-3 rounded-2xl bg-[#141227]/90 metal-border backdrop-blur-md">
+<!-- Icon Capsule: Glowing Cyan Sensor Radar -->
+<div class="w-12 h-12 rounded-full bg-[#0a1e30] border border-cyan-400/50 flex-shrink-0 flex items-center justify-center glow-cyan-filter">
+<svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"></path>
+<path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path>
+<path d="M12 2v2"></path>
+<path d="M12 20v2"></path>
+<path d="m4.93 4.93 1.41 1.41"></path>
+<path d="m17.66 17.66 1.41 1.41"></path>
+</svg>
+</div>
+<!-- Text Body -->
+<div class="flex-1 min-w-0 pr-1">
+<h2 class="text-sm font-bold text-white tracking-wide">Ölçümleri oku</h2>
+<p class="text-[12px] leading-snug text-slate-300">Sensör, frekans ve reaktör değerlerini kaptana aktar.</p>
+</div>
+</div>
+<!-- Responsibility Item 2: Sistemleri yönet -->
+<div class="flex items-center space-x-3.5 p-3 rounded-2xl bg-[#141227]/90 metal-border backdrop-blur-md">
+<!-- Icon Capsule: Power Regulator / Valve -->
+<div class="w-12 h-12 rounded-full bg-[#0a1e30] border border-cyan-400/50 flex-shrink-0 flex items-center justify-center glow-cyan-filter">
+<svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<line x1="4" x2="4" y1="21" y2="14"></line>
+<line x1="4" x2="4" y1="10" y2="3"></line>
+<line x1="12" x2="12" y1="21" y2="12"></line>
+<line x1="12" x2="12" y1="8" y2="3"></line>
+<line x1="20" x2="20" y1="21" y2="16"></line>
+<line x1="20" x2="20" y1="12" y2="3"></line>
+<line x1="1" x2="7" y1="14" y2="14"></line>
+<line x1="9" x2="15" y1="8" y2="8"></line>
+<line x1="17" x2="23" y1="16" y2="16"></line>
+</svg>
+</div>
+<!-- Text Body -->
+<div class="flex-1 min-w-0 pr-1">
+<h2 class="text-sm font-bold text-white tracking-wide">Sistemleri yönet</h2>
+<p class="text-[12px] leading-snug text-slate-300">Kaptanın talimatlarına göre vanaları ve kabloları bağla.</p>
+</div>
+</div>
+<!-- Responsibility Item 3: Enerjiyi paylaştır -->
+<div class="flex items-center space-x-3.5 p-3 rounded-2xl bg-[#141227]/90 metal-border backdrop-blur-md">
+<!-- Icon Capsule: Core Energy Turbine / Battery Balance -->
+<div class="w-12 h-12 rounded-full bg-[#0a1e30] border border-cyan-400/50 flex-shrink-0 flex items-center justify-center glow-cyan-filter">
+<svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+</svg>
+</div>
+<!-- Text Body -->
+<div class="flex-1 min-w-0 pr-1">
+<h2 class="text-sm font-bold text-white tracking-wide">Enerjiyi paylaştır</h2>
+<p class="text-[12px] leading-snug text-slate-300">Hat kayıplarını hesaplayıp reaktör dengesini kur.</p>
+</div>
+</div>
+</section>
+<!-- END: ResponsibilitiesList -->
+<!-- BEGIN: PartnerStatusSection -->
+<!-- Captain Status Strip with pulsing dots and helmet outline -->
+<section class="mt-3 px-5" data-purpose="partner-captain-status">
+<div class="flex items-center space-x-3.5 p-3 rounded-2xl bg-[#1a162b]/90 status-border">
+<!-- Captain Avatar Emblem (Astronaut Visor Icon) -->
+<div class="relative w-12 h-12 rounded-full bg-[#201c38] border border-amber-500/40 flex-shrink-0 flex items-center justify-center">
+<svg class="w-6 h-6 text-amber-400/90" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24">
+<path d="M12 2a8 8 0 0 0-8 8v3a6 6 0 0 0 6 6h4a6 6 0 0 0 6-6v-3a8 8 0 0 0-8-8Z"></path>
+<path d="M8 11h8a2 2 0 0 1 2 2v1a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-1a2 2 0 0 1 2-2Z"></path>
+<line x1="9" x2="15" y1="22" y2="22"></line>
+</svg>
+<!-- Online status green beacon dot -->
+<span class="absolute top-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-[#120f24] rounded-full"></span>
+</div>
+<!-- Partner Status Detail Text -->
+<div class="flex-1 min-w-0">
+<h3 class="text-sm font-bold text-white tracking-wide">Kaptanın hazırlanıyor.</h3>
+<p class="text-[11.5px] leading-snug text-slate-300">Telsiz bağlantısı kuruldu, görev brifingi bekleniyor.</p>
+<!-- Pulsing Loading Indicator Dots in Warm Amber -->
+<div class="flex items-center space-x-1.5 mt-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-[#ffb703] animate-pulse"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-[#ffb703]/70 animate-pulse [animation-delay:200ms]"></span>
+<span class="w-1.5 h-1.5 rounded-full bg-[#ffb703]/40 animate-pulse [animation-delay:400ms]"></span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: PartnerStatusSection -->
+<!-- BEGIN: ActionButtonSection -->
+<!-- Large Arcade Beveled Golden Confirmation Button -->
+<footer class="mt-4 px-5 pt-1" data-purpose="primary-action-cta">
+<button class="w-full h-14 rounded-2xl bg-gradient-to-b from-[#ffcf25] via-[#f59e0b] to-[#d97706] arcade-btn-shadow flex items-center justify-center space-x-2 text-stone-950 font-black text-lg tracking-wide uppercase transition-transform select-none cursor-pointer" type="button">
+<span class="drop-shadow-sm font-extrabold tracking-wider">Rolümü anladım</span>
+<!-- Chevron Arrow -->
+<svg class="w-5 h-5 text-stone-950 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="m8.25 4.5 7.5 7.5-7.5 7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</footer>
+<!-- END: ActionButtonSection -->
+</div>
+<!-- Bottom Home Indicator Bar (iOS Style) -->
+<div class="w-32 h-1 bg-white/20 rounded-full mx-auto mb-2 pointer-events-none"></div>
+</main>
+<!-- END: MobileContainer -->
+
+
+</body></html>

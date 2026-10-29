@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error": "#690005", "on-error-container": "#ffdad6", "primary-fixed": "#ffdea9", "error-container": "#93000a", "primary": "#ffdba0", "on-background": "#e6dff9", "on-primary-fixed": "#271900", "tertiary-container": "#dab5ff", "on-secondary-fixed": "#002022", "on-secondary": "#00363a", "on-tertiary-container": "#7500cc", "surface-tint": "#ffba27", "secondary-container": "#00eefc", "tertiary-fixed-dim": "#dcb8ff", "surface-bright": "#3a374b", "on-tertiary": "#480081", "error": "#ffb4ab", "primary-fixed-dim": "#ffba27", "on-primary": "#422c00", "secondary-fixed": "#7df4ff", "on-primary-container": "#6b4b00", "tertiary": "#eed8ff", "surface-dim": "#141123", "on-surface": "#e6dff9", "tertiary-fixed": "#efdbff", "on-primary-fixed-variant": "#5e4100", "surface-container-low": "#1c192c", "surface-container-lowest": "#0f0c1e", "secondary-fixed-dim": "#00dbe9", "surface-container-highest": "#363246", "on-secondary-container": "#00686f", "inverse-on-surface": "#312e42", "on-tertiary-fixed-variant": "#6700b5", "on-surface-variant": "#d5c4ac", "surface-container": "#201d30", "inverse-surface": "#e6dff9", "on-tertiary-fixed": "#2c0051", "surface": "#141123", "outline-variant": "#514532", "surface-container-high": "#2b273b", "secondary": "#d3fbff", "on-secondary-fixed-variant": "#004f54", "primary-container": "#ffb703", "surface-variant": "#363246", "background": "#141123", "inverse-primary": "#7d5800", "outline": "#9e8f78" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin": "1.25rem", "space-xs": "0.25rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "space-sm": "0.5rem", "space-md": "1rem", "gutter-sm": "0.75rem", "gutter": "1rem", "space-xl": "2.5rem" }, "fontFamily": { "headline-sm": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "display-hero": ["Sora"], "body-sm": ["Manrope"], "headline-md": ["Sora"], "headline-lg-mobile": ["Sora"], "headline-lg": ["Sora"], "label-status": ["Sora"], "label-telemetry": ["Sora"], "display-hero-mobile": ["Sora"] }, "fontSize": { "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface flex flex-col min-h-screen selection:bg-primary selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-dim/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 px-margin flex flex-col justify-center gap-space-xs"><div class="flex items-center justify-between"><div class="flex items-center gap-space-sm"><button aria-label="Geri" class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-on-surface hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span><span class="font-label-telemetry text-label-telemetry text-secondary uppercase">PARTYVERSE // CANLI</span></div><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight uppercase">Kayıp Sinyal Console</h1></div></div><div class="flex items-center gap-space-xs"><div class="h-11 px-space-sm rounded-xl bg-surface-container flex items-center gap-space-xs"><span class="material-symbols-outlined text-[16px] text-primary-container">timer</span><span class="font-label-telemetry text-label-telemetry text-primary">08:42</span></div><button aria-label="Ayarlar" class="w-11 h-11 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div><div class="flex items-center justify-between gap-space-sm px-space-xs"><div class="flex items-center gap-space-xs"><span class="font-label-status text-label-status text-on-surface-variant">SİNYAL BÜTÜNLÜĞÜ</span><span class="font-label-telemetry text-label-telemetry text-secondary">%84.2</span></div><div class="flex items-center gap-1 flex-1 max-w-[140px]"><div class="h-1.5 flex-1 rounded bg-secondary-container"></div><div class="h-1.5 flex-1 rounded bg-secondary-container"></div><div class="h-1.5 flex-1 rounded bg-secondary-container"></div><div class="h-1.5 flex-1 rounded bg-secondary-container"></div><div class="h-1.5 flex-1 rounded bg-surface-container-highest"></div></div></div></div></header><main class="flex flex-col relative w-full pt-20 pb-safe bg-surface flex-grow"><div class="flex flex-col w-full text-on-surface select-none pb-8">
+<!-- Sub-header & Role Identification -->
+<div class="px-margin pt-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-secondary/10 text-secondary">
+<span class="material-symbols-outlined text-[15px]">build</span>
+<span class="font-label-telemetry text-label-telemetry uppercase tracking-wider">MÜHENDİS KONSOLU</span>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-surface-container-high">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+<span class="font-label-status text-label-status text-error uppercase">KRİTİK UYARI</span>
+</div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-bold tracking-tight">Reaktörü</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-secondary-container font-extrabold tracking-tight drop-shadow-[0_0_12px_rgba(0,238,252,0.4)]">dengele</span>
+</div>
+</div>
+<!-- Reactor Centerpiece & Circuit Array Stage -->
+<div class="relative px-margin mt-space-sm">
+<div class="relative w-full rounded-xl bg-surface-container-lowest overflow-hidden shadow-2xl p-space-sm">
+<!-- Ambient Reactor Background Image -->
+<div class="w-full h-72 rounded-xl bg-cover bg-center relative overflow-hidden flex items-center justify-center shadow-inner" data-alt="Futuristic sci-fi cybernetic reactor core viewed from overhead isometric angle. Glowing hyper-cyan and amber energy conduits, circular metal alloy turbine chassis, glowing mechanical canisters labeled CIR with neon telemetry readouts in deep obsidian and midnight navy ambiance." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQp7LKUYjGCeLCIyJBpt6ky7NN_yjlBF0LWkNy8c9HwNVHsUF4hKFGWKFjkaq3gTMS_G6gve35xaOn3HcZexf7iKy8dfbuX9ZiFQUjd8sWUqDFnEZvv3vXt4m4i7pEgX3sa5X7bBE0_0d0ss-pf6RwWTsVBlpurVqKGlINrYlem0nf8Ppqx3iFbouAojK0oQNh98_3VCl2leYdgrnOm6lcYasBaqTjJxp52rSyOl0')">
+<!-- Particle & Conduit Glow Visual Canvas -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-10" viewbox="0 0 340 288">
+<defs>
+<radialgradient cx="50%" cy="50%" id="coreGlow" r="50%">
+<stop offset="0%" stop-color="#ffb703" stop-opacity="0.8"></stop>
+<stop offset="60%" stop-color="#ff8c00" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#141123" stop-opacity="0"></stop>
+</radialgradient>
+<lineargradient id="cyanConduit" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#00eefc" stop-opacity="0.9"></stop>
+<stop offset="100%" stop-color="#00eefc" stop-opacity="0.2"></stop>
+</lineargradient>
+<lineargradient id="dangerConduit" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ffb4ab" stop-opacity="0.9"></stop>
+<stop offset="100%" stop-color="#93000a" stop-opacity="0.3"></stop>
+</lineargradient>
+</defs>
+<!-- Dynamic Conduit Paths radiating from core (170, 144) -->
+<line stroke="url(#cyanConduit)" stroke-dasharray="4 2" stroke-width="3" x1="170" x2="170" y1="144" y2="48"></line>
+<line stroke="url(#cyanConduit)" stroke-width="2.5" x1="170" x2="80" y1="144" y2="78"></line>
+<line class="animate-pulse" stroke="url(#dangerConduit)" stroke-width="3.5" x1="170" x2="260" y1="144" y2="78"></line>
+<line stroke="url(#cyanConduit)" stroke-width="2.5" x1="170" x2="80" y1="144" y2="210"></line>
+<line stroke="#ffba27" stroke-dasharray="3 3" stroke-width="3" x1="170" x2="170" y1="144" y2="240"></line>
+<line stroke="url(#cyanConduit)" stroke-width="2.5" x1="170" x2="260" y1="144" y2="210"></line>
+<!-- Center Ambient Plasma Field -->
+<circle class="animate-pulse" cx="170" cy="144" fill="url(#coreGlow)" r="38"></circle>
+</svg>
+<!-- 2.5D Core Turbine Center Hub -->
+<div class="relative z-20 w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center shadow-[0_0_24px_rgba(255,183,3,0.45)]">
+<div class="w-14 h-14 rounded-full bg-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-[30px] text-primary-container animate-spin" style="animation-duration: 9s;">cyclone</span>
+</div>
+</div>
+<!-- CIR-01 Top -->
+<div class="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+<div class="px-2 py-1 rounded bg-surface-container-high shadow-md flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">CIR-01</span>
+</div>
+</div>
+<!-- CIR-02 Top Left -->
+<div class="absolute top-14 left-4 z-20 flex flex-col items-center">
+<div class="px-2 py-1 rounded bg-surface-container-high shadow-md flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">CIR-02</span>
+</div>
+</div>
+<!-- CIR-03 Top Right (OVERLOADED - CRITICAL TARGET) -->
+<div class="absolute top-14 right-4 z-20 flex flex-col items-end">
+<div class="px-2.5 py-1 rounded bg-error-container text-on-error-container shadow-[0_0_12px_rgba(255,180,171,0.5)] flex items-center gap-1.5 animate-bounce">
+<span class="material-symbols-outlined text-[13px] text-on-error-container">warning</span>
+<span class="font-label-telemetry text-label-telemetry uppercase font-bold">AŞIRI YÜK</span>
+</div>
+<div class="mt-1 px-2.5 py-0.5 rounded bg-surface-container-high text-on-surface shadow">
+<span class="font-label-telemetry text-label-telemetry text-error">CIR-03</span>
+</div>
+</div>
+<!-- CIR-04 Bottom Left -->
+<div class="absolute bottom-14 left-4 z-20 flex flex-col items-center">
+<div class="px-2 py-1 rounded bg-surface-container-high shadow-md flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">CIR-04</span>
+</div>
+</div>
+<!-- CIR-05 Bottom (LOCKED) -->
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
+<div class="px-2.5 py-1 rounded bg-surface-container-high shadow-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">lock</span>
+<span class="font-label-telemetry text-label-telemetry text-primary">CIR-05</span>
+</div>
+</div>
+<!-- CIR-06 Bottom Right -->
+<div class="absolute bottom-14 right-4 z-20 flex flex-col items-center">
+<div class="px-2 py-1 rounded bg-surface-container-high shadow-md flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">CIR-06</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Bar: Active Cartridge CIR-03 Readout -->
+<div class="px-margin mt-space-sm">
+<div class="w-full rounded-xl bg-surface-container-low p-space-sm shadow-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-wide">CIR-03 ANALİZ</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-error/20 text-error flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">emergency_home</span>
+<span class="font-label-status text-label-status uppercase">TEHLİKE LİMİTİ AŞILDI</span>
+</div>
+</div>
+<!-- Real-Time Metrics -->
+<div class="grid grid-cols-3 gap-2 mt-1">
+<!-- Sıcaklık -->
+<div class="rounded-lg bg-surface-container p-2 flex flex-col items-center justify-center">
+<div class="flex items-center gap-1 text-error mb-0.5">
+<span class="material-symbols-outlined text-[16px]">device_thermostat</span>
+<span class="font-label-status text-label-status">SICAKLIK</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-error font-bold">84°C</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Eşik: ≥80°C</span>
+</div>
+<!-- Basınç -->
+<div class="rounded-lg bg-surface-container p-2 flex flex-col items-center justify-center">
+<div class="flex items-center gap-1 text-secondary-container mb-0.5">
+<span class="material-symbols-outlined text-[16px]">speed</span>
+<span class="font-label-status text-label-status">BASINÇ</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-secondary-container font-bold">36 kPa</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Eşik: ≤40 kPa</span>
+</div>
+<!-- Parazit Dalga -->
+<div class="rounded-lg bg-surface-container p-2 flex flex-col items-center justify-center">
+<div class="flex items-center gap-1 text-error mb-0.5">
+<span class="material-symbols-outlined text-[16px]">query_stats</span>
+<span class="font-label-status text-label-status">PARAZİT</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-error font-bold">69 dB</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Eşik: ≥65 dB</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Lower Mechanical Dual Controls -->
+<div class="px-margin mt-space-sm">
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Rotary Knob Valve: Soğutma Valfi -->
+<div class="rounded-xl bg-surface-container p-space-sm flex flex-col justify-between shadow-lg relative overflow-hidden">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-md bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[16px]">mode_fan</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-on-surface uppercase">Soğutma Valfi</span>
+</div>
+<!-- SVG Tactile Arc Dial -->
+<div class="relative flex items-center justify-center my-3">
+<svg class="w-36 h-36" viewbox="0 0 120 120">
+<!-- Background Dial Arc -->
+<path d="M 25 95 A 45 45 0 1 1 95 95" fill="none" stroke="#2b273b" stroke-linecap="round" stroke-width="8"></path>
+<!-- Active Cold to Hot Gradient Arc -->
+<path d="M 25 95 A 45 45 0 0 1 60 15" fill="none" stroke="#00eefc" stroke-linecap="round" stroke-width="8"></path>
+<path d="M 60 15 A 45 45 0 0 1 95 95" fill="none" opacity="0.6" stroke="#ffb4ab" stroke-linecap="round" stroke-width="8"></path>
+</svg>
+<!-- Tactile Physical Knob -->
+<button aria-label="Valf Pozisyonunu Ayarla" class="absolute w-20 h-20 rounded-full bg-surface-container-high shadow-[0_6px_0_#0f0c1e] active:translate-y-1 flex items-center justify-center transition-transform cursor-pointer" id="rotaryKnob">
+<div class="w-16 h-16 rounded-full bg-surface-container-lowest flex items-center justify-center relative shadow-inner">
+<div class="w-3.5 h-10 rounded-full bg-surface-bright flex flex-col items-center justify-start pt-1 shadow transform rotate-45 transition-transform duration-300" id="knobPointer">
+<div class="w-1.5 h-2 rounded bg-secondary-container"></div>
+</div>
+</div>
+</button>
+</div>
+<div class="flex items-center justify-between px-2 pt-1 font-label-telemetry text-label-telemetry text-on-surface-variant">
+<span>KAPALI</span>
+<span class="text-secondary-container font-bold">AÇIK</span>
+</div>
+</div>
+<!-- Vertical Heavy Throttle: Basınç Tahliye -->
+<div class="rounded-xl bg-surface-container p-space-sm flex flex-col justify-between shadow-lg relative overflow-hidden">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-md bg-primary-container/10 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[16px]">air</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-on-surface uppercase">Basınç Tahliye</span>
+</div>
+<!-- Vertical Slider Well Track -->
+<div class="relative w-full h-40 my-2 rounded-lg bg-surface-container-lowest flex justify-center items-center shadow-inner overflow-hidden p-2">
+<!-- Step Gauge Rulers on Right -->
+<div class="absolute right-2.5 top-3 bottom-3 flex flex-col justify-between items-center pointer-events-none opacity-40">
+<span class="w-2.5 h-0.5 bg-on-surface-variant"></span>
+<span class="w-1.5 h-0.5 bg-on-surface-variant"></span>
+<span class="w-2.5 h-0.5 bg-on-surface-variant"></span>
+<span class="w-1.5 h-0.5 bg-on-surface-variant"></span>
+<span class="w-2.5 h-0.5 bg-on-surface-variant"></span>
+<span class="w-1.5 h-0.5 bg-on-surface-variant"></span>
+<span class="w-2.5 h-0.5 bg-on-surface-variant"></span>
+</div>
+<!-- Vertical Slider Lever -->
+<div class="w-16 h-full relative rounded-md bg-surface-container-high/40 flex justify-center" id="sliderTrack">
+<!-- 2.5D Heavy Textured Metallic Slider Grip -->
+<div class="absolute bottom-2 w-14 h-18 rounded-lg bg-surface-container-highest shadow-[0_5px_0_#0f0c1e] cursor-pointer flex flex-col items-center justify-center p-1 transition-all active:brightness-110" id="sliderHandle">
+<div class="w-full h-full rounded bg-primary-container/20 flex flex-col items-center justify-center gap-0.5">
+<span class="material-symbols-outlined text-primary-container text-[20px]">keyboard_double_arrow_up</span>
+<div class="w-8 h-1 rounded-full bg-primary-container/60"></div>
+<div class="w-8 h-1 rounded-full bg-primary-container/60"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between px-1 text-center font-label-status text-label-status text-on-surface-variant">
+<span>0 kPa</span>
+<span class="text-primary-container font-bold">TAHLİYE AKTİF</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Captain Coordination Status & Action Trigger -->
+<div class="px-margin mt-space-sm flex flex-col gap-space-xs">
+<!-- Coordination Note -->
+<div class="w-full py-2 px-3 rounded-lg bg-surface-container-low flex items-center justify-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px] text-primary">lock_clock</span>
+<span class="font-body-sm text-body-sm">Kaptanın ana güvenlik kilidini açması bekleniyor</span>
+</div>
+<!-- Chunky Golden Arcade Trigger Button -->
+<button class="w-full py-3.5 px-space-md rounded-xl bg-gradient-to-b from-primary-container to-amber-600 shadow-[0_5px_0_#8a4b00,0_8px_20px_rgba(255,183,3,0.35)] active:translate-y-1 active:shadow-[0_1px_0_#8a4b00] flex items-center justify-center gap-space-sm text-on-primary-container font-bold transition-transform cursor-pointer" id="purgeActionBtn">
+<span class="material-symbols-outlined text-[24px]">airwave</span>
+<span class="font-headline-sm text-headline-sm tracking-wide uppercase">Basıncı tahliye et</span>
+</button>
+</div>
+<!-- Bottom Tactile Console Navigation Deck -->
+<div class="px-margin mt-space-md">
+<div class="w-full rounded-xl bg-surface-container-low p-1.5 grid grid-cols-4 gap-1 shadow-md">
+<!-- Tab 1: Reaktör (Active) -->
+<button class="flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-surface-container text-primary-container shadow transition-colors">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">solar_power</span>
+<span class="font-label-telemetry text-label-telemetry mt-1">Reaktör</span>
+</button>
+<!-- Tab 2: Anten -->
+<button class="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">settings_input_antenna</span>
+<span class="font-label-telemetry text-label-telemetry mt-1">Anten</span>
+</button>
+<!-- Tab 3: Yaşam -->
+<button class="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">eco</span>
+<span class="font-label-telemetry text-label-telemetry mt-1">Yaşam</span>
+</button>
+<!-- Tab 4: Kargo -->
+<button class="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-telemetry text-label-telemetry mt-1">Kargo</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function () {
+    // Rotary Dial Interaction
+    const knobBtn = document.getElementById('rotaryKnob');
+    const knobPointer = document.getElementById('knobPointer');
+    let currentAngle = 45;
+
+    if (knobBtn && knobPointer) {
+      knobBtn.addEventListener('click', function () {
+        currentAngle = currentAngle === 45 ? 135 : currentAngle === 135 ? -45 : 45;
+        knobPointer.style.transform = `rotate(${currentAngle}deg)`;
+      });
+    }
+
+    // Basınç Tahliye Slider Interaction
+    const sliderHandle = document.getElementById('sliderHandle');
+    let isToggled = false;
+
+    if (sliderHandle) {
+      sliderHandle.addEventListener('click', function () {
+        isToggled = !isToggled;
+        if (isToggled) {
+          sliderHandle.style.bottom = '4.5rem';
+        } else {
+          sliderHandle.style.bottom = '0.5rem';
+        }
+      });
+    }
+
+    // Arcade Purge Button Feedback
+    const purgeBtn = document.getElementById('purgeActionBtn');
+    if (purgeBtn) {
+      purgeBtn.addEventListener('click', function () {
+        purgeBtn.classList.add('scale-[0.98]');
+        setTimeout(() => purgeBtn.classList.remove('scale-[0.98]'), 150);
+      });
+    }
+  })();
+</script></main></body></html>

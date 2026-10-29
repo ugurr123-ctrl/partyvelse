@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-primary": "#7d5800", "surface-container-low": "#1c192c", "on-primary": "#422c00", "on-tertiary-fixed": "#2c0051", "surface-container": "#201d30", "on-error": "#690005", "on-tertiary-fixed-variant": "#6700b5", "surface-bright": "#3a374b", "primary-container": "#ffb703", "on-primary-fixed-variant": "#5e4100", "outline-variant": "#514532", "surface": "#141123", "surface-tint": "#ffba27", "on-surface-variant": "#d5c4ac", "primary-fixed-dim": "#ffba27", "on-tertiary-container": "#7500cc", "tertiary-container": "#dab5ff", "surface-container-highest": "#363246", "on-primary-container": "#6b4b00", "secondary-fixed-dim": "#00dbe9", "on-tertiary": "#480081", "secondary-fixed": "#7df4ff", "surface-container-high": "#2b273b", "tertiary": "#eed8ff", "surface-dim": "#141123", "primary-fixed": "#ffdea9", "on-surface": "#e6dff9", "secondary-container": "#00eefc", "background": "#141123", "on-background": "#e6dff9", "on-secondary-fixed-variant": "#004f54", "error": "#ffb4ab", "surface-container-lowest": "#0f0c1e", "tertiary-fixed-dim": "#dcb8ff", "on-secondary-fixed": "#002022", "secondary": "#d3fbff", "outline": "#9e8f78", "on-primary-fixed": "#271900", "on-secondary-container": "#00686f", "inverse-on-surface": "#312e42", "error-container": "#93000a", "on-secondary": "#00363a", "primary": "#ffdba0", "surface-variant": "#363246", "tertiary-fixed": "#efdbff", "on-error-container": "#ffdad6", "inverse-surface": "#e6dff9" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-tablet": "2rem", "space-md": "1rem", "space-lg": "1.5rem", "margin": "1.25rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "2.5rem", "gutter-sm": "0.75rem" }, "fontFamily": { "headline-md": ["Sora"], "body-sm": ["Manrope"], "display-hero": ["Sora"], "headline-lg": ["Sora"], "label-telemetry": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "display-hero-mobile": ["Sora"], "headline-sm": ["Sora"], "headline-lg-mobile": ["Sora"], "label-status": ["Sora"] }, "fontSize": { "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><button aria-label="Geri Dön" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container/60 hover:bg-surface-container text-on-surface transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span></button><div class="flex items-center gap-space-xs ml-space-xs"><span class="material-symbols-outlined text-primary text-[22px]">all_inclusive</span><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight uppercase leading-none">Sinyal Odasi</span><span class="font-label-status text-label-status text-primary uppercase tracking-widest">Kayıp Sinyal</span></div></div></div><div class="flex items-center gap-space-sm"><div class="flex flex-col items-end gap-1 bg-surface-container-low/90 px-2.5 py-1.5 rounded-lg border-b border-surface-bright/20"><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span><span class="font-label-telemetry text-label-telemetry text-secondary-fixed tracking-widest">05:20</span></div><div class="flex items-center gap-1"><div class="w-14 h-1.5 bg-surface-container-highest rounded-full overflow-hidden flex"><div class="w-[85%] h-full bg-gradient-to-r from-primary-container to-secondary-fixed-dim rounded-full"></div></div><span class="font-label-status text-label-status text-on-surface-variant font-bold">%85</span></div></div><button aria-label="Sistem Ayarları" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container/60 hover:bg-surface-container text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-safe">
+<!-- Live Tactical Mission Bar -->
+<div class="px-margin pt-space-sm pb-space-xs flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">PARTYVERSE // CANLI</span>
+</span>
+<span class="font-label-status text-label-status text-on-surface-variant font-bold">KAYIP SİNYAL CONSOLE</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-primary text-[14px]">timer</span>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold" id="missionTimer">03:40</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high shadow-sm">
+<span class="font-label-status text-label-status text-on-surface-variant">BÜTÜNLÜK</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-fixed-dim font-bold">%78</span>
+</div>
+</div>
+</div>
+<!-- Role Badge & Directives -->
+<div class="px-margin pt-space-xs pb-space-sm">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest shadow-sm mb-space-xs">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[16px]" style="font-variation-settings: 'FILL' 1;">build</span>
+<span class="font-label-telemetry text-label-telemetry text-primary uppercase">MÜHENDİS // MEKANİK VALF VE KİLİT</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface uppercase tracking-tight">Hava kilidini dengele</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Kaptanından gelen adımlara göre fiziksel valfleri çevir ve mandalları kilitle.</p>
+</div>
+<!-- Main Telemetry Controls Stack -->
+<div class="px-margin flex flex-col gap-space-md">
+<!-- Digital Pressure Barometer Gauge (Level 2 Bento) -->
+<div class="p-space-md rounded-xl bg-surface-container-high shadow-xl relative overflow-hidden">
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[18px]">speed</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase">ODA BASINCI (BAROMETRE)</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-lowest">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim"></span>
+<span class="font-label-status text-label-status text-secondary font-bold">STABİL SEVİYE</span>
+</div>
+</div>
+<div class="flex items-end justify-between">
+<div>
+<div class="flex items-baseline gap-1.5">
+<span class="font-display-hero-mobile text-display-hero-mobile text-primary tracking-tight font-extrabold" id="pressureValue">2.40</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold">BAR</span>
+</div>
+<span class="font-label-status text-label-status text-secondary-fixed">ATMOSFERİK SİNYAL: %94 DİRENÇ</span>
+</div>
+<!-- Inline Barometer Wave Sensor Visual -->
+<div class="flex flex-col items-end gap-1">
+<div class="flex items-end gap-1 h-8">
+<span class="w-1.5 h-3 rounded-full bg-secondary-fixed-dim/40"></span>
+<span class="w-1.5 h-5 rounded-full bg-secondary-fixed-dim/60"></span>
+<span class="w-1.5 h-7 rounded-full bg-secondary-fixed-dim"></span>
+<span class="w-1.5 h-6 rounded-full bg-secondary-fixed-dim"></span>
+<span class="w-1.5 h-4 rounded-full bg-secondary-fixed-dim/70"></span>
+<span class="w-1.5 h-2 rounded-full bg-secondary-fixed-dim/30"></span>
+</div>
+<span class="font-label-status text-label-status text-on-surface-variant">DEKOMPRESYON AKTİF</span>
+</div>
+</div>
+<!-- Segmented Pressure Gradient Ribbon -->
+<div class="grid grid-cols-12 gap-1 mt-space-sm">
+<div class="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
+<div class="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
+<div class="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
+<div class="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
+<div class="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
+<div class="h-1.5 rounded-full bg-primary-container"></div>
+<div class="h-1.5 rounded-full bg-primary-container"></div>
+<div class="h-1.5 rounded-full bg-primary-container"></div>
+<div class="h-1.5 rounded-full bg-surface-container-highest"></div>
+<div class="h-1.5 rounded-full bg-surface-container-highest"></div>
+<div class="h-1.5 rounded-full bg-surface-container-highest"></div>
+<div class="h-1.5 rounded-full bg-surface-container-highest"></div>
+</div>
+</div>
+<!-- Dual Heavy Mechanical Tactile Panel (Dial & Lever) -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- LEFT: Circular Rotary Valve Dial -->
+<div class="p-space-md rounded-xl bg-surface-container-high shadow-xl flex flex-col items-center justify-between text-center relative overflow-hidden">
+<div class="w-full flex items-center justify-between mb-space-xs">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase">BİRİNCİL VALF</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">sync</span>
+</div>
+<!-- 2.5D Radial Dial Module -->
+<div class="relative w-28 h-28 my-space-xs flex items-center justify-center cursor-pointer select-none" id="rotaryDialContainer">
+<!-- Outer Ticks Track SVG -->
+<svg class="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewbox="0 0 100 100">
+<circle class="text-surface-container-lowest" cx="50" cy="50" fill="none" r="42" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-secondary-fixed-dim" cx="50" cy="50" fill="none" r="42" stroke="currentColor" stroke-dasharray="131 264" stroke-width="4"></circle>
+</svg>
+<!-- Tactile Rotary Core Knob -->
+<div class="w-20 h-20 rounded-full bg-surface-container-lowest shadow-2xl flex items-center justify-center relative transition-transform duration-300" id="rotaryDialKnob">
+<!-- Center Screw Cap -->
+<div class="w-10 h-10 rounded-full bg-surface-container-highest shadow-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">radio_button_checked</span>
+</div>
+<!-- Indicator Needle Pointer -->
+<div class="absolute top-1 w-1.5 h-4 rounded-full bg-secondary-container shadow-md"></div>
+</div>
+</div>
+<div class="w-full bg-surface-container-lowest py-1 px-2 rounded-lg flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant">KONUM</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed font-bold" id="dialStateText">%50 DENGEDE</span>
+</div>
+</div>
+<!-- RIGHT: Mechanical Seal Lock Lever -->
+<div class="p-space-md rounded-xl bg-surface-container-high shadow-xl flex flex-col items-center justify-between text-center relative overflow-hidden">
+<div class="w-full flex items-center justify-between mb-space-xs">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase">SIZDIRMAZLIK</span>
+<span class="material-symbols-outlined text-primary-container text-[16px]" id="sealStatusIcon">lock</span>
+</div>
+<!-- Heavy Physical Lever Switch Track -->
+<div class="relative w-14 h-28 my-space-xs bg-surface-container-lowest rounded-full p-1.5 flex flex-col justify-between items-center cursor-pointer shadow-inner" id="leverTrack">
+<span class="font-label-status text-label-status text-primary-container font-extrabold uppercase">KİLİT</span>
+<div class="w-11 h-11 rounded-full bg-primary-container shadow-2xl flex items-center justify-center transition-all duration-200" id="leverHandle">
+<span class="material-symbols-outlined text-on-primary-container text-[20px]">shield_lock</span>
+</div>
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">AÇIK</span>
+</div>
+<div class="w-full bg-surface-container-lowest py-1 px-2 rounded-lg flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant">DURUM</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container font-bold" id="sealStateBadge">KİLİTLİ</span>
+</div>
+</div>
+</div>
+<!-- Vacuum Pump Linear Power Console Slider -->
+<div class="p-space-md rounded-xl bg-surface-container-high shadow-xl">
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">air</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase">VAKUM POMPASI GÜCÜ</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-sm text-headline-sm text-primary font-bold" id="sliderPercentText">%45</span>
+<span class="font-label-status text-label-status text-on-surface-variant">/ 100</span>
+</div>
+</div>
+<!-- Tactile Slider Shell Track -->
+<div class="relative py-2">
+<input class="w-full h-3 bg-surface-container-lowest rounded-full appearance-none cursor-pointer accent-amber-400 focus:outline-none" id="vacuumSlider" max="100" min="0" type="range" value="45"/>
+<div class="flex justify-between items-center px-1 mt-1.5">
+<span class="font-label-status text-label-status text-on-surface-variant">0 BARREL (BOŞTA)</span>
+<span class="font-label-status text-label-status text-primary font-bold">45 NOMİNAL</span>
+<span class="font-label-status text-label-status text-on-surface-variant">100 TAM TAHLİYE</span>
+</div>
+</div>
+</div>
+<!-- Interactive Tactical Co-op Mission Push Button -->
+<div class="pt-space-xs">
+<button class="w-full py-4 px-space-md rounded-xl bg-secondary-container text-on-secondary-container shadow-2xl flex items-center justify-center gap-2 uppercase transition-all duration-150 active:translate-y-1" id="engageAirlockBtn" type="button">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">power_settings_new</span>
+<span class="font-headline-sm text-headline-sm font-extrabold tracking-wider">VALF VE KİLİDİ DEVREYE SOK</span>
+</button>
+</div>
+<!-- Co-op Radio Protocol Status Hint -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5 mb-space-sm shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-[18px] shrink-0 mt-0.5">headset_mic</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">
+        Kaptan protokolü onayladıktan sonra dış kapağı güvenle açabilirsin. Bekleme frekansı: <span class="text-secondary-fixed font-bold">KANAL 4</span>.
+      </p>
+</div>
+<!-- Crew Station Quick Telemetry Row -->
+<div class="grid grid-cols-3 gap-2 pb-space-sm">
+<div class="p-2 rounded-lg bg-surface-container text-center flex flex-col items-center">
+<span class="font-label-status text-label-status text-on-surface-variant">O2 SEVİYESİ</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed mt-0.5">%98.4</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container text-center flex flex-col items-center">
+<span class="font-label-status text-label-status text-on-surface-variant">KAPAK KİLİT #2</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container mt-0.5">KORUMALI</span>
+</div>
+<div class="p-2 rounded-lg bg-surface-container text-center flex flex-col items-center">
+<span class="font-label-status text-label-status text-on-surface-variant">MANUEL BYPASS</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface mt-0.5">HAZIR</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // 1. Rotary Valve Dial Logic
+    const dialContainer = document.getElementById('rotaryDialContainer');
+    const dialKnob = document.getElementById('rotaryDialKnob');
+    const dialText = document.getElementById('dialStateText');
+    const dialLevels = [
+      { deg: 0, text: '%50 DENGEDE' },
+      { deg: 90, text: '%75 BASINÇLI' },
+      { deg: 180, text: '%100 TAHLİYE' },
+      { deg: 270, text: '%25 DÜŞÜK' }
+    ];
+    let dialIndex = 0;
+
+    if (dialContainer && dialKnob && dialText) {
+      dialContainer.addEventListener('click', function() {
+        dialIndex = (dialIndex + 1) % dialLevels.length;
+        dialKnob.style.transform = 'rotate(' + dialLevels[dialIndex].deg + 'deg)';
+        dialText.innerText = dialLevels[dialIndex].text;
+      });
+    }
+
+    // 2. Mechanical Seal Lever Logic
+    const leverTrack = document.getElementById('leverTrack');
+    const leverHandle = document.getElementById('leverHandle');
+    const sealStateBadge = document.getElementById('sealStateBadge');
+    const sealStatusIcon = document.getElementById('sealStatusIcon');
+    let isLocked = true;
+
+    if (leverTrack && leverHandle && sealStateBadge && sealStatusIcon) {
+      leverTrack.addEventListener('click', function() {
+        isLocked = !isLocked;
+        if (isLocked) {
+          leverHandle.style.transform = 'translateY(0px)';
+          leverHandle.className = 'w-11 h-11 rounded-full bg-primary-container shadow-2xl flex items-center justify-center transition-all duration-200';
+          sealStateBadge.innerText = 'KİLİTLİ';
+          sealStateBadge.className = 'font-label-telemetry text-label-telemetry text-primary-container font-bold';
+          sealStatusIcon.innerText = 'lock';
+          sealStatusIcon.className = 'material-symbols-outlined text-primary-container text-[16px]';
+        } else {
+          leverHandle.style.transform = 'translateY(56px)';
+          leverHandle.className = 'w-11 h-11 rounded-full bg-secondary-fixed-dim shadow-2xl flex items-center justify-center transition-all duration-200';
+          sealStateBadge.innerText = 'DEVRE DIŞI';
+          sealStateBadge.className = 'font-label-telemetry text-label-telemetry text-secondary-fixed-dim font-bold';
+          sealStatusIcon.innerText = 'lock_open';
+          sealStatusIcon.className = 'material-symbols-outlined text-secondary-fixed-dim text-[16px]';
+        }
+      });
+    }
+
+    // 3. Vacuum Pump Slider Micro-interaction
+    const vacuumSlider = document.getElementById('vacuumSlider');
+    const sliderPercentText = document.getElementById('sliderPercentText');
+    const pressureValue = document.getElementById('pressureValue');
+
+    if (vacuumSlider && sliderPercentText && pressureValue) {
+      vacuumSlider.addEventListener('input', function(e) {
+        const val = e.target.value;
+        sliderPercentText.innerText = '%' + val;
+        // Dynamically shift barometric pressure simulated value
+        const dynamicPressure = (1.5 + (val / 100) * 1.8).toFixed(2);
+        pressureValue.innerText = dynamicPressure;
+      });
+    }
+
+    // 4. Primary Trigger Push Button Delight
+    const engageBtn = document.getElementById('engageAirlockBtn');
+    if (engageBtn) {
+      engageBtn.addEventListener('click', function() {
+        engageBtn.classList.add('scale-95');
+        setTimeout(function() {
+          engageBtn.classList.remove('scale-95');
+        }, 150);
+      });
+    }
+  })();
+</script></main></body></html>

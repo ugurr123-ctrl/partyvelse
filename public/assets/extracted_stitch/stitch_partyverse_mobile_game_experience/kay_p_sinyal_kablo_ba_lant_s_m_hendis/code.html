@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "inverse-primary": "#7d5800", "surface-container-low": "#1c192c", "on-primary": "#422c00", "on-tertiary-fixed": "#2c0051", "surface-container": "#201d30", "on-error": "#690005", "on-tertiary-fixed-variant": "#6700b5", "surface-bright": "#3a374b", "primary-container": "#ffb703", "on-primary-fixed-variant": "#5e4100", "outline-variant": "#514532", "surface": "#141123", "surface-tint": "#ffba27", "on-surface-variant": "#d5c4ac", "primary-fixed-dim": "#ffba27", "on-tertiary-container": "#7500cc", "tertiary-container": "#dab5ff", "surface-container-highest": "#363246", "on-primary-container": "#6b4b00", "secondary-fixed-dim": "#00dbe9", "on-tertiary": "#480081", "secondary-fixed": "#7df4ff", "surface-container-high": "#2b273b", "tertiary": "#eed8ff", "surface-dim": "#141123", "primary-fixed": "#ffdea9", "on-surface": "#e6dff9", "secondary-container": "#00eefc", "background": "#141123", "on-background": "#e6dff9", "on-secondary-fixed-variant": "#004f54", "error": "#ffb4ab", "surface-container-lowest": "#0f0c1e", "tertiary-fixed-dim": "#dcb8ff", "on-secondary-fixed": "#002022", "secondary": "#d3fbff", "outline": "#9e8f78", "on-primary-fixed": "#271900", "on-secondary-container": "#00686f", "inverse-on-surface": "#312e42", "error-container": "#93000a", "on-secondary": "#00363a", "primary": "#ffdba0", "surface-variant": "#363246", "tertiary-fixed": "#efdbff", "on-error-container": "#ffdad6", "inverse-surface": "#e6dff9" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-tablet": "2rem", "space-md": "1rem", "space-lg": "1.5rem", "margin": "1.25rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter": "1rem", "space-xl": "2.5rem", "gutter-sm": "0.75rem" }, "fontFamily": { "headline-md": ["Sora"], "body-sm": ["Manrope"], "display-hero": ["Sora"], "headline-lg": ["Sora"], "label-telemetry": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "display-hero-mobile": ["Sora"], "headline-sm": ["Sora"], "headline-lg-mobile": ["Sora"], "label-status": ["Sora"] }, "fontSize": { "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><button aria-label="Geri Dön" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container/60 hover:bg-surface-container text-on-surface transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back_ios_new</span></button><div class="flex items-center gap-space-xs ml-space-xs"><span class="material-symbols-outlined text-primary text-[22px]">all_inclusive</span><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight uppercase leading-none">Taktik Konsolu</span><span class="font-label-status text-label-status text-primary uppercase tracking-widest">Kayıp Sinyal</span></div></div></div><div class="flex items-center gap-space-sm"><div class="flex flex-col items-end gap-1 bg-surface-container-low/90 px-2.5 py-1.5 rounded-lg border-b border-surface-bright/20"><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span><span class="font-label-telemetry text-label-telemetry text-secondary-fixed tracking-widest">05:20</span></div><div class="flex items-center gap-1"><div class="w-14 h-1.5 bg-surface-container-highest rounded-full overflow-hidden flex"><div class="w-[85%] h-full bg-gradient-to-r from-primary-container to-secondary-fixed-dim rounded-full"></div></div><span class="font-label-status text-label-status text-on-surface-variant font-bold">%85</span></div></div><button aria-label="Sistem Ayarları" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container/60 hover:bg-surface-container text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-safe px-margin space-y-space-md select-none">
+<!-- HUD Sub-Banner Status -->
+<div class="flex items-center justify-between bg-surface-container-low px-space-md py-space-sm rounded-xl shadow-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim animate-pulse"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed tracking-wider uppercase">PARTYVERSE // CANLI</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-telemetry text-label-telemetry text-primary tracking-widest bg-surface-container px-2 py-0.5 rounded">04:15</span>
+<span class="font-label-status text-label-status text-on-surface-variant">BÜTÜNLÜK <strong class="text-secondary-fixed">%80</strong></span>
+</div>
+</div>
+<!-- Role Badge & Header Directives -->
+<div class="flex flex-col space-y-space-xs">
+<div class="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded bg-surface-container-high">
+<span class="material-symbols-outlined text-[14px] text-primary-fixed-dim" style="font-variation-settings: 'FILL' 1;">build</span>
+<span class="font-label-status text-label-status text-primary uppercase tracking-wider">MÜHENDİS // DEVRE SOKETLERİ</span>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">Kabloları soketlere bağla</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+      Kaptanından gelen port ve hat talimatına göre fiziksel jumper kablolarını eşleştirerek yerleştir.
+    </p>
+</div>
+<!-- Telemetry V/A Diagnostic Strip -->
+<div class="grid grid-cols-3 gap-space-xs bg-surface-container-lowest p-space-sm rounded-xl shadow-inner">
+<div class="flex flex-col bg-surface-container/60 p-2 rounded-lg">
+<span class="font-label-status text-label-status text-outline uppercase tracking-wider">GERİLİM</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-sm text-headline-sm text-secondary-fixed">220</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant">V</span>
+</div>
+<span class="font-label-status text-label-status text-secondary-fixed-dim mt-0.5">Dengeli</span>
+</div>
+<div class="flex flex-col bg-surface-container/60 p-2 rounded-lg">
+<span class="font-label-status text-label-status text-outline uppercase tracking-wider">AKIM DEBİSİ</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-sm text-headline-sm text-primary">14.2</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant">A</span>
+</div>
+<span class="font-label-status text-label-status text-primary-fixed-dim mt-0.5">Akış Aktif</span>
+</div>
+<div class="flex flex-col bg-surface-container/60 p-2 rounded-lg">
+<span class="font-label-status text-label-status text-outline uppercase tracking-wider">KISA DEVRE</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-headline-sm text-headline-sm text-secondary">DÜŞÜK</span>
+</div>
+<span class="font-label-status text-label-status text-outline mt-0.5">%4 Tolerans</span>
+</div>
+</div>
+<!-- Interactive 2.5D Wire Patching Console -->
+<div class="relative flex flex-col bg-surface-container-low rounded-xl p-space-md shadow-xl overflow-hidden">
+<!-- Console Backdrop Grid / Ambient Circuit Glow -->
+<div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#00eefc_1px,transparent_1px)] [background-size:16px_16px]"></div>
+<!-- Terminals Rack Header -->
+<div class="flex items-center justify-between mb-space-sm z-10">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed">developer_board</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface tracking-widest uppercase">ANA DAĞITIM MATRİSİ</span>
+</div>
+<span class="font-label-status text-label-status text-secondary-fixed-dim bg-surface-container-high px-2 py-0.5 rounded">2/4 BAĞLI</span>
+</div>
+<!-- Dynamic Sockets + Interactive Jumpers Stage -->
+<div class="relative flex flex-col gap-space-md z-10 py-1" id="patch-bay">
+<!-- PORT 01 (Connected - Amber) -->
+<div class="flex items-center justify-between bg-surface-container p-space-sm rounded-lg shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold">P1</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">İYON (60 Hz)</span>
+<span class="font-label-status text-label-status text-primary">KUTUP KİLİTLİ · 380 kVA</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-2 py-1 rounded bg-primary-container/20 text-primary-fixed-dim font-label-status text-label-status">BAĞLANDI</span>
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-inner">
+<div class="w-5 h-5 rounded-full bg-primary-container shadow-[0_0_10px_#ffb703] flex items-center justify-center">
+<span class="w-2 h-2 rounded-full bg-on-primary-container"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- PORT 02 (Empty Socket) -->
+<div class="flex items-center justify-between bg-surface-container p-space-sm rounded-lg shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="font-label-telemetry text-label-telemetry text-outline font-bold">P2</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">SOĞUTMA</span>
+<span class="font-label-status text-label-status text-on-surface-variant">BEKLEMEDE · BOŞ HAT</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-2 py-1 rounded bg-surface-container-highest text-on-surface-variant font-label-status text-label-status">BOŞ SOKET</span>
+<button aria-label="Soket 02 Bağlantısı Yap" class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center hover:bg-surface-container-highest active:scale-95 transition-all" type="button">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+</div>
+</button>
+</div>
+</div>
+<!-- PORT 03 (Connected - Cyan) -->
+<div class="flex items-center justify-between bg-surface-container p-space-sm rounded-lg shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed font-bold">P3</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">ANA GÜÇ</span>
+<span class="font-label-status text-label-status text-secondary-fixed">KUTUP KİLİTLİ · 1.2 GW</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-2 py-1 rounded bg-secondary-container/20 text-secondary-fixed font-label-status text-label-status">BAĞLANDI</span>
+<div class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-inner">
+<div class="w-5 h-5 rounded-full bg-secondary-container shadow-[0_0_10px_#00eefc] flex items-center justify-center">
+<span class="w-2 h-2 rounded-full bg-on-secondary-container"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- PORT 04 (Empty Socket - Bypass) -->
+<div class="flex items-center justify-between bg-surface-container p-space-sm rounded-lg shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="font-label-telemetry text-label-telemetry text-outline font-bold">P4</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">BAYPAS</span>
+<span class="font-label-status text-label-status text-on-surface-variant">BEKLEMEDE · BOŞ HAT</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-2 py-1 rounded bg-surface-container-highest text-on-surface-variant font-label-status text-label-status">BOŞ SOKET</span>
+<button aria-label="Soket 04 Bağlantısı Yap" class="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center hover:bg-surface-container-highest active:scale-95 transition-all" type="button">
+<div class="w-5 h-5 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+</div>
+</button>
+</div>
+</div>
+</div>
+<!-- Jumper Cable Selector Dock -->
+<div class="mt-space-md pt-space-sm bg-surface-container-lowest p-space-sm rounded-lg flex flex-col gap-space-xs z-10">
+<div class="flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase tracking-wider">KULLANILABİLİR KABLOLAR (SEÇ VE SOKETE TAK)</span>
+<span class="font-label-telemetry text-label-telemetry text-primary">2 HAZIR</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm mt-1">
+<!-- Red Cable Patch Trigger -->
+<button class="flex items-center gap-2.5 p-2 bg-surface-container hover:bg-surface-container-high rounded active:scale-95 transition-all text-left" type="button">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center shrink-0">
+<div class="w-3.5 h-3.5 rounded-full bg-error-container shadow-[0_0_8px_#ffb4ab]"></div>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-telemetry text-label-telemetry text-error tracking-wider uppercase truncate">KIRMIZI // YÜK</span>
+<span class="font-label-status text-label-status text-outline">Kablo Hazır</span>
+</div>
+</button>
+<!-- Neon Green Cable Patch Trigger -->
+<button class="flex items-center gap-2.5 p-2 bg-surface-container hover:bg-surface-container-high rounded active:scale-95 transition-all text-left" type="button">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center shrink-0">
+<div class="w-3.5 h-3.5 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_#00dbe9]"></div>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed tracking-wider uppercase truncate">NEON // KORUMA</span>
+<span class="font-label-status text-label-status text-outline">Kablo Hazır</span>
+</div>
+</button>
+</div>
+</div>
+</div>
+<!-- Lock Distribution & Protocol Verification Area -->
+<div class="flex flex-col space-y-space-xs pt-1">
+<!-- Primary Arcade Push Trigger -->
+<button class="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-secondary-container to-secondary-fixed-dim text-on-secondary-container rounded-lg font-headline-sm text-headline-sm font-bold shadow-[0_4px_0_#00686f] active:translate-y-1 active:shadow-none transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">lock_open</span>
+<span class="tracking-wide">DEVRE BAĞLANTISINI KİLİTLE</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 py-1 text-center">
+<span class="material-symbols-outlined text-[16px] text-outline">radio_button_checked</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Kaptanının onay vermesini bekle.
+      </p>
+</div>
+</div>
+</div></main></body></html>
