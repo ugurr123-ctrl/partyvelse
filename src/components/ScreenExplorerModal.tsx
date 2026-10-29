@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Layers, 
   Code, 
@@ -13,17 +13,21 @@ import {
   Clock, 
   WifiOff, 
   FileCode,
-  Image as ImageIcon
+  Smartphone,
+  ExternalLink,
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { MissionState, Role } from '../types/game';
 
-interface ScreenMeta {
+export interface ScreenMeta {
   id: number;
   name: string;
   role: 'kaptan' | 'muhendis' | 'ortak';
   category: string;
   desc: string;
   referencePath: string;
+  htmlPath: string;
   statusKey: MissionState['status'];
   miniGameKey?: string;
   phaseIndex?: number;
@@ -35,8 +39,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '1. Giriş (Oda Oluştur / Katıl)',
     role: 'ortak',
     category: 'Giriş & Eşleşme',
-    desc: 'Oyuncu adı, oda oluşturma, oda koduyla katılma ve uzay istasyonu ana görseli.',
+    desc: 'Oyuncu adı, oda oluşturma, 6 haneli oda koduyla katılma ve uzay istasyonu ana görseli.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_oda_olu_tur_ve_kat_l',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_oda_olu_tur_ve_kat_l/code.html',
     statusKey: 'entry',
   },
   {
@@ -46,6 +51,7 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     category: 'Lobi & Hazırlık',
     desc: 'Oda kodu kopyalama, iki oyuncu kartı, hazır durumları, 4 görev ortamı seçimi ve görev havuzu.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_parti_lobisi_oda_bekleme',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_parti_lobisi_oda_bekleme/code.html',
     statusKey: 'lobby',
   },
   {
@@ -53,8 +59,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '3. Kaptan Rol Tanıtımı',
     role: 'kaptan',
     category: 'Rol Brifingi',
-    desc: 'Kaptan portresi, gizli prosedür sorumluluğu, görev sırası ve "Rolümü anladım" onayı.',
+    desc: 'Kaptan portresi, gizli prosedür ve karar sorumluluğu, görev sırası ve "Rolümü anladım" onayı.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_gizli_rol_kaptan',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_gizli_rol_kaptan/code.html',
     statusKey: 'role_intro',
   },
   {
@@ -62,8 +69,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '4. Mühendis Rol Tanıtımı',
     role: 'muhendis',
     category: 'Rol Brifingi',
-    desc: 'Mühendis portresi, panoları ve canlı ölçümleri kullanma sorumluluğu, görev sırası.',
+    desc: 'Mühendis portresi, konsolları ve canlı ölçümleri yönetme sorumluluğu, görev sırası ve hazır onayı.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_gizli_rol_m_hendis',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_gizli_rol_m_hendis/code.html',
     statusKey: 'role_intro',
   },
   {
@@ -71,8 +79,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '5. Arıza Teşhisi — Kaptan',
     role: 'kaptan',
     category: '1. Aşama Onarım',
-    desc: '3 gizli arıza koşulu, devre bağlantı şeması, K1–K4 mekanik kesiciler ve müdahale.',
+    desc: '3 gizli arıza koşulu (Isı, Basınç, Parazit), devre bağlantı şeması, K1–K4 mekanik kesiciler ve müdahale.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kaptan_reakt_r_konsolu',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kaptan_reakt_r_konsolu/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'ariza_teshisi',
     phaseIndex: 0,
@@ -82,8 +91,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '6. Arıza Teşhisi — Mühendis',
     role: 'muhendis',
     category: '1. Aşama Onarım',
-    desc: '4 hattın sıcaklık, basınç ve parazit ölçümleri, hat seçimi ve "Teşhisi kaptana ilet".',
+    desc: '4 hattın sıcaklık, basınç ve parazit canlı ölçümleri, arızalı hat tespiti ve "Teşhisi ilet".',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_m_hendis_reakt_r_konsolu',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_m_hendis_reakt_r_konsolu/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'ariza_teshisi',
     phaseIndex: 0,
@@ -93,8 +103,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '7. Sinyal Çözümü — Kaptan',
     role: 'kaptan',
     category: '2. Aşama Onarım',
-    desc: '4 sembollü mesaj, sembol–sayı tablosu, turun permutasyon kuralı ve gizli şifre.',
+    desc: '4 sembollü mesaj, sembol–sayı tablosu, turun permutasyon kuralı ve gizli şifre kılavuzu.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kaptan_ifre_paneli',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kaptan_ifre_paneli/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'sinyal_cozumu',
     phaseIndex: 1,
@@ -104,8 +115,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '8. Sinyal Çözümü — Mühendis',
     role: 'muhendis',
     category: '2. Aşama Onarım',
-    desc: 'Spektrum dalgası, döner frekans kadranı, 4 frekans kanalı ve kodları, "Frekansı kilitle".',
+    desc: 'Spektrum dalgası, döner frekans kadranı, 4 frekans kanalı ve kodları, "Frekansı kilitle" aksiyonu.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_m_hendis_sinyal_konsolu',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_m_hendis_sinyal_konsolu/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'sinyal_cozumu',
     phaseIndex: 1,
@@ -117,6 +129,7 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     category: 'Onarım Modülü',
     desc: 'Güneş, Ay ve Yıldız kablolarının darbe frekansları ve teknik bağlantı kılavuzu.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kablo_ba_lant_s_kaptan',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kablo_ba_lant_s_kaptan/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'kablo_baglantisi',
     phaseIndex: 0,
@@ -126,8 +139,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '10. Kablo Bağlantısı — Mühendis',
     role: 'muhendis',
     category: 'Onarım Modülü',
-    desc: '3 kablo terminali, J1–J4 soketleri ve darbe ölçümleri, renkli kablo SVG hatları.',
+    desc: 'P1–P4 port terminalleri, gerilim/akım telemetri bandı, renkli jumper kablo yuvaları ve kilitleme.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kablo_ba_lant_s_m_hendis',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_kablo_ba_lant_s_m_hendis/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'kablo_baglantisi',
     phaseIndex: 0,
@@ -137,8 +151,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '11. Hava Kilidi — Kaptan',
     role: 'kaptan',
     category: 'Onarım Modülü',
-    desc: 'Pompa, Filtre, Tahliye ve Mühür için karışık 3 güvenlik kuralı ve mantıksal sıralama.',
+    desc: 'İç kapak, ara hazne, dış kapak izometrik şeması ve 4 adımlı basınç tahliye protokol talimatları.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_hava_kilidi_kaptan',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_hava_kilidi_kaptan/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'hava_kilidi',
     phaseIndex: 1,
@@ -148,8 +163,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '12. Hava Kilidi — Mühendis',
     role: 'muhendis',
     category: 'Onarım Modülü',
-    desc: 'Basınç kapısı, V1–V4 vanaları, 4 adımlı sıra tamponu, "Son seçimi geri al" ve kilidi aç.',
+    desc: 'Barometre oda basıncı göstergesi, döner birincil valf kadranı, sızdırmazlık mandalı ve vakum kaydırıcısı.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_hava_kilidi_m_hendis',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_hava_kilidi_m_hendis/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'hava_kilidi',
     phaseIndex: 1,
@@ -159,8 +175,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '13. Radar Yönlendirme — Kaptan',
     role: 'kaptan',
     category: 'Onarım Modülü',
-    desc: 'Referans işareti ve yön tarifi ("L2\'den 2 hücre doğu, 1 hücre kuzey") koordinat şifresi.',
+    desc: 'Orbital radar matrisi, polar radyal ızgara, hedef şamandıra kerterizi (275° azimut, +42° elevasyon) ve Ku-band taşıyıcı.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_radar_y_nlendirme_kaptan',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_radar_y_nlendirme_kaptan/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'radar_yonlendirme',
     phaseIndex: 0,
@@ -170,8 +187,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '14. Radar Yönlendirme — Mühendis',
     role: 'muhendis',
     category: 'Onarım Modülü',
-    desc: '5×5 dokunmatik radar ızgarası, L1–L3 işaretleri, pusula yönü ve "Hedefi tara" taraması.',
+    desc: '360° döner azimut çanağı kadranı, dikey elevasyon kaydırıcısı, taşıyıcı dalga formu görselleştiricisi ve kilit.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_radar_y_nlendirme_m_hendis',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_radar_y_nlendirme_m_hendis/code.html',
     statusKey: 'phase_game',
     miniGameKey: 'radar_yonlendirme',
     phaseIndex: 0,
@@ -181,8 +199,9 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '15. Enerji Dağıtımı — Kaptan',
     role: 'kaptan',
     category: '3. Aşama Güç',
-    desc: 'Asgari ihtiyaçlar gizli kılavuzu, paylaşılan dağılım, rotaların süre/kişi bilgisi, aktar & kilitle.',
+    desc: 'Asgari güç şartları gizli kılavuzu (Yaşam ≥3, İtki ≥3, Kalkan ≥4 MW), paylaşılan dağılım kontrolü ve kilit.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli/code.html',
     statusKey: 'phase_energy',
     phaseIndex: 2,
   },
@@ -191,20 +210,42 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '16. Enerji Dağıtımı — Mühendis',
     role: 'muhendis',
     category: '3. Aşama Güç',
-    desc: '12 enerji birimi, 3 sistem kontrolü, hat kayıpları hesabı, "Enerji taslağını paylaş".',
+    desc: '12 MW toplam reaktör bütçesi, Yaşam / İtki / Kalkan kademeli artış tuşları, hat kayıpları ve taslak paylaşımı.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli/code.html',
     statusKey: 'phase_energy',
     phaseIndex: 2,
   },
   {
     id: 17,
-    name: '17. Ortak Kurtarma (17A) & Sonuç (17B)',
+    name: '17. Ortak Kurtarma Kararı (17A)',
     role: 'ortak',
-    category: '4. Aşama Kurtarma & Zafer',
-    desc: '17A: Rota haritası, 3 rota, çift onay kuralı; 17B: Tam başarı, kısmi, başarısızlık istatistikleri.',
-    referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_g_rev_sonucu_ve_zafer',
+    category: '4. Aşama Kurtarma',
+    desc: 'Derin uzay yörünge haritası, 3 kurtarma rotası (Sığınak 6, Hızlı Geçiş 8, Konvoy 10), çift onay kuralı ve kalkış.',
+    referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli/code.html',
     statusKey: 'phase_rescue',
     phaseIndex: 3,
+  },
+  {
+    id: 18,
+    name: '18. Görev Sonucu & Zafer (17B)',
+    role: 'ortak',
+    category: 'Sonuç & İstatistik',
+    desc: 'Birlikte Kurtuldunuz zafer ekranı, 10/10 kurtarılan mürettebat plaketi, Ece & Mert kartları ve interaktif stardust parçacıkları.',
+    referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_g_rev_sonucu_ve_zafer',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_g_rev_sonucu_ve_zafer/code.html',
+    statusKey: 'phase_result',
+  },
+  {
+    id: 19,
+    name: '19. Görev Başarısız & Süre Tükendi (17C)',
+    role: 'ortak',
+    category: 'Sonuç & İstatistik',
+    desc: 'Sinyal koptu ve süre tükendi hata ekranı, 0/10 kayıp mürettebat, çevrimdışı Ece & Mert kartları, kritik olay raporu ve arcade tekrar dene.',
+    referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_g_rev_basarisiz',
+    htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_g_rev_basarisiz/code.html',
+    statusKey: 'phase_result',
   },
 ];
 
@@ -215,63 +256,63 @@ interface Props {
 }
 
 export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNavigateToScreen }) => {
-  const [selectedScreenId, setSelectedScreenId] = useState<number>(1);
-  const [activeTab, setActiveTab] = useState<'info' | 'code' | 'preview'>('info');
+  const [selectedScreenId, setSelectedScreenId] = useState<number>(10);
+  const [activeTab, setActiveTab] = useState<'info' | 'code' | 'preview'>('code');
   const [mockState, setMockState] = useState<'normal' | 'incomplete' | 'waiting' | 'error' | 'disconnected'>('normal');
   const [copiedCode, setCopiedCode] = useState(false);
-
-  if (!isOpen) return null;
+  const [codeCache, setCodeCache] = useState<Record<number, string>>({});
+  const [loadingCode, setLoadingCode] = useState<boolean>(false);
 
   const currentScreen = ALL_17_SCREENS.find((s) => s.id === selectedScreenId) || ALL_17_SCREENS[0];
 
-  // Standalone HTML template generator for export
-  const generateExportHtml = (screen: ScreenMeta) => {
-    return `<!DOCTYPE html>
-<html lang="tr" class="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>PARTYVERSE — ${screen.name}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: 'Manrope', sans-serif; background-color: #0b081a; color: #e6dff9; }
-    h1, h2, h3, h4, .font-sora { font-family: 'Sora', sans-serif; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
-  </style>
-</head>
-<body class="p-4 flex flex-col items-center justify-center min-h-screen">
-  <div class="w-full max-w-md p-6 rounded-2xl bg-[#141123] border border-cyan-500/30 shadow-2xl text-center space-y-4">
-    <div class="text-[10px] font-mono tracking-widest text-[#00f0ff] uppercase px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 inline-block">
-      ${screen.category} • ${screen.role.toUpperCase()}
-    </div>
-    <h1 class="text-2xl font-bold font-sora text-white">${screen.name}</h1>
-    <p class="text-xs text-[#a59db8]">${screen.desc}</p>
-    <div class="p-4 rounded-xl bg-[#0f0c1e] border border-white/10 text-xs font-mono text-[#ffb703] text-left space-y-1">
-      <div>// PARTYVERSE LOST SIGNAL PROTOCOL</div>
-      <div>DURUM: ${mockState.toUpperCase()}</div>
-      <div>ROL: ${screen.role}</div>
-      <div>REFERANS: ${screen.referencePath}</div>
-    </div>
-  </div>
-</body>
-</html>`;
-  };
+  // Fetch genuine code.html from the extracted stitch assets whenever screen changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (codeCache[currentScreen.id]) {
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingCode(true);
+
+    fetch(currentScreen.htmlPath)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        return res.text();
+      })
+      .then((htmlText) => {
+        if (isMounted) {
+          setCodeCache((prev) => ({ ...prev, [currentScreen.id]: htmlText }));
+          setLoadingCode(false);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch screen HTML directly:', err);
+        if (isMounted) {
+          setLoadingCode(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentScreen.id, currentScreen.htmlPath, isOpen, codeCache]);
+
+  if (!isOpen) return null;
+
+  const activeHtmlCode = codeCache[currentScreen.id] || `<!-- PARTYVERSE — ${currentScreen.name} -->\n<!-- Kaynak dosya: ${currentScreen.htmlPath} -->\n<!-- Yükleniyor... -->`;
 
   const handleCopyCode = () => {
-    const code = generateExportHtml(currentScreen);
     if (navigator?.clipboard) {
-      navigator.clipboard.writeText(code);
+      navigator.clipboard.writeText(activeHtmlCode);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     }
   };
 
   const handleDownload = () => {
-    const code = generateExportHtml(currentScreen);
-    const blob = new Blob([code], { type: 'text/html' });
+    const blob = new Blob([activeHtmlCode], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -287,24 +328,24 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-5xl h-[92vh] bg-[#141123] border border-[#ffb703]/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#e6dff9]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-6xl h-[94vh] bg-[#141123] border border-[#ffb703]/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#e6dff9]">
         
         {/* Top Header */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#1a163b]/70">
+        <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between bg-[#1a163b]/70">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#ffb703]/20 border border-[#ffb703]/40 flex items-center justify-center text-[#ffb703]">
+            <div className="w-10 h-10 rounded-xl bg-[#ffb703]/20 border border-[#ffb703]/40 flex items-center justify-center text-[#ffb703] shrink-0">
               <Layers className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono tracking-widest text-[#00f0ff] uppercase px-2 py-0.5 rounded bg-[#00f0ff]/10">
-                  17 EKRAN KATALOĞU & GEZGİNİ
+                  17+ EKRAN KATALOĞU & KOD GEZGİNİ
                 </span>
-                <span className="text-xs text-[#a59db8]">Kaptan & Mühendis Arayüzleri</span>
+                <span className="text-xs text-[#a59db8] hidden sm:inline">Kaptan & Mühendis Birebir Konsolları</span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white font-sora">
-                PARTYVERSE — Kayıp Sinyal Tüm Ekranlar
+                PARTYVERSE — Kayıp Sinyal Tüm Ekranlar & Gerçek HTML Kodu
               </h2>
             </div>
           </div>
@@ -319,8 +360,8 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
         {/* Main 2-Column Split: Screen Selector List (Left) & Inspector / Code (Right) */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
-          {/* Left: 17 Screens Scrollable Sidebar */}
-          <div className="w-full md:w-80 border-r border-white/10 overflow-y-auto p-3 space-y-1.5 bg-[#0f0c1e]/60">
+          {/* Left: 18 Screens Scrollable Sidebar */}
+          <div className="w-full md:w-80 border-r border-white/10 overflow-y-auto p-3 space-y-1.5 bg-[#0f0c1e]/60 shrink-0">
             <span className="text-[10px] font-mono text-[#9e8f78] uppercase px-2 block mb-1">
               EKRAN SEÇİN ({ALL_17_SCREENS.length} EKRAN):
             </span>
@@ -375,20 +416,31 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
               {/* View Tabs */}
               <div className="flex items-center gap-1 bg-[#0f0c1e] p-1 rounded-lg border border-white/10 text-xs">
                 <button
-                  onClick={() => setActiveTab('info')}
-                  className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                    activeTab === 'info' ? 'bg-[#ffb703] text-black font-bold' : 'text-[#a59db8] hover:text-white'
-                  }`}
-                >
-                  Detay & Kural
-                </button>
-                <button
                   onClick={() => setActiveTab('code')}
-                  className={`px-3 py-1 rounded-md font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
                     activeTab === 'code' ? 'bg-[#ffb703] text-black font-bold' : 'text-[#a59db8] hover:text-white'
                   }`}
                 >
-                  HTML Kodu
+                  <Code className="w-3.5 h-3.5" />
+                  <span>Gerçek HTML Kodu</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('preview')}
+                  className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+                    activeTab === 'preview' ? 'bg-[#ffb703] text-black font-bold' : 'text-[#a59db8] hover:text-white'
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>Orijinal HTML Önizleme</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('info')}
+                  className={`px-3 py-1 rounded-md font-medium transition-colors flex items-center gap-1.5 ${
+                    activeTab === 'info' ? 'bg-[#ffb703] text-black font-bold' : 'text-[#a59db8] hover:text-white'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Kural & Detay</span>
                 </button>
               </div>
             </div>
@@ -428,7 +480,79 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
               </button>
             </div>
 
-            {/* Tab 1: Detailed Info & Asymmetric Rules */}
+            {/* Tab 1: Real HTML Source Code & Export */}
+            {activeTab === 'code' && (
+              <div className="flex-1 flex flex-col p-3 sm:p-4 overflow-hidden">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-[#00f0ff] font-bold">
+                      {currentScreen.htmlPath}
+                    </span>
+                    {loadingCode && (
+                      <span className="flex items-center gap-1 text-[11px] text-[#ffb703]">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Yükleniyor...</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleCopyCode}
+                      className="px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-white text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#ffb703]" />}
+                      <span>{copiedCode ? 'Kopyalandı!' : 'Kodu Kopyala'}</span>
+                    </button>
+                    <button
+                      onClick={handleDownload}
+                      className="px-3 py-1 rounded bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 border border-[#00f0ff]/40 text-[#00f0ff] text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>.HTML İndir</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 p-3 rounded-xl bg-[#0b081a] border border-white/10 font-mono text-[11px] text-cyan-300 overflow-y-auto leading-relaxed select-all">
+                  <pre className="whitespace-pre-wrap font-mono">{activeHtmlCode}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Live HTML Iframe Preview */}
+            {activeTab === 'preview' && (
+              <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 overflow-y-auto bg-[#0b081a]">
+                <div className="flex items-center justify-between w-full max-w-sm mb-2 text-xs font-mono text-[#a59db8]">
+                  <span className="text-[#00f0ff]">390 × 844 Mobil Görünüm</span>
+                  <a 
+                    href={currentScreen.htmlPath} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-[#ffb703] hover:underline"
+                  >
+                    <span>Yeni Sekmede Aç</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+                
+                {/* Smartphone Bezel */}
+                <div className="relative w-full max-w-[390px] h-[720px] rounded-[36px] border-4 border-[#363246] bg-[#141123] shadow-2xl overflow-hidden flex flex-col">
+                  {/* Speaker Notch */}
+                  <div className="h-5 w-full bg-[#0f0c1e] flex items-center justify-center shrink-0 z-20">
+                    <div className="w-20 h-3 rounded-full bg-black/60"></div>
+                  </div>
+                  
+                  {/* Iframe */}
+                  <iframe 
+                    src={currentScreen.htmlPath} 
+                    title={currentScreen.name}
+                    className="w-full flex-1 border-0 bg-[#141123]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Detailed Info & Asymmetric Rules */}
             {activeTab === 'info' && (
               <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
                 
@@ -465,37 +589,6 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                   <span className="text-[10px] text-emerald-400 font-bold">2.5D Piksel Sadık</span>
                 </div>
 
-              </div>
-            )}
-
-            {/* Tab 2: HTML Source Code & Export */}
-            {activeTab === 'code' && (
-              <div className="flex-1 flex flex-col p-4 overflow-hidden">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-mono text-[#a59db8]">
-                    STANDALONE HTML ÇIKTISI (Kopyala veya İndir):
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleCopyCode}
-                      className="px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-white text-xs font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                    >
-                      {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#ffb703]" />}
-                      <span>{copiedCode ? 'Kopyalandı' : 'Kodu Kopyala'}</span>
-                    </button>
-                    <button
-                      onClick={handleDownload}
-                      className="px-3 py-1 rounded bg-[#00f0ff]/20 hover:bg-[#00f0ff]/30 border border-[#00f0ff]/40 text-[#00f0ff] text-xs font-mono flex items-center gap-1 transition-colors cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>.HTML İndir</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 p-3 rounded-xl bg-[#0b081a] border border-white/10 font-mono text-[11px] text-cyan-300 overflow-y-auto leading-relaxed select-all">
-                  <pre className="whitespace-pre-wrap">{generateExportHtml(currentScreen)}</pre>
-                </div>
               </div>
             )}
 

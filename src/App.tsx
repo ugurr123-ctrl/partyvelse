@@ -170,6 +170,18 @@ export default function App() {
         updated.selectedMiniGames = newSelected;
       }
 
+      if (screenMeta.id === 19) {
+        updated.outcomeType = 'basarisizlik';
+        updated.rescuedCrewCount = 0;
+        updated.timeLeftSeconds = 0;
+        updated.hullIntegrity = 0;
+      } else if (screenMeta.id === 18) {
+        updated.outcomeType = 'tam_basari';
+        updated.rescuedCrewCount = 10;
+        updated.timeLeftSeconds = 162;
+        updated.hullIntegrity = 84;
+      }
+
       return updated;
     });
   };
@@ -291,12 +303,13 @@ export default function App() {
       );
     }
 
-    // 17B. Phase 4B: Final Mission Result & Victory
+    // 17B. Phase 4B: Final Mission Result & Victory / Failure
     if (state.status === 'phase_result') {
       return (
         <Screen17BResult 
           state={currentState} 
           onRestartGame={() => updateState((p) => ({ ...createInitialMissionState(p.roomCode, p.activeEnvironment, p.players.kaptan.name) }))} 
+          onLobbyReturn={() => updateState((p) => ({ ...p, status: 'lobby' }))}
         />
       );
     }

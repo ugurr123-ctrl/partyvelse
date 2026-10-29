@@ -1,5 +1,80 @@
 @import "tailwindcss";
 
+@theme {
+  --color-surface: #141123;
+  --color-surface-dim: #141123;
+  --color-surface-bright: #3a374b;
+  --color-surface-variant: #363246;
+  --color-surface-container-lowest: #0f0c1e;
+  --color-surface-container-low: #1c192c;
+  --color-surface-container: #201d30;
+  --color-surface-container-high: #2b273b;
+  --color-surface-container-highest: #363246;
+  --color-surface-tint: #ffba27;
+
+  --color-on-surface: #e6dff9;
+  --color-on-surface-variant: #d5c4ac;
+  --color-inverse-surface: #e6dff9;
+  --color-inverse-on-surface: #312e42;
+  --color-outline: #9e8f78;
+  --color-outline-variant: #514532;
+
+  --color-primary: #ffdba0;
+  --color-on-primary: #422c00;
+  --color-primary-container: #ffb703;
+  --color-on-primary-container: #6b4b00;
+  --color-primary-fixed: #ffdea9;
+  --color-primary-fixed-dim: #ffba27;
+  --color-on-primary-fixed: #271900;
+  --color-on-primary-fixed-variant: #5e4100;
+  --color-inverse-primary: #7d5800;
+
+  --color-secondary: #d3fbff;
+  --color-on-secondary: #00363a;
+  --color-secondary-container: #00eefc;
+  --color-on-secondary-container: #00686f;
+  --color-secondary-fixed: #7df4ff;
+  --color-secondary-fixed-dim: #00dbe9;
+  --color-on-secondary-fixed: #002022;
+  --color-on-secondary-fixed-variant: #004f54;
+
+  --color-tertiary: #eed8ff;
+  --color-on-tertiary: #480081;
+  --color-tertiary-container: #dab5ff;
+  --color-on-tertiary-container: #7500cc;
+  --color-tertiary-fixed: #efdbff;
+  --color-tertiary-fixed-dim: #dcb8ff;
+  --color-on-tertiary-fixed: #2c0051;
+  --color-on-tertiary-fixed-variant: #6700b5;
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-margin: 1.25rem;
+  --spacing-margin-tablet: 2rem;
+  --spacing-gutter: 1rem;
+  --spacing-gutter-sm: 0.75rem;
+
+  --font-headline-sm: 'Sora', sans-serif;
+  --font-headline-md: 'Sora', sans-serif;
+  --font-headline-lg: 'Sora', sans-serif;
+  --font-headline-lg-mobile: 'Sora', sans-serif;
+  --font-display-hero: 'Sora', sans-serif;
+  --font-display-hero-mobile: 'Sora', sans-serif;
+  --font-label-status: 'Sora', sans-serif;
+  --font-label-telemetry: 'Sora', sans-serif;
+  --font-body-sm: 'Manrope', sans-serif;
+  --font-body-md: 'Manrope', sans-serif;
+  --font-body-lg: 'Manrope', sans-serif;
+}
+
 @layer base {
   :root {
     --font-sora: 'Sora', sans-serif;
@@ -9,7 +84,7 @@
 
   body {
     font-family: var(--font-manrope);
-    background-color: #0b081a;
+    background-color: #141123;
     color: #e6dff9;
     overflow-x: hidden;
   }
@@ -19,17 +94,107 @@
   }
 }
 
-/* Custom Tactical 2.5D Arcade & Space Console Utilities */
-.font-sora {
-  font-family: var(--font-sora);
+/* Typography Utility Classes matching Stitch Design Tokens */
+.font-headline-sm, .text-headline-sm {
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.font-headline-md, .text-headline-md {
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.font-headline-lg-mobile, .text-headline-lg-mobile {
+  font-family: 'Sora', sans-serif;
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+.font-headline-lg, .text-headline-lg {
+  font-family: 'Sora', sans-serif;
+  font-size: 32px;
+  line-height: 38px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+.font-display-hero-mobile, .text-display-hero-mobile {
+  font-family: 'Sora', sans-serif;
+  font-size: 36px;
+  line-height: 42px;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+.font-display-hero, .text-display-hero {
+  font-family: 'Sora', sans-serif;
+  font-size: 48px;
+  line-height: 54px;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+.font-label-telemetry, .text-label-telemetry {
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.font-label-status, .text-label-status {
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.font-body-sm, .text-body-sm {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+.font-body-md, .text-body-md {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.font-body-lg, .text-body-lg {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
 }
 
-.font-manrope {
-  font-family: var(--font-manrope);
-}
+.font-sora { font-family: var(--font-sora); }
+.font-manrope { font-family: var(--font-manrope); }
+.font-mono { font-family: var(--font-mono); }
 
-.font-mono {
-  font-family: var(--font-mono);
+/* Spacing fallbacks if needed */
+.px-margin { padding-left: 1.25rem; padding-right: 1.25rem; }
+.py-margin { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.p-space-sm { padding: 0.5rem; }
+.p-space-md { padding: 1rem; }
+.p-space-lg { padding: 1.5rem; }
+.gap-space-xs { gap: 0.25rem; }
+.gap-space-sm { gap: 0.5rem; }
+.gap-space-md { gap: 1rem; }
+.space-y-space-md > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
+.space-y-space-xs > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
+}
+.space-y-space-sm > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
 }
 
 /* 2.5D Push Buttons with Physical Depth */

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <meta content="mobile_stack" name="shell-type"/>
+  <title>Kayıp Sinyal — Görev Başarısız</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        background-color: #141123;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-error": "#690005",
+            "on-error-container": "#ffdad6",
+            "primary-fixed": "#ffdea9",
+            "error-container": "#93000a",
+            "primary": "#ffdba0",
+            "on-background": "#e6dff9",
+            "on-primary-fixed": "#271900",
+            "tertiary-container": "#dab5ff",
+            "on-secondary-fixed": "#002022",
+            "on-secondary": "#00363a",
+            "on-tertiary-container": "#7500cc",
+            "surface-tint": "#ffba27",
+            "secondary-container": "#00eefc",
+            "tertiary-fixed-dim": "#dcb8ff",
+            "surface-bright": "#3a374b",
+            "on-tertiary": "#480081",
+            "error": "#ffb4ab",
+            "primary-fixed-dim": "#ffba27",
+            "on-primary": "#422c00",
+            "secondary-fixed": "#7df4ff",
+            "on-primary-container": "#6b4b00",
+            "tertiary": "#eed8ff",
+            "surface-dim": "#141123",
+            "on-surface": "#e6dff9",
+            "tertiary-fixed": "#efdbff",
+            "on-primary-fixed-variant": "#5e4100",
+            "surface-container-low": "#1c192c",
+            "surface-container-lowest": "#0f0c1e",
+            "secondary-fixed-dim": "#00dbe9",
+            "surface-container-highest": "#363246",
+            "on-secondary-container": "#00686f",
+            "inverse-on-surface": "#312e42",
+            "on-tertiary-fixed-variant": "#6700b5",
+            "on-surface-variant": "#d5c4ac",
+            "surface-container": "#201d30",
+            "inverse-surface": "#e6dff9",
+            "on-tertiary-fixed": "#2c0051",
+            "surface": "#141123",
+            "outline-variant": "#514532",
+            "surface-container-high": "#2b273b",
+            "secondary": "#d3fbff",
+            "on-secondary-fixed-variant": "#004f54",
+            "primary-container": "#ffb703",
+            "surface-variant": "#363246",
+            "background": "#141123",
+            "inverse-primary": "#7d5800",
+            "outline": "#9e8f78"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "margin": "1.25rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "margin-tablet": "2rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "gutter-sm": "0.75rem",
+            "gutter": "1rem",
+            "space-xl": "2.5rem"
+          },
+          fontFamily: {
+            "headline-sm": ["Sora"],
+            "body-lg": ["Manrope"],
+            "body-md": ["Manrope"],
+            "display-hero": ["Sora"],
+            "body-sm": ["Manrope"],
+            "headline-md": ["Sora"],
+            "headline-lg-mobile": ["Sora"],
+            "headline-lg": ["Sora"],
+            "label-status": ["Sora"],
+            "label-telemetry": ["Sora"],
+            "display-hero-mobile": ["Sora"]
+          },
+          fontSize: {
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+            "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }],
+            "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface text-on-surface flex flex-col min-h-screen selection:bg-error selection:text-on-error">
+  <main class="flex flex-col relative w-full pb-safe bg-surface flex-grow max-w-[420px] mx-auto overflow-hidden">
+    <!-- Red Alert Ambient Glows -->
+    <div class="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-error-container/25 blur-[100px] z-10"></div>
+    <div class="pointer-events-none absolute top-48 left-1/4 w-72 h-72 rounded-full bg-error/15 blur-[90px] z-10"></div>
+
+    <!-- Hero Disaster Background Card -->
+    <div class="relative w-full overflow-hidden flex flex-col justify-end px-margin pb-6 pt-10">
+      <div 
+        class="absolute inset-0 bg-cover bg-center filter grayscale-[30%] brightness-75 contrast-125" 
+        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDYYRGcO-qooDGua9vJuMZ2UEE08MvX5onD4i79wD2nvA3dJx_NAS9TVasc1xx7SyqUqQ81wencqyzUcSsWmO4yW2SqXX62FN40vwns_ZtNVO5CTYbm9JpYpR5cbXGRInJoxSk4kGHMGy2qgUNTXc0e_4FhyvKE-B44ZGvRhhXA_aVVSUN23Cl7w0yybN7HKHcS3N9U2V_BBVophbF86YGvun2K3eA-XeEkNYF-3DE');"
+      ></div>
+      <!-- Scrim Overlays for Depth and Contrast -->
+      <div class="absolute inset-0 bg-gradient-to-b from-surface-dim/90 via-surface-dim/60 to-surface z-0"></div>
+      <div class="absolute inset-0 bg-radial-at-t from-error/20 via-transparent to-surface z-0"></div>
+
+      <!-- Telemetry Badges & Titles -->
+      <div class="relative z-10 flex flex-col items-center text-center mt-2">
+        <div class="inline-flex items-center gap-space-xs px-3.5 py-1.5 rounded-full bg-error-container/40 border border-error/30 backdrop-blur-md mb-3 shadow-lg">
+          <span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+          <span class="material-symbols-outlined text-[15px] text-error">sensors_off</span>
+          <span class="font-label-telemetry text-label-telemetry text-error uppercase tracking-widest font-bold">PROTOKOL İHLALİ // FAULT-99</span>
+        </div>
+
+        <!-- Main Failure Headline -->
+        <h2 class="font-display-hero-mobile text-display-hero-mobile text-transparent bg-clip-text bg-gradient-to-b from-error via-red-400 to-red-600 uppercase tracking-tight drop-shadow-[0_4px_16px_rgba(255,180,171,0.35)] font-black">
+          GÖREV BAŞARISIZ
+        </h2>
+        <span class="font-label-status text-label-status text-error/90 uppercase tracking-widest font-bold mt-1">
+          TAHLİYE BAŞARISIZ // SÜRE TÜKENDİ
+        </span>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-[290px] mt-2 font-medium leading-relaxed">
+          Sinyal tamamen koptu. İstasyon gövdesi parçalandı ve kaçış kapsülü rota dışına savruldu.
+        </p>
+      </div>
+    </div>
+
+    <!-- Content Stream Container -->
+    <div class="relative z-30 px-margin flex flex-col gap-space-md -mt-2 pb-8">
+      <!-- Failure Plaque Console Frame -->
+      <div class="relative w-full rounded-xl bg-surface-container-high/90 border border-error/20 backdrop-blur-xl p-5 shadow-2xl flex flex-col items-center overflow-hidden">
+        <!-- Top Subtle Red Alert Glow Highlight -->
+        <div class="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-error to-transparent opacity-90"></div>
+        <!-- Corner Hardware Accents -->
+        <div class="absolute top-2 left-2 w-2 h-2 rounded bg-error/40"></div>
+        <div class="absolute top-2 right-2 w-2 h-2 rounded bg-error/40"></div>
+        <div class="absolute bottom-2 left-2 w-2 h-2 rounded bg-error/40"></div>
+        <div class="absolute bottom-2 right-2 w-2 h-2 rounded bg-error/40"></div>
+
+        <!-- Zero Rescued Stat Display -->
+        <div class="flex flex-col items-center">
+          <div class="w-13 h-13 rounded-2xl bg-error-container/30 border border-error/40 flex items-center justify-center text-error mb-1 shadow-inner">
+            <span class="material-symbols-outlined text-[30px]" style="font-variation-settings: 'FILL' 1">running_with_errors</span>
+          </div>
+          <div class="flex items-baseline gap-1 mt-1">
+            <span class="font-display-hero-mobile text-display-hero-mobile text-error drop-shadow-[0_2px_12px_rgba(255,180,171,0.5)] font-black">
+              0
+            </span>
+            <span class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface-variant/70 font-bold">
+              / 10
+            </span>
+          </div>
+          <span class="font-headline-sm text-headline-sm text-error/90 font-semibold tracking-wide uppercase mt-0.5">
+            KİŞİ KURTARILDI
+          </span>
+        </div>
+
+        <!-- Offline Crew Members Section -->
+        <div class="w-full grid grid-cols-2 gap-space-md mt-5 pt-4 border-t border-surface-variant/40">
+          <!-- Ece Offline Card -->
+          <div class="flex flex-col items-center bg-surface-container-low/90 border border-error/20 rounded-lg p-3 group transition-transform active:scale-95 shadow-sm">
+            <div class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg mb-2 grayscale brightness-75">
+              <img 
+                class="w-full h-full object-cover" 
+                alt="Ece" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjneeJLFuxwZXqCp9n0nolhcFqV8kIP4eP-bUHd_IS7Q56A2X1NsM_e7NpsGLqiH7V5QrjjzpODzs5lrX4cklFH9pE_2TWW3o-Vky9Bh5x5m5eB4kagmjjFkp8VmwGC2abL5fOIrUDXQli8anUR_1d-X19wWdQHYpuu9S90yPmwsRRs6lq-bTSQEYMKg3QUN4x7S_gVJDosZoXIEWN4Q_k6i1PGRLr6CCJ1AJDNb0" 
+              />
+              <div class="absolute inset-0 bg-red-950/40"></div>
+              <div class="absolute top-1 right-1 w-5 h-5 rounded-full bg-error text-on-error flex items-center justify-center shadow">
+                <span class="material-symbols-outlined text-[13px] font-bold">close</span>
+              </div>
+            </div>
+            <span class="font-headline-sm text-headline-sm text-on-surface/90 tracking-tight font-bold">
+              Ece
+            </span>
+            <span class="font-label-telemetry text-label-telemetry text-error uppercase mt-0.5 px-2 py-0.5 rounded-full bg-error-container/20 font-bold">
+              KAYIP // ÇEVRİMDIŞI
+            </span>
+          </div>
+
+          <!-- Mert Offline Card -->
+          <div class="flex flex-col items-center bg-surface-container-low/90 border border-error/20 rounded-lg p-3 group transition-transform active:scale-95 shadow-sm">
+            <div class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg mb-2 grayscale brightness-75">
+              <img 
+                class="w-full h-full object-cover" 
+                alt="Mert" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSDGyHEo6C57QfHLfzHn6fHpATwZ_E4dRftmOaQg_x3YXnw8n7tnNeqdE0gOgdK4VaiihLM8bAzh7zjRdQTf2oT_bgIlocy1EBKvKWfyuPCVDxlhRBYRDtYYxvKlhwJBCILE5AC2lTlb9bHIVuVNyegbFuVtMWeYkciEfgUS4vXS62n5FqJqbZrC-1o66H4IPlTdRWp4LXOQ-1UtYt-Lpi5fl3prglhdDKxNsDJo8" 
+              />
+              <div class="absolute inset-0 bg-red-950/40"></div>
+              <div class="absolute top-1 right-1 w-5 h-5 rounded-full bg-error text-on-error flex items-center justify-center shadow">
+                <span class="material-symbols-outlined text-[13px] font-bold">close</span>
+              </div>
+            </div>
+            <span class="font-headline-sm text-headline-sm text-on-surface/90 tracking-tight font-bold">
+              Mert
+            </span>
+            <span class="font-label-telemetry text-label-telemetry text-error uppercase mt-0.5 px-2 py-0.5 rounded-full bg-error-container/20 font-bold">
+              KAYIP // ÇEVRİMDIŞI
+            </span>
+          </div>
+        </div>
+
+        <!-- Telemetry Divider Strip -->
+        <div class="w-full my-4 h-[1px] bg-surface-variant/40"></div>
+
+        <!-- Mission Failure Metrics Row -->
+        <div class="w-full grid grid-cols-3 gap-space-xs text-center">
+          <!-- Metric 1: Tasks -->
+          <div class="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60 border border-error/15">
+            <span class="material-symbols-outlined text-[18px] text-error mb-1">warning</span>
+            <span class="font-headline-sm text-headline-sm text-on-surface font-bold">2/3</span>
+            <span class="font-label-status text-label-status text-error uppercase mt-0.5">kısmi</span>
+          </div>
+          <!-- Metric 2: Time Left -->
+          <div class="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60 border border-error/15">
+            <span class="material-symbols-outlined text-[18px] text-error mb-1">timer_off</span>
+            <span class="font-headline-sm text-headline-sm text-error font-bold">00:00</span>
+            <span class="font-label-status text-label-status text-on-surface-variant uppercase mt-0.5">tükendi</span>
+          </div>
+          <!-- Metric 3: Integrity -->
+          <div class="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60 border border-error/15">
+            <span class="material-symbols-outlined text-[18px] text-error mb-1">heart_broken</span>
+            <span class="font-headline-sm text-headline-sm text-error font-bold">%0</span>
+            <span class="font-label-status text-label-status text-error uppercase mt-0.5">kritik</span>
+          </div>
+        </div>
+
+        <!-- Incident Breakdown Box -->
+        <div class="w-full mt-4 p-3 rounded-lg bg-error-container/20 border border-error/30 text-left">
+          <div class="flex items-center gap-1.5 text-error font-bold font-label-telemetry text-label-telemetry uppercase mb-1">
+            <span class="material-symbols-outlined text-[15px]">report_problem</span>
+            <span>KRİTİK OLAY RAPORU</span>
+          </div>
+          <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Tahsis edilen 5 dakikalık kurtarma penceresi doldu veya gövde bütünlüğü kritik seviyenin altına indi. Yaşam destek üniteleri devre dışı kaldı.
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="flex flex-col gap-space-sm pt-2">
+        <!-- Arcade Retry Button -->
+        <button 
+          type="button"
+          class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-red-600 via-error to-rose-600 text-on-error font-headline-sm text-headline-sm uppercase tracking-wide flex items-center justify-center gap-space-sm shadow-[0_6px_0_#690005,0_12px_24px_rgba(255,180,171,0.25)] transition-all active:translate-y-[4px] active:shadow-[0_2px_0_#690005] active:scale-[0.99] cursor-pointer font-bold"
+        >
+          <span>Tekrar dene (Aynı ekiple)</span>
+          <span class="material-symbols-outlined text-[22px]">replay</span>
+        </button>
+
+        <!-- Secondary Dark Glass Button -->
+        <button 
+          type="button"
+          class="w-full py-3.5 px-6 rounded-xl bg-surface-container-high/70 backdrop-blur-md text-on-surface-variant hover:text-on-surface font-headline-sm text-headline-sm uppercase tracking-wide flex items-center justify-center gap-space-xs transition-all active:scale-[0.98] shadow-md hover:bg-surface-container-highest cursor-pointer font-semibold"
+        >
+          <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+          <span>Lobiye dön</span>
+        </button>
+      </div>
+
+      <!-- Tip Note -->
+      <div class="flex items-center justify-center gap-2 pt-2 opacity-80">
+        <span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+        <span class="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold text-center">
+          İPUCU: KAPTAN VE MÜHENDİS DAHA HIZLI BİLGİ ALIŞVERİŞİ YAPMALIDIR
+        </span>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
