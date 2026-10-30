@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../types/game';
 import { calculateFinalScore } from '../../services/gameFactory';
+import { validateRescueDecision } from '../../services/phaseTransition';
 
 interface Props {
   state: MissionState;
@@ -73,65 +74,19 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
   const handleConfirmRescue = () => {
     setValidationError(null);
 
-    // 1. Verify Energy Lock
-    if (!isEnergyLocked) {
-      setValidationError('HATA: Reaktör enerjisi kilitlenmedi! Önceki aşamada güç dağılımı onaylanmalıdır.');
+    const validation = validateRescueDecision(state, activeRoute);
+    if (!validation.success) {
+      if (validation.nextState) {
+        // Failed transit due to running out of time during journey
+        onUpdate(() => validation.nextState!);
+        onFinalizeMission();
+        return;
+      }
+      setValidationError(validation.error || 'Kurtarma doğrulaması başarısız oldu.');
       return;
     }
 
-    // 2. Verify Life Support
-    if (!hasLifePower) {
-      setValidationError(`YETERSİZ YAŞAM DESTEĞİ! Net ${netLife} MW sağlandı (Asgari 3 MW gereklidir).`);
-      return;
-    }
-
-    // 3. Verify Route Thrust Requirement
-    if (!hasThrustPower) {
-      setValidationError(`YETERSİZ İTKİ GÜCÜ! ${activeRoute.name} için net ${activeRoute.powerRequirements.itki} MW itki gerekiyor, sağlanan: ${netThrust} MW.`);
-      return;
-    }
-
-    // 4. Verify Route Shield Requirement
-    if (!hasShieldPower) {
-      setValidationError(`YETERSİZ KALKAN GÜCÜ! ${activeRoute.name} için net ${activeRoute.powerRequirements.kalkan} MW kalkan gerekiyor, sağlanan: ${netShield} MW.`);
-      return;
-    }
-
-    // 5. Verify Time Remaining vs Travel Time
-    if (!hasEnoughTime) {
-      // Failed due to running out of time during transit
-      const scoreData = calculateFinalScore(3, 0, 0, 0);
-      onUpdate((prev) => ({
-        ...prev,
-        status: 'phase_result',
-        outcomeType: 'basarisizlik',
-        rescuedCrewCount: 0,
-        completedTasksCount: 3,
-        timeLeftSeconds: 0,
-        hullIntegrity: 0,
-        finalScore: scoreData.total,
-        scoreBreakdown: scoreData.breakdown,
-      }));
-      onFinalizeMission();
-      return;
-    }
-
-    // All validation passed: calculate real score and determine outcome!
-    const rescued = activeRoute.crewCount;
-    const outcomeType = rescued === 10 ? 'tam_basari' : 'kismi_kurtarma';
-    const remainingTimeAfterTravel = Math.max(0, timeLeftSeconds - activeRoute.travelTimeSeconds);
-    const scoreData = calculateFinalScore(4, remainingTimeAfterTravel, hullIntegrity, rescued);
-
-    onUpdate((prev) => ({
-      ...prev,
-      status: 'phase_result',
-      outcomeType,
-      rescuedCrewCount: rescued,
-      completedTasksCount: 4,
-      timeLeftSeconds: remainingTimeAfterTravel,
-      finalScore: scoreData.total,
-      scoreBreakdown: scoreData.breakdown,
-    }));
+    onUpdate(() => validation.nextState!);
     onFinalizeMission();
   };
 

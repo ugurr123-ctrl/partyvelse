@@ -212,6 +212,7 @@ export interface RescueData {
 
 export interface MissionState {
   roomCode: string;
+  roundId: string; // Unique identifier regenerated on each new round
   status: GameStatus;
   activeEnvironment: EnvironmentType;
   selectedMiniGames: [MiniGameType, MiniGameType];

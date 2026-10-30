@@ -46,42 +46,48 @@ export function generateRoomCode(): string {
   return code;
 }
 
+export function generateRoundId(): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const randomSuffix = Math.random().toString(36).substring(2, 7).toUpperCase();
+  return `RND-${timestamp}-${randomSuffix}`;
+}
+
 export const RESCUE_ROUTES: RescueRoute[] = [
   {
     id: 'alfa',
-    name: 'Rota Alfa (Konvoy / Süper-İtki)',
+    name: 'Rota Alfa (Tahliye Filosu / Tam Kurtarma)',
     badge: 'TAM TAHLİYE // 10 KİŞİ',
-    desc: 'Bütün mürettebatı tahliye eden yüksek hızlı acil kaçış koridoru.',
+    desc: 'Ağır tahliye filosu; tüm personeli kurtarır. Yüksek itki ve kalkan gerektirir.',
     crewCount: 10,
-    travelTimeMin: '1.2 dk',
-    travelTimeSeconds: 72,
+    travelTimeMin: '1.25 dk',
+    travelTimeSeconds: 75,
     powerRequirements: { itki: 5, kalkan: 4, yasamDestegi: 3 },
-    dangerRating: 'YÜKSEK GÜÇ TALEBİ',
-    dangerDesc: 'Tüm 10 kişiyi kurtarır. Net 5 MW itki ve 4 MW kalkan gerektirir.',
+    dangerRating: 'YÜKSEK ENERJİ TALEBİ',
+    dangerDesc: '10 kişiyi kurtarır. Net 5 MW İtki, 4 MW Kalkan ve 75s seyahat süresi gerektirir.',
   },
   {
     id: 'beta',
-    name: 'Rota Beta (Lagrange Denge Yolu)',
+    name: 'Rota Beta (Lagrange Denge Koridoru)',
     badge: 'DENGELİ // 8 KİŞİ',
-    desc: 'İstasyon çevresinden orta süreli, dengeli güç isteyen kurtarma rotası.',
+    desc: 'Orta kapasiteli mekik; dengeli güç ve 50 saniyelik güvenli koridor.',
     crewCount: 8,
-    travelTimeMin: '2.5 dk',
-    travelTimeSeconds: 150,
-    powerRequirements: { itki: 4, kalkan: 3, yasamDestegi: 3 },
-    dangerRating: 'ORTA GÜÇ TALEBİ',
-    dangerDesc: '8 kişiyi kurtarır. Net 4 MW itki ve 3 MW kalkan gerektirir.',
+    travelTimeMin: '0.8 dk',
+    travelTimeSeconds: 50,
+    powerRequirements: { itki: 3, kalkan: 3, yasamDestegi: 3 },
+    dangerRating: 'ORTA ENERJİ TALEBİ',
+    dangerDesc: '8 kişiyi kurtarır. Net 3 MW İtki, 3 MW Kalkan ve 50s seyahat süresi gerektirir.',
   },
   {
     id: 'gama',
-    name: 'Rota Gama (Gölge Sığınak)',
-    badge: 'ASGARİ // 6 KİŞİ',
-    desc: 'Düşük itkiyle ulaşılan, güvenli ancak kısıtlı kapasiteli sığınak.',
+    name: 'Rota Gama (Acil Kaçış Podu / Hızlı Fırlatma)',
+    badge: 'DARBOĞAZ // 6 KİŞİ',
+    desc: 'Hafif kaçış podu; asgari güçle çalışır ve 30 saniyede süratle istasyondan ayrılır.',
     crewCount: 6,
-    travelTimeMin: '4.0 dk',
-    travelTimeSeconds: 240,
+    travelTimeMin: '0.5 dk',
+    travelTimeSeconds: 30,
     powerRequirements: { itki: 2, kalkan: 2, yasamDestegi: 3 },
-    dangerRating: 'DÜŞÜK GÜÇ TALEBİ',
-    dangerDesc: '6 kişiyi kurtarır. Asgari net 2 MW itki ve 2 MW kalkanla güvenle tamamlanır.',
+    dangerRating: 'DÜŞÜK GÜÇ // EN HIZLI',
+    dangerDesc: '6 kişiyi kurtarır. Asgari net 2 MW İtki, 2 MW Kalkan ile 30s içinde tahliye tamamlanır.',
   },
 ];
 
@@ -420,6 +426,7 @@ export function createInitialMissionState(
 
   return {
     roomCode,
+    roundId: generateRoundId(),
     status: 'entry',
     activeEnvironment: env,
     selectedMiniGames: selectedGames,

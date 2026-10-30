@@ -6,6 +6,7 @@ import {
   GameStatus 
 } from './types/game';
 import { createInitialMissionState } from './services/gameFactory';
+import { validateAndAdvancePhase } from './services/phaseTransition';
 import { syncService } from './services/multiplayerSync';
 import { ConsoleHeader } from './components/ConsoleHeader';
 import { NetworkDisconnectModal } from './components/NetworkDisconnectModal';
@@ -96,45 +97,22 @@ export default function App() {
     return () => clearInterval(timer);
   }, [state.status, state.isPaused, state.isDisconnected]);
 
-  const lastAdvanceTimestampRef = React.useRef<number>(0);
-
   // Handle phase advance: Phase 0 -> Phase 1 -> Phase 2 (Energy) -> Phase 3 (Rescue)
-  // Debounce guard prevents double-advancing if both players click simultaneously
-  const handleAdvancePhase = () => {
-    const now = Date.now();
-    if (now - lastAdvanceTimestampRef.current < 800) {
-      return; // Ignore concurrent / duplicate advance signals
-    }
-    lastAdvanceTimestampRef.current = now;
-
+  // Protected with roundId, expectedPhaseIndex, and puzzle completion verification
+  const handleAdvancePhase = (expectedPhaseIndex?: number) => {
     updateState((prev) => {
-      const nextPhaseIdx = prev.currentPhaseIndex + 1;
-      const nextCompleted = prev.currentPhaseIndex < 2 ? prev.completedTasksCount + 1 : prev.completedTasksCount;
-      if (nextPhaseIdx === 1) {
-        return {
-          ...prev,
-          currentPhaseIndex: 1,
-          completedTasksCount: nextCompleted,
-          status: 'phase_game',
-        };
+      const targetExpected = expectedPhaseIndex !== undefined ? expectedPhaseIndex : prev.currentPhaseIndex;
+      const result = validateAndAdvancePhase(prev, {
+        roundId: prev.roundId,
+        expectedPhaseIndex: targetExpected,
+      });
+
+      if (!result.success) {
+        console.warn(`[Phase Advance Blocked]: ${result.error}`);
+        return prev;
       }
-      if (nextPhaseIdx === 2) {
-        return {
-          ...prev,
-          currentPhaseIndex: 2,
-          completedTasksCount: nextCompleted,
-          status: 'phase_energy',
-        };
-      }
-      if (nextPhaseIdx >= 3) {
-        return {
-          ...prev,
-          currentPhaseIndex: 3,
-          completedTasksCount: nextCompleted,
-          status: 'phase_rescue',
-        };
-      }
-      return prev;
+
+      return result.nextState || prev;
     });
   };
 
