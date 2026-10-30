@@ -8,7 +8,9 @@ interface Props {
 }
 
 export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
-  const { engineerAllocation, lineLosses, captainMinRequirements, isDraftShared, isLocked } = state.energy;
+  const { energy } = state;
+  const { engineerAllocation, lineLosses, captainMinRequirements, isDraftShared, isLocked } = energy;
+  
   const [feedback, setFeedback] = useState<{ type: 'idle' | 'success' | 'error'; msg: string }>({
     type: isLocked ? 'success' : 'idle',
     msg: isLocked ? 'Enerji dağılımı kilitlendi! Tüm hayati sistemler nominal sınırlarda.' : '',
@@ -24,7 +26,7 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
     if (!isDraftShared) {
       setFeedback({
         type: 'error',
-        msg: 'Henüz Mühendisten onaylı enerji taslağı ulaşmadı! Mühendisin taslağı paylaşması bekleniyor.',
+        msg: 'Henüz Mühendisten onaylı enerji taslağı ulaşmadı! Mühendisin taslağı iletmesi bekleniyor.',
       });
       return;
     }
@@ -46,9 +48,14 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
         },
       }));
     } else {
+      let failDetail = 'YETERSİZ ENERJİ DAĞILIMI! ';
+      if (!meetsLife) failDetail += `Net Yaşam Desteği (${effectivePower.yasamDestegi} MW) asgari 3 MW olmalı. `;
+      if (!meetsThrust) failDetail += `Net İtki (${effectivePower.itki} MW) asgari 2 MW olmalı. `;
+      if (!meetsShield) failDetail += `Net Kalkan (${effectivePower.kalkan} MW) asgari 2 MW olmalı. `;
+
       setFeedback({
         type: 'error',
-        msg: 'YETERSİZ ENERJİ DAĞILIMI! Mühendisin paylaştığı net güç asgari eşikleri karşılamıyor. Mühendise güçleri artırmasını söyleyin! (Gövde Bütünlüğü -%10, Süre -15 sn)',
+        msg: `${failDetail}Mühendisten tahsisi artırmasını isteyin! Bütünlük -%10, Süre -15 sn!`,
       });
       onUpdate((prev) => ({
         ...prev,
@@ -59,194 +66,122 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
   };
 
   return (
-    <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe px-margin gap-space-md select-none animate-fadeIn text-[#e6dff9]">
-      {/* Top Telemetry & Role Pill */}
-      <div className="flex items-center justify-between gap-space-xs mt-space-sm">
-        <div className="flex items-center gap-space-xs bg-surface-container-high px-3 py-1.5 rounded-full shadow-sm">
-          <span className="material-symbols-outlined text-primary-fixed-dim text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
-          <span className="font-label-telemetry text-label-telemetry text-primary tracking-wider uppercase font-bold">👑 KAPTAN // ENERJİ MATRİSİ</span>
+    <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe px-margin gap-space-md select-none animate-fadeIn text-[#e6dff9] font-sans">
+      
+      {/* Role Header */}
+      <div className="flex flex-col gap-1 mt-2">
+        <div className="inline-flex items-center self-start gap-1.5 px-3 py-1 bg-[#ffb703]/20 text-[#ffba27] border border-[#ffb703]/30 rounded-full shadow-sm">
+          <span className="material-symbols-outlined text-[15px] text-[#ffb703]" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+          <span className="font-mono text-[10px] tracking-widest uppercase font-bold">KAPTAN // ENERJİ DOĞRULAMA</span>
         </div>
-        <div className="flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-full shadow-inner">
-          <span className="w-2 h-2 rounded-full bg-secondary-fixed-dim animate-ping"></span>
-          <span className="font-label-status text-label-status text-secondary tracking-widest uppercase font-bold">CANLI BAĞLANTI</span>
-        </div>
-      </div>
-
-      {/* Briefing Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight font-extrabold uppercase">
+        <h1 className="font-sora text-2xl font-extrabold text-white tracking-tight mt-1">
           Reaktör Gücünü Yönet
         </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant leading-snug">
-          Mühendisin taslağını gizli asgari gereksinimlerle karşılaştır ve onay ver.
+        <p className="text-xs text-[#d5c4ac] leading-relaxed">
+          Mühendisin 15 MW toplam bütçeden sunduğu güç dağılımını asgari güvenlik şartlarıyla kıyasla ve kilitle.
         </p>
       </div>
 
       {/* Secret Minimum Requirements Card */}
-      <div className="p-space-md rounded-xl bg-surface-container-low shadow-xl flex flex-col gap-space-sm relative overflow-hidden">
+      <div className="p-4 rounded-2xl bg-[#201d30] border border-white/5 shadow-xl flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 text-primary-container">
+          <div className="flex items-center gap-1.5 text-[#ffb703]">
             <span className="material-symbols-outlined text-[18px]">bolt</span>
-            <span className="font-label-telemetry text-label-telemetry uppercase tracking-wider font-bold">ASGARİ GÜÇ ŞARTLARI</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider font-bold">ASGARİ GÜVENLİK SINIRLARI</span>
           </div>
-          <span className="font-label-status text-label-status text-on-surface-variant uppercase tracking-widest font-semibold">GİZLİ KILAVUZ</span>
+          <span className="font-mono text-[9px] text-[#00eefc] uppercase tracking-widest font-bold">GİZLİ KILAVUZ</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-space-xs text-center">
-          <div className="p-space-sm rounded-lg bg-surface-container shadow-inner flex flex-col items-center">
-            <span className="material-symbols-outlined text-secondary-container text-[20px] mb-1">ecg_heart</span>
-            <span className="font-label-status text-label-status text-on-surface-variant mb-0.5">Yaşam</span>
-            <span className="font-headline-sm text-headline-sm text-secondary-container font-bold">≥ {captainMinRequirements.yasamDestegi} MW</span>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="p-2.5 rounded-xl bg-[#0f0c1e] border border-white/5 flex flex-col items-center">
+            <span className="material-symbols-outlined text-[#00eefc] text-[18px] mb-1">ecg_heart</span>
+            <span className="text-[10px] text-[#d5c4ac]">Net Yaşam</span>
+            <span className="font-sora text-sm text-[#00eefc] font-bold">≥ {captainMinRequirements.yasamDestegi} MW</span>
           </div>
-          <div className="p-space-sm rounded-lg bg-surface-container shadow-inner flex flex-col items-center">
-            <span className="material-symbols-outlined text-secondary-fixed text-[20px] mb-1">rocket_launch</span>
-            <span className="font-label-status text-label-status text-on-surface-variant mb-0.5">İtki</span>
-            <span className="font-headline-sm text-headline-sm text-secondary-fixed font-bold">≥ {captainMinRequirements.itki} MW</span>
+
+          <div className="p-2.5 rounded-xl bg-[#0f0c1e] border border-white/5 flex flex-col items-center">
+            <span className="material-symbols-outlined text-[#ffb703] text-[18px] mb-1">rocket_launch</span>
+            <span className="text-[10px] text-[#d5c4ac]">Net İtki</span>
+            <span className="font-sora text-sm text-[#ffb703] font-bold">≥ {captainMinRequirements.itki} MW</span>
           </div>
-          <div className="p-space-sm rounded-lg bg-surface-container shadow-inner flex flex-col items-center">
-            <span className="material-symbols-outlined text-primary-container text-[20px] mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
-            <span className="font-label-status text-label-status text-on-surface-variant mb-0.5">Kalkan</span>
-            <span className="font-headline-sm text-headline-sm text-primary-container font-bold">≥ {captainMinRequirements.kalkan} MW</span>
+
+          <div className="p-2.5 rounded-xl bg-[#0f0c1e] border border-white/5 flex flex-col items-center">
+            <span className="material-symbols-outlined text-[#dab5ff] text-[18px] mb-1">shield</span>
+            <span className="text-[10px] text-[#d5c4ac]">Net Kalkan</span>
+            <span className="font-sora text-sm text-[#dab5ff] font-bold">≥ {captainMinRequirements.kalkan} MW</span>
           </div>
         </div>
       </div>
 
-      {/* Engineer's Shared Live Allocation */}
-      <div className="flex flex-col bg-surface-container-low rounded-xl p-space-md shadow-lg gap-space-md relative overflow-hidden">
+      {/* Engineer's Shared Draft Readout */}
+      <div className="p-4 rounded-2xl bg-[#0f0c1e] border border-white/10 shadow-xl flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-space-xs">
-            <span className="material-symbols-outlined text-[20px] text-primary-container">sync</span>
-            <h3 className="font-headline-sm text-headline-sm text-on-surface tracking-tight font-bold">Mühendisin Dağılımı</h3>
+          <div className="flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${isDraftShared ? 'bg-emerald-400' : 'bg-amber-400 animate-ping'}`}></span>
+            <span className="font-mono text-[10px] text-white uppercase font-bold">MÜHENDİSİN ENERJİ TASLAĞI</span>
           </div>
-          <div className="px-space-sm py-0.5 rounded-lg bg-surface-container-highest">
-            <span className={`font-label-telemetry text-label-telemetry font-bold ${isDraftShared ? 'text-secondary-fixed' : 'text-primary'}`}>
-              {isDraftShared ? 'TASLAK AKTİF' : 'BEKLENİYOR'}
-            </span>
+          <span className={`text-[10px] font-mono font-bold ${isDraftShared ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {isDraftShared ? 'İLETİLDİ' : 'BEKLENİYOR'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-center mt-1">
+          <div className="p-2 rounded-xl bg-[#1c192c] border border-white/5 flex flex-col items-center">
+            <span className="text-[10px] text-[#d5c4ac]">Yaşam Desteği</span>
+            <span className="font-sora text-lg font-bold text-white">{engineerAllocation.yasamDestegi} MW</span>
+            <span className="text-[9px] text-emerald-400 font-mono">Net: {effectivePower.yasamDestegi} MW</span>
+          </div>
+
+          <div className="p-2 rounded-xl bg-[#1c192c] border border-white/5 flex flex-col items-center">
+            <span className="text-[10px] text-[#d5c4ac]">İtki Motorları</span>
+            <span className="font-sora text-lg font-bold text-white">{engineerAllocation.itki} MW</span>
+            <span className="text-[9px] text-emerald-400 font-mono">Net: {effectivePower.itki} MW</span>
+          </div>
+
+          <div className="p-2 rounded-xl bg-[#1c192c] border border-white/5 flex flex-col items-center">
+            <span className="text-[10px] text-[#d5c4ac]">Gövde Kalkanı</span>
+            <span className="font-sora text-lg font-bold text-white">{engineerAllocation.kalkan} MW</span>
+            <span className="text-[9px] text-emerald-400 font-mono">Net: {effectivePower.kalkan} MW</span>
           </div>
         </div>
 
-        {/* 3 Columns */}
-        <div className="grid grid-cols-3 gap-space-sm">
-          {/* Yaşam */}
-          <div className="flex flex-col items-center p-space-sm rounded-lg bg-surface-container-high/80 gap-space-xs shadow-sm">
-            <span className="font-headline-sm text-[13px] leading-4 text-on-surface font-semibold">Yaşam</span>
-            <span className={`font-label-telemetry text-[12px] font-bold ${
-              effectivePower.yasamDestegi >= captainMinRequirements.yasamDestegi ? 'text-secondary-container' : 'text-error'
-            }`}>
-              {effectivePower.yasamDestegi} MW
-            </span>
-            <div className="flex flex-col-reverse w-full gap-1 pt-1.5 px-space-xs">
-              {[...Array(6)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`h-2.5 w-full rounded ${
-                    i < effectivePower.yasamDestegi ? 'bg-secondary-container shadow-[0_0_8px_rgba(0,238,252,0.6)]' : 'bg-surface-container-highest/80'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* İtki */}
-          <div className="flex flex-col items-center p-space-sm rounded-lg bg-surface-container-high/80 gap-space-xs shadow-sm">
-            <span className="font-headline-sm text-[13px] leading-4 text-on-surface font-semibold">İtki</span>
-            <span className={`font-label-telemetry text-[12px] font-bold ${
-              effectivePower.itki >= captainMinRequirements.itki ? 'text-secondary-fixed' : 'text-error'
-            }`}>
-              {effectivePower.itki} MW
-            </span>
-            <div className="flex flex-col-reverse w-full gap-1 pt-1.5 px-space-xs">
-              {[...Array(6)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`h-2.5 w-full rounded ${
-                    i < effectivePower.itki ? 'bg-secondary-fixed shadow-[0_0_8px_rgba(125,244,255,0.6)]' : 'bg-surface-container-highest/80'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Kalkan */}
-          <div className="flex flex-col items-center p-space-sm rounded-lg bg-surface-container-high/80 gap-space-xs shadow-sm">
-            <span className="font-headline-sm text-[13px] leading-4 text-on-surface font-semibold">Kalkan</span>
-            <span className={`font-label-telemetry text-[12px] font-bold ${
-              effectivePower.kalkan >= captainMinRequirements.kalkan ? 'text-primary-container' : 'text-error'
-            }`}>
-              {effectivePower.kalkan} MW
-            </span>
-            <div className="flex flex-col-reverse w-full gap-1 pt-1.5 px-space-xs">
-              {[...Array(6)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`h-2.5 w-full rounded ${
-                    i < effectivePower.kalkan ? 'bg-primary-container shadow-[0_0_10px_rgba(255,183,3,0.7)]' : 'bg-surface-container-highest/80'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <span className="text-[10px] text-center text-on-surface-variant font-medium">
-          Mühendisin hat kayıpları düşüldükten sonra sisteme ulaşan net güçler gösterilmektedir.
-        </span>
-      </div>
-
-      {/* Routes Preview */}
-      <div className="bg-surface-container p-space-md rounded-xl flex flex-col gap-space-xs shadow-sm">
-        <span className="font-label-telemetry text-label-telemetry text-primary uppercase font-bold">
-          TAHLİYE ROTALARI (KAPTAN BİLGİSİ)
-        </span>
-        <div className="flex flex-col gap-1.5 mt-1 font-body-sm text-body-sm">
-          <div className="flex items-center justify-between p-2 rounded bg-surface-container-low">
-            <span className="font-semibold text-white">Rota Alfa (Sığınak)</span>
-            <span className="text-secondary-container font-bold">6 Kişi • 1.2 dk</span>
-          </div>
-          <div className="flex items-center justify-between p-2 rounded bg-surface-container-low">
-            <span className="font-semibold text-white">Rota Beta (Hızlı Geçiş)</span>
-            <span className="text-secondary-fixed font-bold">8 Kişi • 2.5 dk</span>
-          </div>
-          <div className="flex items-center justify-between p-2 rounded bg-surface-container-low">
-            <span className="font-semibold text-white">Rota Gama (Konvoy)</span>
-            <span className="text-primary-container font-bold">10 Kişi • 4.0 dk</span>
-          </div>
+        <div className="text-[10px] font-mono text-[#d5c4ac] text-center pt-1 border-t border-white/5">
+          Toplam Tahsis: {engineerAllocation.yasamDestegi + engineerAllocation.itki + engineerAllocation.kalkan} / 15 MW (Hat Kaybı: her hatta -1 MW)
         </div>
       </div>
 
-      {/* Feedback banner */}
+      {/* Feedback Message */}
       {feedback.msg && (
-        <div className={`p-3 rounded-xl border text-xs font-mono leading-relaxed animate-fadeIn ${
-          feedback.type === 'success' 
-            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
-            : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+        <div className={`p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
+          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
         }`}>
           {feedback.msg}
         </div>
       )}
 
-      {/* Action Trigger */}
-      <div className="pt-space-xs pb-4">
+      {/* Action Button */}
+      <div className="mt-2 flex flex-col gap-2">
         {!isLocked ? (
           <button
-            type="button"
             onClick={handleLockEnergy}
-            className="w-full h-14 rounded-xl bg-gradient-to-r from-primary-container to-surface-tint text-on-primary-container font-headline-sm text-headline-sm font-bold shadow-[0_6px_0_#996500,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 active:shadow-[0_2px_0_#996500] transition-all flex items-center justify-center gap-2 cursor-pointer uppercase"
+            className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#ffb703] to-[#ffba27] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 transition-all cursor-pointer"
+            type="button"
           >
-            <span className="material-symbols-outlined text-[24px]">lock</span>
-            <span>ENERJİYİ AKTAR VE KİLİTLE</span>
+            <span className="material-symbols-outlined text-[20px]">lock</span>
+            <span>Enerji Dağılımını Onayla ve Kilitle</span>
           </button>
         ) : (
           <button
-            type="button"
             onClick={onAdvancePhase}
-            className="w-full h-14 rounded-xl bg-gradient-to-r from-secondary-container to-secondary-fixed text-on-secondary-container font-headline-sm text-headline-sm font-bold shadow-[0_6px_0_#00686f] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer animate-pulse uppercase"
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#00dbe9] via-[#00eefc] to-[#7df4ff] text-[#002022] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#00686f,0_0_24px_rgba(0,238,252,0.35)] active:translate-y-1 transition-all cursor-pointer animate-bounce"
+            type="button"
           >
-            <span className="material-symbols-outlined text-[24px]">verified</span>
-            <span>4. AŞAMA KURTARMAYA GEÇ</span>
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+            <span>ENERJİ KİLİTLENDİ • KURTARMA ROTASI</span>
           </button>
         )}
       </div>
+
     </div>
   );
 };

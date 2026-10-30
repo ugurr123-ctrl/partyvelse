@@ -18,7 +18,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
 
   const isFailure = previewOutcome === 'basarisizlik';
 
-  const { rescuedCrewCount, timeLeftSeconds, hullIntegrity } = state;
+  const { rescuedCrewCount, timeLeftSeconds, hullIntegrity, completedTasksCount, finalScore, scoreBreakdown } = state;
 
   const minutes = Math.floor(timeLeftSeconds / 60).toString().padStart(2, '0');
   const seconds = (timeLeftSeconds % 60).toString().padStart(2, '0');
@@ -111,20 +111,20 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
   };
 
   return (
-    <div className="w-full max-w-[420px] mx-auto flex flex-col relative overflow-hidden select-none animate-fadeIn text-[#e6dff9] pb-8">
+    <div className="w-full max-w-[420px] mx-auto flex flex-col relative overflow-hidden select-none animate-fadeIn text-[#e6dff9] pb-8 font-sans">
       {/* Particle Canvas */}
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-20 w-full h-full opacity-60" />
 
       {/* Outcome Switcher Bar for Quick Evaluation / Testing */}
       <div className="relative z-40 px-margin pt-2 flex items-center justify-between">
-        <div className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant">
+        <div className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant font-bold">
           SONUÇ PROTOKOLÜ:
         </div>
         <div className="flex items-center gap-1 bg-surface-container-highest/80 p-0.5 rounded-lg border border-surface-variant/40 backdrop-blur-md">
           <button
             type="button"
             onClick={() => setPreviewOutcome('basarisizlik')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all ${
+            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
               isFailure 
                 ? 'bg-error-container text-on-error-container shadow-sm' 
                 : 'text-on-surface-variant hover:text-on-surface'
@@ -135,7 +135,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
           <button
             type="button"
             onClick={() => setPreviewOutcome('tam_basari')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all ${
+            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
               !isFailure 
                 ? 'bg-primary-container text-on-primary-container shadow-sm' 
                 : 'text-on-surface-variant hover:text-on-surface'
@@ -216,8 +216,19 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 </span>
               </div>
 
+              {/* Real Score Box */}
+              <div className="w-full mt-3 p-2.5 rounded-xl bg-surface-container border border-error/20 flex flex-col items-center">
+                <div className="text-[10px] font-mono text-on-surface-variant uppercase">HESAPLANAN SKOR</div>
+                <div className="text-xl font-sora font-black text-rose-300 mt-0.5">
+                  {finalScore || 200} PUAN
+                </div>
+                <div className="text-[9px] font-mono text-[#d5c4ac] mt-1 text-center">
+                  Formül: (Tamamlanan Görev × 200) + (Süre × 2) + (Bütünlük × 3) + (Mürettebat × 50)
+                </div>
+              </div>
+
               {/* Offline Crew Members Section */}
-              <div className="w-full grid grid-cols-2 gap-space-md mt-5 pt-4 border-t border-surface-variant/40">
+              <div className="w-full grid grid-cols-2 gap-space-md mt-4 pt-3 border-t border-surface-variant/40">
                 {/* Ece Offline Card */}
                 <div className="flex flex-col items-center bg-surface-container-low/90 border border-error/20 rounded-lg p-3 group transition-transform active:scale-95 shadow-sm">
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg mb-2 grayscale brightness-75">
@@ -269,7 +280,9 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 {/* Metric 1: Tasks */}
                 <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60 border border-error/15">
                   <span className="material-symbols-outlined text-[18px] text-error mb-1">warning</span>
-                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">2/3</span>
+                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    {completedTasksCount || 2}/4
+                  </span>
                   <span className="font-label-status text-label-status text-error uppercase mt-0.5">kısmi</span>
                 </div>
                 {/* Metric 2: Time Left */}
@@ -302,7 +315,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
 
             {/* Action Controls */}
             <div className="flex flex-col gap-space-sm pt-2">
-              {/* Arcade Retry Button */}
               <button 
                 type="button"
                 onClick={handleReplayClick}
@@ -317,7 +329,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 </span>
               </button>
 
-              {/* Secondary Dark Glass Button */}
               <button 
                 type="button"
                 onClick={handleLobbyClick}
@@ -326,14 +337,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                 <span>Lobiye dön</span>
               </button>
-            </div>
-
-            {/* Tip Note */}
-            <div className="flex items-center justify-center gap-2 pt-2 opacity-80">
-              <span className="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
-              <span className="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold text-center">
-                İPUCU: KAPTAN VE MÜHENDİS DAHA HIZLI BİLGİ ALIŞVERİŞİ YAPMALIDIR
-              </span>
             </div>
           </div>
         </>
@@ -359,15 +362,19 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
             <div className="relative z-10 flex flex-col items-center text-center mt-2">
               <div className="inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container-high/80 backdrop-blur-md mb-3 shadow-md">
                 <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
-                <span className="font-label-telemetry text-label-telemetry text-primary uppercase tracking-widest font-bold">GÖREV PROTOKOLÜ: BAŞARILI</span>
+                <span className="font-label-telemetry text-label-telemetry text-primary uppercase tracking-widest font-bold">
+                  {rescuedCrewCount === 10 ? 'GÖREV PROTOKOLÜ: KUSURSUZ TAHLİYE' : 'GÖREV PROTOKOLÜ: KISMİ KURTARMA'}
+                </span>
               </div>
 
               {/* Main Headline */}
               <h2 className="font-display-hero-mobile text-display-hero-mobile text-transparent bg-clip-text bg-gradient-to-b from-primary via-primary-container to-amber-500 uppercase tracking-tight drop-shadow-[0_4px_16px_rgba(255,183,3,0.35)] font-black">
-                BİRLİKTE KURTULDUNUZ
+                {rescuedCrewCount === 10 ? 'BİRLİKTE KURTULDUNUZ' : 'GÖREV TAMAMLANDI'}
               </h2>
               <p className="font-body-md text-body-md text-on-surface-variant max-w-[280px] mt-2 font-medium leading-relaxed">
-                Doğru kararlar, daha fazla hayat.<br />Harika bir ekip oldunuz.
+                {rescuedCrewCount === 10 
+                  ? 'Doğru kararlar, tüm mürettebat kurtuldu. Harika bir ekip oldunuz!' 
+                  : `${rescuedCrewCount} mürettebat başarıyla tahliye edildi. İstasyon boşaltıldı.`}
               </p>
             </div>
           </div>
@@ -400,8 +407,40 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 </span>
               </div>
 
+              {/* Real Score Box & Formula Breakdown */}
+              <div className="w-full mt-3 p-3 rounded-xl bg-[#0f0c1e] border border-white/10 flex flex-col items-center shadow-inner">
+                <span className="text-[10px] font-mono text-[#ffb703] uppercase font-bold tracking-wider">HESAPLANAN SKOR</span>
+                <span className="text-2xl font-sora font-extrabold text-white mt-0.5">
+                  {finalScore || 1480} PUAN
+                </span>
+                
+                {/* Score Formula Components */}
+                <div className="w-full grid grid-cols-4 gap-1 mt-2 pt-2 border-t border-white/5 text-center font-mono text-[9px]">
+                  <div className="flex flex-col">
+                    <span className="text-[#d5c4ac]">Görev</span>
+                    <span className="text-white font-bold">+{scoreBreakdown?.tasksScore ?? ((completedTasksCount || 4) * 200)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#d5c4ac]">Süre</span>
+                    <span className="text-[#00eefc] font-bold">+{scoreBreakdown?.timeBonus ?? (timeLeftSeconds * 2)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#d5c4ac]">Bütünlük</span>
+                    <span className="text-[#00eefc] font-bold">+{scoreBreakdown?.hullBonus ?? (hullIntegrity * 3)}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[#d5c4ac]">Mürettebat</span>
+                    <span className="text-[#ffb703] font-bold">+{scoreBreakdown?.crewBonus ?? ((rescuedCrewCount || 10) * 50)}</span>
+                  </div>
+                </div>
+
+                <div className="text-[8px] font-mono text-[#d5c4ac] mt-1.5 opacity-70">
+                  Formül: (Görev × 200) + (Kalan Süre × 2) + (Gövde % × 3) + (Mürettebat × 50)
+                </div>
+              </div>
+
               {/* Crew Members Section */}
-              <div className="w-full grid grid-cols-2 gap-space-md mt-5 pt-4">
+              <div className="w-full grid grid-cols-2 gap-space-md mt-4 pt-3">
                 {/* Ece Card */}
                 <div className="flex flex-col items-center bg-surface-container-low/90 rounded-lg p-3 group transition-transform active:scale-95 shadow-sm">
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg mb-2">
@@ -444,13 +483,13 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
 
               {/* Mission Metrics Row */}
               <div className="w-full grid grid-cols-3 gap-space-xs text-center">
-                {/* Metric 1: Tasks */}
                 <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60">
                   <span className="material-symbols-outlined text-[18px] text-on-surface-variant mb-1">assignment</span>
-                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">3</span>
+                  <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
+                    {completedTasksCount || 4}
+                  </span>
                   <span className="font-label-status text-label-status text-on-surface-variant uppercase mt-0.5">görev</span>
                 </div>
-                {/* Metric 2: Time Left */}
                 <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60">
                   <span className="material-symbols-outlined text-[18px] text-primary-container mb-1">timer</span>
                   <span className="font-headline-sm text-headline-sm text-primary font-bold">
@@ -458,7 +497,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                   </span>
                   <span className="font-label-status text-label-status text-on-surface-variant uppercase mt-0.5">kaldı</span>
                 </div>
-                {/* Metric 3: Integrity */}
                 <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60">
                   <span className="material-symbols-outlined text-[18px] text-secondary mb-1">shield</span>
                   <span className="font-headline-sm text-headline-sm text-secondary font-bold">
@@ -471,7 +509,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
 
             {/* Action Controls */}
             <div className="flex flex-col gap-space-sm pt-2">
-              {/* Primary Tactile Gold Arcade Push Button */}
               <button 
                 type="button"
                 onClick={handleReplayClick}
@@ -487,7 +524,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 </span>
               </button>
 
-              {/* Secondary Dark Glass Button */}
               <button 
                 type="button"
                 onClick={handleLobbyClick}
@@ -496,14 +532,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 <span className="material-symbols-outlined text-[20px]">chevron_left</span>
                 <span>Lobiye dön</span>
               </button>
-            </div>
-
-            {/* VIP Honor Note */}
-            <div className="flex items-center justify-center gap-2 pt-2 opacity-75">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-              <span className="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold">
-                TAKIM PERFORMANSI: KUSURSUZ TAHLİYE
-              </span>
             </div>
           </div>
         </>

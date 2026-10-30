@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MissionState } from '../../types/game';
+import { MissionState, ENVIRONMENTS } from '../../types/game';
 
 interface Props {
   state: MissionState;
@@ -8,18 +8,20 @@ interface Props {
 }
 
 export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+  const { diagnostic, activeEnvironment } = state;
+  const envInfo = ENVIRONMENTS[activeEnvironment];
+
   const [selectedBreaker, setSelectedBreaker] = useState<'K1' | 'K2' | 'K3' | 'K4'>(
-    state.diagnostic.captainSelectedBreaker || 'K3'
+    diagnostic.captainSelectedBreaker || diagnostic.correctBreaker
   );
   const [activeModule, setActiveModule] = useState<'reaktor' | 'anten' | 'yasam' | 'kargo'>('reaktor');
-  const [isUnlocked, setIsUnlocked] = useState(state.diagnostic.isSolved);
   const [feedback, setFeedback] = useState<{ type: 'idle' | 'success' | 'error'; msg: string }>({
-    type: state.diagnostic.isSolved ? 'success' : 'idle',
-    msg: state.diagnostic.isSolved ? 'K3 Kesicisi Devre Dışı Bırakıldı • Reaktör Kararlı' : '',
+    type: diagnostic.isSolved ? 'success' : 'idle',
+    msg: diagnostic.isSolved ? `${diagnostic.correctBreaker} Kesicisi Devre Dışı Bırakıldı • Reaktör Kararlı` : '',
   });
 
   const handleSelectBreaker = (id: 'K1' | 'K2' | 'K3' | 'K4') => {
-    if (state.diagnostic.isSolved) return;
+    if (diagnostic.isSolved) return;
     setSelectedBreaker(id);
     onUpdate((prev) => ({
       ...prev,
@@ -31,31 +33,38 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
   };
 
   const handleUnlockAction = () => {
-    if (selectedBreaker === 'K3') {
-      setIsUnlocked(true);
+    if (diagnostic.isSolved) return;
+
+    if (selectedBreaker === diagnostic.correctBreaker) {
+      const willSolve = diagnostic.engineerActionTaken;
       setFeedback({
         type: 'success',
-        msg: 'GÜVENLİK KİLİDİ AÇILDI! K3 kesicisi Anten hattını başarıyla izole etti.',
+        msg: willSolve 
+          ? `GÜVENLİK KİLİDİ AÇILDI! ${selectedBreaker} kesicisi arızalı hattı başarıyla izole etti. Reaktör dengelendi!`
+          : `GÜVENLİK KİLİDİ AÇILDI (${selectedBreaker})! Mühendisin fiziksel soğutma/tahliye müdahalesi bekleniyor.`,
       });
       onUpdate((prev) => ({
         ...prev,
         diagnostic: {
           ...prev.diagnostic,
-          isSolved: true,
+          captainSelectedBreaker: selectedBreaker,
+          isSolved: willSolve,
         },
       }));
     } else {
       setFeedback({
         type: 'error',
-        msg: `HATALI KESİCİ (${selectedBreaker})! Yanlış devre açıldı. Bütünlük -%15, Süre -20 sn!`,
+        msg: `HATALI KESİCİ (${selectedBreaker})! Arızalı hat yerine sağlam hat kesildi. Bütünlük -%10, Süre -15 sn!`,
       });
       onUpdate((prev) => ({
         ...prev,
-        hullIntegrity: Math.max(0, prev.hullIntegrity - 15),
-        timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 20),
+        hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
+        timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 15),
       }));
     }
   };
+
+  const isUnlocked = diagnostic.captainSelectedBreaker === diagnostic.correctBreaker;
 
   return (
     <div className="w-full max-w-[420px] mx-auto flex flex-col text-on-surface select-none pb-8 animate-fadeIn font-sans">
@@ -68,6 +77,9 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               <span className="material-symbols-outlined text-[16px]">military_tech</span>
               <span className="font-mono text-[10px] tracking-widest uppercase font-bold">KAPTAN</span>
             </div>
+            <span className="text-[10px] font-mono text-[#00eefc] px-2 py-0.5 rounded bg-[#00eefc]/10">
+              {envInfo.badge}
+            </span>
           </div>
           <h2 className="font-sora text-2xl font-extrabold text-white tracking-tight leading-tight">
             Arızayı <span className="text-[#ffb703] drop-shadow-[0_0_8px_rgba(255,183,3,0.5)]">birlikte</span> bulun
@@ -95,7 +107,7 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center text-[#00eefc]">
                 <span className="material-symbols-outlined text-[14px]">satellite_alt</span>
               </div>
-              <span className="font-mono text-[10px] text-white">Anten</span>
+              <span className="font-mono text-[10px] text-white">Anten ({diagnostic.lineBreakerMap.anten})</span>
             </button>
 
             {/* Node: Yaşam Modülü (Top-Right) */}
@@ -109,10 +121,10 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               <div className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center text-[#00eefc]">
                 <span className="material-symbols-outlined text-[14px]">eco</span>
               </div>
-              <span className="font-mono text-[10px] text-white">Yaşam Modülü</span>
+              <span className="font-mono text-[10px] text-white">Soğutma ({diagnostic.lineBreakerMap.sogutucu})</span>
             </button>
 
-            {/* Node: Reaktör (Bottom-Left, ACTIVE) */}
+            {/* Node: Reaktör (Bottom-Left) */}
             <div 
               onClick={() => setActiveModule('reaktor')}
               className="absolute bottom-4 left-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#363246] shadow-[0_0_16px_rgba(255,183,3,0.4)] border border-[#ffb703] cursor-pointer"
@@ -120,11 +132,11 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               <div className="w-6 h-6 rounded bg-[#ffb703] text-[#422c00] flex items-center justify-center animate-pulse">
                 <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>detector_battery</span>
               </div>
-              <span className="font-mono text-[10px] text-[#ffb703] font-bold">Reaktör</span>
+              <span className="font-mono text-[10px] text-[#ffb703] font-bold">Reaktör ({diagnostic.lineBreakerMap.reaktor})</span>
               <span className="w-2 h-2 rounded-full bg-[#ffb703] animate-ping ml-0.5"></span>
             </div>
 
-            {/* Node: Kargo (Bottom-Right) */}
+            {/* Node: Kargo/Yönlendirme (Bottom-Right) */}
             <button 
               onClick={() => setActiveModule('kargo')}
               className={`group absolute bottom-4 right-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg backdrop-blur-md shadow-lg transition-transform active:scale-95 cursor-pointer ${
@@ -133,42 +145,51 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               type="button"
             >
               <div className="w-6 h-6 rounded bg-[#363246] flex items-center justify-center text-[#d5c4ac]">
-                <span className="material-symbols-outlined text-[14px]">inventory_2</span>
+                <span className="material-symbols-outlined text-[14px]">grid_view</span>
               </div>
-              <span className="font-mono text-[10px] text-[#d5c4ac]">Kargo</span>
+              <span className="font-mono text-[10px] text-[#d5c4ac]">Yönlendirme ({diagnostic.lineBreakerMap.yonlendirme})</span>
             </button>
           </div>
         </div>
 
-        {/* Diagnostic Criteria Plaque (Captain Telemetry Specs) */}
+        {/* Diagnostic Criteria Plaque (Dynamic according to Station Environment) */}
         <div className="w-full rounded-2xl bg-[#1c192c] p-3.5 flex flex-col gap-2.5 shadow-xl border border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-[#ffb703]">
               <span className="material-symbols-outlined text-[18px]">warning</span>
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#ffdba0] font-bold">ARIZA KOŞULLARI</span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#ffdba0] font-bold">
+                {envInfo.name.toUpperCase()} ARIZA KURALI
+              </span>
             </div>
-            <span className="font-mono text-[9px] text-[#d5c4ac] uppercase tracking-widest">KAPTAN DOKÜMANI</span>
+            <span className="font-mono text-[9px] text-[#00eefc] uppercase tracking-widest font-bold">
+              KAPTAN KILAVUZU
+            </span>
           </div>
 
-          {/* 3 Diagnostic Pills */}
+          <div className="text-xs text-[#e6dff9] font-medium leading-relaxed bg-[#201d30] p-2.5 rounded-xl border border-white/5">
+            {envInfo.conditionNote}
+          </div>
+
+          {/* 3 Diagnostic Reference Pills */}
           <div className="grid grid-cols-3 gap-2">
-            {/* Temp */}
             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#201d30] shadow-inner border border-white/5">
-              <span className="material-symbols-outlined text-[#ffdba0] text-[20px] mb-0.5">thermostat</span>
-              <span className="font-mono text-[9px] text-[#d5c4ac] mb-0.5">Isı</span>
-              <span className="font-sora text-sm text-[#ffdba0] font-bold">≥ 80°C</span>
+              <span className="material-symbols-outlined text-[#ffdba0] text-[18px] mb-0.5">thermostat</span>
+              <span className="font-mono text-[9px] text-[#d5c4ac] mb-0.5">Isı Kriteri</span>
+              <span className="font-sora text-xs text-[#ffdba0] font-bold">
+                {activeEnvironment === 'buzul_istasyonu' ? '≤ -10°C' : '≥ 80°C'}
+              </span>
             </div>
-            {/* Pressure */}
             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#201d30] shadow-inner border border-white/5">
-              <span className="material-symbols-outlined text-[#00eefc] text-[20px] mb-0.5">speed</span>
-              <span className="font-mono text-[9px] text-[#d5c4ac] mb-0.5">Basınç</span>
-              <span className="font-sora text-sm text-[#00eefc] font-bold">≤ 40 kPa</span>
+              <span className="material-symbols-outlined text-[#00eefc] text-[18px] mb-0.5">speed</span>
+              <span className="font-mono text-[9px] text-[#d5c4ac] mb-0.5">Basınç Kriteri</span>
+              <span className="font-sora text-xs text-[#00eefc] font-bold">
+                {activeEnvironment === 'buzul_istasyonu' ? '≥ 70 kPa' : '≤ 40 kPa'}
+              </span>
             </div>
-            {/* Parazit */}
             <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#201d30] shadow-inner border border-white/5">
-              <span className="material-symbols-outlined text-[#dab5ff] text-[20px] mb-0.5">airwave</span>
-              <span className="font-mono text-[9px] text-[#d5c4ac] mb-0.5">Parazit</span>
-              <span className="font-sora text-sm text-[#dab5ff] font-bold">≥ 65 dB</span>
+              <span className="material-symbols-outlined text-[#dab5ff] text-[18px] mb-0.5">airwave</span>
+              <span className="font-mono text-[9px] text-[#d5c4ac] mb-0.5">Parazit Kriteri</span>
+              <span className="font-sora text-xs text-[#dab5ff] font-bold">≥ 65 dB</span>
             </div>
           </div>
         </div>
@@ -180,80 +201,59 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               <span className="material-symbols-outlined text-[18px]">build</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-[#d5c4ac]">Bağlantılı Görevli</span>
+              <span className="text-[10px] text-[#d5c4ac]">Mühendis Durumu</span>
               <span className="font-mono text-xs font-bold text-white">
-                Mühendis: <span className="text-[#00eefc]">{state.diagnostic.engineerSuggestedLine ? state.diagnostic.engineerSuggestedLine.toUpperCase() + ' hattı' : 'Anten hattı'}</span>
+                {diagnostic.engineerActionTaken ? (
+                  <span className="text-emerald-400">
+                    Fiziksel Tahliye Uygulandı ({diagnostic.engineerSuggestedLine?.toUpperCase() || ''})
+                  </span>
+                ) : (
+                  <span className="text-[#00eefc]">Ölçüm alıyor / İletişim bekleniyor</span>
+                )}
               </span>
             </div>
           </div>
           <div className="flex items-center gap-1 text-[#d5c4ac]">
-            <span className="w-2 h-2 rounded-full bg-[#00eefc] animate-ping"></span>
+            <span className={`w-2 h-2 rounded-full ${diagnostic.engineerActionTaken ? 'bg-emerald-400' : 'bg-[#00eefc] animate-ping'}`}></span>
             <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           </div>
         </div>
 
-        {/* Power Circuit Schematic Console (GÜÇ DEVRESİ ŞEMASI) */}
+        {/* Breaker Selection Console */}
         <div className="w-full rounded-2xl bg-[#0f0c1e] p-3.5 flex flex-col gap-3 shadow-2xl relative overflow-hidden border border-white/10">
-          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#ffb703]/10 blur-3xl pointer-events-none rounded-full"></div>
-          
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-1">
-              <span className="font-mono text-[10px] uppercase text-[#d5c4ac] tracking-wider font-bold">GÜÇ DEVRESİ ŞEMASI</span>
+              <span className="font-mono text-[10px] uppercase text-[#d5c4ac] tracking-wider font-bold">KESİCİ MATRİSİ (K1 - K4)</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-[#ffb703]"></span>
-              <span className="font-mono text-[9px] text-[#ffb703] font-bold uppercase">CANLI AKIM</span>
+              <span className="font-mono text-[9px] text-[#ffb703] font-bold uppercase">GÜVENLİK KİLİDİ</span>
             </div>
           </div>
 
-          {/* Core & Circuit Schematic Visual Canvas */}
-          <div className="relative w-full flex flex-col items-center z-10">
-            <div className="w-12 h-12 rounded-2xl bg-[#2b273b] flex items-center justify-center shadow-[0_0_24px_rgba(255,183,3,0.4)] relative border border-[#ffb703]/50">
-              <div className="absolute inset-1 rounded-xl bg-[#ffb703]/20 animate-pulse"></div>
-              <span className="material-symbols-outlined text-[24px] text-[#ffb703] relative z-10" style={{ fontVariationSettings: "'FILL' 1" }}>detector_battery</span>
-            </div>
-
-            {/* Bus Conduit Lines (Inline SVG) */}
-            <svg className="w-full h-14 stroke-current" fill="none" viewBox="0 0 320 64" xmlns="http://www.w3.org/2000/svg">
-              <path className="text-[#ffb703]" d="M160 0 V24" strokeLinecap="round" strokeWidth="4"></path>
-              <path className="text-[#363246]" d="M40 24 H280" strokeLinecap="round" strokeWidth="3"></path>
-              <path className="text-[#363246]" d="M40 24 V64" strokeLinecap="round" strokeWidth="3"></path>
-              <path className="text-[#363246]" d="M120 24 V64" strokeLinecap="round" strokeWidth="3"></path>
-              <path className="text-[#ffb703]" d="M160 24 H200 V64" strokeDasharray="4 2" strokeLinecap="round" strokeWidth="4"></path>
-              <path className="text-[#00eefc]/40" d="M280 24 V64" strokeLinecap="round" strokeWidth="3"></path>
-            </svg>
-
-            {/* 4 Breaker / Switch Pods (K1, K2, K3, K4) */}
-            <div className="grid grid-cols-4 gap-2 w-full pt-1">
-              {(['K1', 'K2', 'K3', 'K4'] as const).map((id) => {
-                const isSelected = selectedBreaker === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => handleSelectBreaker(id)}
-                    className={`breaker-card flex flex-col items-center py-2.5 px-1 rounded-xl transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#ffb703]/20 shadow-[0_0_18px_rgba(255,183,3,0.35)] border border-[#ffb703]'
-                        : 'bg-[#2b273b] hover:bg-[#363246] border border-white/5 active:translate-y-1'
-                    }`}
-                    type="button"
-                  >
-                    <div className={`w-7 h-14 rounded-md flex flex-col items-center p-1 ${
-                      isSelected 
-                        ? 'bg-[#ffb703] justify-end shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]' 
-                        : 'bg-[#201d30] justify-start shadow-inner'
-                    }`}>
-                      <div className={`w-5 h-7 rounded ${isSelected ? 'bg-[#422c00] flex items-center justify-center' : 'bg-[#363246]'}`}>
-                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#ffdba0] animate-ping"></span>}
-                      </div>
-                    </div>
-                    <span className={`font-mono text-xs font-bold mt-1.5 uppercase ${isSelected ? 'text-[#ffb703]' : 'text-[#d5c4ac]'}`}>
-                      {id}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="grid grid-cols-4 gap-2 z-10">
+            {(['K1', 'K2', 'K3', 'K4'] as const).map((id) => {
+              const isSelected = selectedBreaker === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => handleSelectBreaker(id)}
+                  className={`p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+                    isSelected 
+                      ? 'bg-[#ffb703]/20 border-[#ffb703] shadow-[0_0_12px_rgba(255,183,3,0.4)]' 
+                      : 'bg-[#201d30] border-white/5 text-[#d5c4ac] hover:bg-[#2b273b]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px] text-[#ffb703]">
+                    {isSelected ? 'toggle_on' : 'toggle_off'}
+                  </span>
+                  <span className={`font-mono text-xs font-bold mt-1 uppercase ${isSelected ? 'text-[#ffb703]' : 'text-white'}`}>
+                    {id}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -267,7 +267,7 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
         )}
 
         {/* Primary Action Button */}
-        {!state.diagnostic.isSolved ? (
+        {!diagnostic.isSolved ? (
           <div className="w-full flex flex-col items-center gap-1.5 pt-1">
             <button
               onClick={handleUnlockAction}
@@ -277,11 +277,11 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
               <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                 {isUnlocked ? 'lock_open' : 'lock'}
               </span>
-              <span>{isUnlocked ? 'Kilit Açıldı (Devre İzole)' : 'Güvenlik kilidini aç'}</span>
+              <span>{isUnlocked ? `${selectedBreaker} Açıldı (Mühendis Bekleniyor)` : `${selectedBreaker} Güvenlik Kilidini Aç`}</span>
             </button>
             <div className="flex items-center gap-1.5 text-rose-400 mt-0.5">
               <span className="material-symbols-outlined text-[15px]">report</span>
-              <span className="text-[11px] font-mono">Yanlış müdahale bütünlüğü azaltır</span>
+              <span className="text-[11px] font-mono">Yanlış kesici bütünlüğü ve süreyi düşürür</span>
             </div>
           </div>
         ) : (
@@ -294,46 +294,6 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
             <span>REAKTÖR DENGELENDİ • SONRAKİ AŞAMA</span>
           </button>
         )}
-
-        {/* Tactical Sector Switcher Dock (4 Bottom Station Navigation Tabs) */}
-        <div className="w-full rounded-xl bg-[#1c192c] p-1.5 grid grid-cols-4 gap-1 shadow-xl border border-white/5">
-          <button 
-            onClick={() => setActiveModule('reaktor')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors cursor-pointer ${
-              activeModule === 'reaktor' ? 'bg-[#363246] text-[#ffb703] shadow-md font-bold' : 'text-[#d5c4ac] hover:bg-[#201d30]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">adjust</span>
-            <span className="font-mono text-[9px] mt-0.5">Reaktör</span>
-          </button>
-          <button 
-            onClick={() => setActiveModule('anten')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors cursor-pointer ${
-              activeModule === 'anten' ? 'bg-[#363246] text-[#00eefc] shadow-md font-bold' : 'text-[#d5c4ac] hover:bg-[#201d30]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">settings_input_antenna</span>
-            <span className="font-mono text-[9px] mt-0.5">Anten</span>
-          </button>
-          <button 
-            onClick={() => setActiveModule('yasam')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors cursor-pointer ${
-              activeModule === 'yasam' ? 'bg-[#363246] text-[#00eefc] shadow-md font-bold' : 'text-[#d5c4ac] hover:bg-[#201d30]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">spa</span>
-            <span className="font-mono text-[9px] mt-0.5">Yaşam</span>
-          </button>
-          <button 
-            onClick={() => setActiveModule('kargo')}
-            className={`flex flex-col items-center py-2 px-1 rounded-lg transition-colors cursor-pointer ${
-              activeModule === 'kargo' ? 'bg-[#363246] text-[#00eefc] shadow-md font-bold' : 'text-[#d5c4ac] hover:bg-[#201d30]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">grid_view</span>
-            <span className="font-mono text-[9px] mt-0.5">Kargo</span>
-          </button>
-        </div>
 
       </div>
     </div>

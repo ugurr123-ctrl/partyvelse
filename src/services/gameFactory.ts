@@ -3,10 +3,17 @@ import {
   MiniGameType, 
   EnvironmentType, 
   ENVIRONMENTS,
-  RescueRoute
+  RescueRoute,
+  DiagnosticData,
+  SignalData,
+  CableData,
+  AirlockData,
+  RadarData,
+  EnergyData,
+  RescueData
 } from '../types/game';
 
-const ALL_MINI_GAMES: MiniGameType[] = [
+export const ALL_MINI_GAMES: MiniGameType[] = [
   'ariza_teshisi',
   'sinyal_cozumu',
   'kablo_baglantisi',
@@ -14,9 +21,20 @@ const ALL_MINI_GAMES: MiniGameType[] = [
   'radar_yonlendirme',
 ];
 
-export function getRandomMiniGames(): [MiniGameType, MiniGameType] {
-  const shuffled = [...ALL_MINI_GAMES].sort(() => Math.random() - 0.5);
-  return [shuffled[0], shuffled[1]];
+export function getRandomMiniGames(previousPair?: [MiniGameType, MiniGameType]): [MiniGameType, MiniGameType] {
+  let candidate: [MiniGameType, MiniGameType];
+  let attempts = 0;
+  do {
+    const shuffled = [...ALL_MINI_GAMES].sort(() => Math.random() - 0.5);
+    candidate = [shuffled[0], shuffled[1]];
+    attempts++;
+  } while (
+    attempts < 50 &&
+    previousPair &&
+    ((candidate[0] === previousPair[0] && candidate[1] === previousPair[1]) ||
+     (candidate[0] === previousPair[1] && candidate[1] === previousPair[0]))
+  );
+  return candidate;
 }
 
 export function generateRoomCode(): string {
@@ -31,48 +49,381 @@ export function generateRoomCode(): string {
 export const RESCUE_ROUTES: RescueRoute[] = [
   {
     id: 'alfa',
-    name: 'Rota Alfa (Süper-İtki Koridoru)',
-    badge: 'HIZLI & YÜKSEK RİSK',
-    desc: 'Plazma kuyruğu içinden süratli geçiş. Yüksek itki ve reaktör kararlılığı gerektirir.',
-    crewCount: 18,
+    name: 'Rota Alfa (Konvoy / Süper-İtki)',
+    badge: 'TAM TAHLİYE // 10 KİŞİ',
+    desc: 'Bütün mürettebatı tahliye eden yüksek hızlı acil kaçış koridoru.',
+    crewCount: 10,
     travelTimeMin: '1.2 dk',
-    powerRequirements: { itki: 4, kalkan: 2 },
-    dangerRating: 'YÜKSEK',
+    travelTimeSeconds: 72,
+    powerRequirements: { itki: 5, kalkan: 4, yasamDestegi: 3 },
+    dangerRating: 'YÜKSEK GÜÇ TALEBİ',
+    dangerDesc: 'Tüm 10 kişiyi kurtarır. Net 5 MW itki ve 4 MW kalkan gerektirir.',
   },
   {
     id: 'beta',
-    name: 'Rota Beta (Lagrange Yolu)',
-    badge: 'STANDART DENGELİ',
-    desc: 'Yerçekimi sapanı desteğiyle istasyon çevresinden orta süreli güvenli geçiş.',
-    crewCount: 12,
+    name: 'Rota Beta (Lagrange Denge Yolu)',
+    badge: 'DENGELİ // 8 KİŞİ',
+    desc: 'İstasyon çevresinden orta süreli, dengeli güç isteyen kurtarma rotası.',
+    crewCount: 8,
     travelTimeMin: '2.5 dk',
-    powerRequirements: { itki: 3, kalkan: 3 },
-    dangerRating: 'ORTA',
+    travelTimeSeconds: 150,
+    powerRequirements: { itki: 4, kalkan: 3, yasamDestegi: 3 },
+    dangerRating: 'ORTA GÜÇ TALEBİ',
+    dangerDesc: '8 kişiyi kurtarır. Net 4 MW itki ve 3 MW kalkan gerektirir.',
   },
   {
     id: 'gama',
-    name: 'Rota Gama (Gölge Yörünge)',
-    badge: 'AĞIR & ZIRHLI',
-    desc: 'Enkaza karşı tam kalkan korumalı, uzun süreli ancak minimum riskli tahliye rotası.',
+    name: 'Rota Gama (Gölge Sığınak)',
+    badge: 'ASGARİ // 6 KİŞİ',
+    desc: 'Düşük itkiyle ulaşılan, güvenli ancak kısıtlı kapasiteli sığınak.',
     crewCount: 6,
     travelTimeMin: '4.0 dk',
-    powerRequirements: { itki: 2, kalkan: 4 },
-    dangerRating: 'DÜŞÜK',
+    travelTimeSeconds: 240,
+    powerRequirements: { itki: 2, kalkan: 2, yasamDestegi: 3 },
+    dangerRating: 'DÜŞÜK GÜÇ TALEBİ',
+    dangerDesc: '6 kişiyi kurtarır. Asgari net 2 MW itki ve 2 MW kalkanla güvenle tamamlanır.',
   },
 ];
+
+// Helper to test if a line meets environment anomaly conditions
+export function isLineAnomaly(
+  env: EnvironmentType,
+  telemetry: { temp: number; press: number; noise: number }
+): boolean {
+  const { temp, press, noise } = telemetry;
+  switch (env) {
+    case 'kayip_sinyal':
+      return temp >= 80 && press <= 40 && noise >= 65;
+    case 'buzul_istasyonu':
+      return temp <= -10 || press >= 70;
+    case 'meteor_yagmuru': {
+      let count = 0;
+      if (temp >= 80) count++;
+      if (press <= 40) count++;
+      if (noise >= 65) count++;
+      return count >= 2;
+    }
+    case 'karantina_protokolu':
+      return temp >= 80 || press <= 40 || noise >= 65;
+  }
+}
+
+export function generateDiagnostic(env: EnvironmentType): DiagnosticData {
+  const lineKeys: Array<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme'> = [
+    'anten',
+    'reaktor',
+    'sogutucu',
+    'yonlendirme',
+  ];
+  const faultyLine = lineKeys[Math.floor(Math.random() * lineKeys.length)];
+
+  const breakerOptions: Array<'K1' | 'K2' | 'K3' | 'K4'> = ['K1', 'K2', 'K3', 'K4'];
+  const shuffledBreakers = [...breakerOptions].sort(() => Math.random() - 0.5);
+
+  const lineBreakerMap: Record<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme', 'K1' | 'K2' | 'K3' | 'K4'> = {
+    reaktor: shuffledBreakers[0],
+    sogutucu: shuffledBreakers[1],
+    anten: shuffledBreakers[2],
+    yonlendirme: shuffledBreakers[3],
+  };
+
+  const correctBreaker = lineBreakerMap[faultyLine];
+
+  const lines = {
+    reaktor: { temp: 58, press: 52, noise: 40, code: 'CIR-01' },
+    sogutucu: { temp: 48, press: 50, noise: 35, code: 'CIR-02' },
+    anten: { temp: 52, press: 48, noise: 42, code: 'CIR-03' },
+    yonlendirme: { temp: 60, press: 55, noise: 38, code: 'CIR-04' },
+  };
+
+  // Configure measurements so ONLY faultyLine triggers isLineAnomaly(env, ...)
+  for (const key of lineKeys) {
+    if (key === faultyLine) {
+      if (env === 'kayip_sinyal') {
+        lines[key].temp = 82 + Math.floor(Math.random() * 8);
+        lines[key].press = 32 + Math.floor(Math.random() * 7);
+        lines[key].noise = 68 + Math.floor(Math.random() * 8);
+      } else if (env === 'buzul_istasyonu') {
+        lines[key].temp = -15 - Math.floor(Math.random() * 12);
+        lines[key].press = 75 + Math.floor(Math.random() * 10);
+        lines[key].noise = 55;
+      } else if (env === 'meteor_yagmuru') {
+        lines[key].temp = 85 + Math.floor(Math.random() * 6);
+        lines[key].press = 34 + Math.floor(Math.random() * 5);
+        lines[key].noise = 45; // 2 conditions met
+      } else {
+        // karantina_protokolu
+        lines[key].temp = 88 + Math.floor(Math.random() * 8);
+        lines[key].press = 55;
+        lines[key].noise = 40;
+      }
+    } else {
+      // Safe values that fail all conditions
+      if (env === 'buzul_istasyonu') {
+        lines[key].temp = 20 + Math.floor(Math.random() * 15);
+        lines[key].press = 40 + Math.floor(Math.random() * 15);
+        lines[key].noise = 30 + Math.floor(Math.random() * 10);
+      } else {
+        lines[key].temp = 50 + Math.floor(Math.random() * 15);
+        lines[key].press = 50 + Math.floor(Math.random() * 12);
+        lines[key].noise = 35 + Math.floor(Math.random() * 12);
+      }
+    }
+  }
+
+  return {
+    lines,
+    faultyLine,
+    lineBreakerMap,
+    engineerSuggestedLine: null,
+    captainSelectedBreaker: null,
+    correctBreaker,
+    engineerActionTaken: false,
+    isSolved: false,
+  };
+}
+
+export function generateSignal(): SignalData {
+  const glyphPool = ['Δ', 'Ω', 'Σ', 'λ', 'Ψ', 'Φ'];
+  const shuffledGlyphs = [...glyphPool].sort(() => Math.random() - 0.5).slice(0, 4);
+
+  const digits = [2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+  const symbolMap: Record<string, number> = {};
+  shuffledGlyphs.forEach((g, i) => {
+    symbolMap[g] = digits[i];
+  });
+
+  const ruleTypes: Array<'cift_degis' | 'ters' | 'ilk_sona'> = ['cift_degis', 'ters', 'ilk_sona'];
+  const ruleType = ruleTypes[Math.floor(Math.random() * ruleTypes.length)];
+
+  let ruleDescription = '';
+  let computedDigits: number[] = [];
+
+  const rawDigits = shuffledGlyphs.map(g => symbolMap[g]);
+
+  if (ruleType === 'cift_degis') {
+    ruleDescription = 'Sembol çiftlerini yer değiştirin (1-2 ve 3-4)';
+    computedDigits = [rawDigits[1], rawDigits[0], rawDigits[3], rawDigits[2]];
+  } else if (ruleType === 'ters') {
+    ruleDescription = 'Sembol sırasını tersten okuyun (4-3-2-1)';
+    computedDigits = [rawDigits[3], rawDigits[2], rawDigits[1], rawDigits[0]];
+  } else {
+    ruleDescription = 'İlk sembolü en sona kaydırın (2-3-4-1)';
+    computedDigits = [rawDigits[1], rawDigits[2], rawDigits[3], rawDigits[0]];
+  }
+
+  const computedCode = computedDigits.join('');
+
+  // 4 Frequencies between 141.0 and 144.5 MHz
+  const freqList = ['141.2 MHz', '142.8 MHz', '143.6 MHz', '144.4 MHz'];
+  const correctFreqIndex = Math.floor(Math.random() * freqList.length);
+  const correctFrequency = freqList[correctFreqIndex];
+
+  const frequencies = freqList.map((freq, idx) => {
+    if (idx === correctFreqIndex) {
+      return {
+        freq,
+        code: computedCode,
+        label: 'Acil Yardım Taşıyıcı',
+      };
+    }
+    // Generate dummy code
+    const fakeCode = String(Math.floor(1000 + Math.random() * 9000));
+    return {
+      freq,
+      code: fakeCode === computedCode ? '9812' : fakeCode,
+      label: idx === 0 ? 'Alfa Kanalı' : idx === 2 ? 'Yedek Röle' : 'Gezegen Telsiz',
+    };
+  });
+
+  return {
+    symbols: shuffledGlyphs,
+    ruleDescription,
+    ruleType,
+    symbolMap,
+    computedCode,
+    correctFrequency,
+    frequencies,
+    engineerTunedFreq: '140.5 MHz', // Intentionally wrong initial state
+    isLocked: false,
+    isSolved: false,
+  };
+}
+
+export function generateCable(): CableData {
+  const cables = [
+    { id: 'c1', label: 'KIRMIZI // YÜK', color: '#ffb4ab', dotColor: 'bg-error-container', shadow: 'shadow-[0_0_8px_#ffb4ab]', textColor: 'text-error', requiredHz: 120 },
+    { id: 'c2', label: 'NEON // KORUMA', color: '#00dbe9', dotColor: 'bg-secondary-fixed-dim', shadow: 'shadow-[0_0_8px_#00dbe9]', textColor: 'text-secondary-fixed', requiredHz: 240 },
+    { id: 'c3', label: 'SARI // İYON', color: '#ffb703', dotColor: 'bg-primary-container', shadow: 'shadow-[0_0_8px_#ffb703]', textColor: 'text-primary-container', requiredHz: 360 },
+    { id: 'c4', label: 'CYAN // ANA GÜÇ', color: '#00eefc', dotColor: 'bg-secondary-container', shadow: 'shadow-[0_0_8px_#00eefc]', textColor: 'text-secondary-container', requiredHz: 480 },
+  ];
+
+  // Random assignment of 4 cables to 4 ports
+  const shuffledCableIds = ['c1', 'c2', 'c3', 'c4'].sort(() => Math.random() - 0.5);
+
+  const functionLabels = [
+    'Birincil Soğutma Koruması',
+    'Yedek İyon Regülatörü',
+    'Ana Güç Dağıtım Hattı',
+    'Acil Durum Baypas Yükü',
+  ];
+
+  const ports = [
+    { id: 'P1', label: 'PORT-01', requiredCableId: shuffledCableIds[0], functionLabel: functionLabels[0] },
+    { id: 'P2', label: 'PORT-02', requiredCableId: shuffledCableIds[1], functionLabel: functionLabels[1] },
+    { id: 'P3', label: 'PORT-03', requiredCableId: shuffledCableIds[2], functionLabel: functionLabels[2] },
+    { id: 'P4', label: 'PORT-04', requiredCableId: shuffledCableIds[3], functionLabel: functionLabels[3] },
+  ];
+
+  // Intentionally start with EMPTY/UNWIRED sockets so players must solve it
+  return {
+    cables,
+    ports,
+    portAssignments: {
+      P1: null,
+      P2: null,
+      P3: null,
+      P4: null,
+    },
+    isTested: false,
+    isSolved: false,
+  };
+}
+
+export function generateAirlock(): AirlockData {
+  // Dial levels: 0: %50 DENGEDE, 1: %75 BASINÇLI, 2: %100 TAHLİYE, 3: %25 DÜŞÜK
+  const targetDialIndex = Math.floor(Math.random() * 4);
+  const dialTexts = ['%50 DENGEDE', '%75 BASINÇLI', '%100 TAHLİYE', '%25 DÜŞÜK'];
+  const targetDialText = dialTexts[targetDialIndex];
+
+  const targetSealLocked = Math.random() > 0.4; // true or false
+
+  // Vacuum target range
+  const vacuumTargets = [
+    { min: 40, max: 50, rangeStr: '2.20 - 2.40 Bar', nominal: 45 },
+    { min: 65, max: 75, rangeStr: '2.65 - 2.85 Bar', nominal: 70 },
+  ];
+  const chosenVac = vacuumTargets[Math.floor(Math.random() * vacuumTargets.length)];
+
+  const rules = [
+    `1. Birincil döngü valfi [${targetDialText}] konumuna getirilmelidir.`,
+    `2. Sızdırmazlık mandalı [${targetSealLocked ? 'KİLİTLİ (Yukarı)' : 'SERBEST (Aşağı)'}] durumda olmalıdır.`,
+    `3. Vakum pompası nominal seviyeye (${chosenVac.nominal} güç / ${chosenVac.rangeStr}) kilitlenmelidir.`,
+  ];
+
+  // Initial engineer state MUST be incorrect
+  const initialDial = (targetDialIndex + 2) % 4;
+  const initialSeal = !targetSealLocked;
+  const initialVac = chosenVac.nominal > 50 ? 20 : 85;
+
+  return {
+    rules,
+    targetDialIndex,
+    targetDialText,
+    targetSealLocked,
+    targetVacuumMin: chosenVac.min,
+    targetVacuumMax: chosenVac.max,
+    targetPressureRange: chosenVac.rangeStr,
+    engineerDialIndex: initialDial,
+    engineerSealLocked: initialSeal,
+    engineerVacuumPower: initialVac,
+    isSolved: false,
+  };
+}
+
+export function generateRadar(): RadarData {
+  const azimuthTargets = [45, 90, 135, 180, 225, 275, 315];
+  const elevationTargets = [25, 35, 42, 50, 60];
+
+  const targetAzimuth = azimuthTargets[Math.floor(Math.random() * azimuthTargets.length)];
+  const targetElevation = elevationTargets[Math.floor(Math.random() * elevationTargets.length)];
+
+  const beaconLabel = `SEC-0${Math.floor(1 + Math.random() * 9)} // ${targetAzimuth}°`;
+
+  // Start at incorrect angle
+  const initialAzimuth = (targetAzimuth + 90) % 360;
+  const initialElevation = 15;
+
+  return {
+    targetAzimuth,
+    targetElevation,
+    beaconLabel,
+    engineerAzimuth: initialAzimuth,
+    engineerElevation: initialElevation,
+    isScanned: false,
+    isSolved: false,
+  };
+}
+
+export function generateEnergy(): EnergyData {
+  return {
+    totalBudget: 15, // 15 MW total budget
+    engineerAllocation: {
+      yasamDestegi: 4,
+      itki: 3,
+      kalkan: 3,
+    },
+    lineLosses: {
+      yasamDestegi: 1, // Net = 4 - 1 = 3 MW (Meets min 3 MW)
+      itki: 1,         // Net = 3 - 1 = 2 MW (Meets min 2 MW)
+      kalkan: 1,       // Net = 3 - 1 = 2 MW (Meets min 2 MW)
+    },
+    captainMinRequirements: {
+      yasamDestegi: 3,
+      itki: 2,
+      kalkan: 2,
+    },
+    isDraftShared: false,
+    isLocked: false,
+  };
+}
+
+export function generateRescue(): RescueData {
+  return {
+    selectedRouteId: 'beta',
+    captainApproved: false,
+    engineerApproved: false,
+    routes: RESCUE_ROUTES,
+    validationError: null,
+  };
+}
+
+export function calculateFinalScore(
+  completedTasks: number,
+  timeLeftSeconds: number,
+  hullIntegrity: number,
+  rescuedCrew: number
+) {
+  const tasksScore = completedTasks * 200;
+  const timeBonus = Math.max(0, timeLeftSeconds * 2);
+  const hullBonus = Math.max(0, Math.round(hullIntegrity * 3));
+  const crewBonus = rescuedCrew * 50;
+  const total = tasksScore + timeBonus + hullBonus + crewBonus;
+  return {
+    total,
+    breakdown: {
+      tasksScore,
+      timeBonus,
+      hullBonus,
+      crewBonus,
+    },
+  };
+}
 
 export function createInitialMissionState(
   roomCode: string = generateRoomCode(),
   env: EnvironmentType = 'kayip_sinyal',
-  playerName: string = 'Kaptan Ece'
+  playerName: string = 'Kaptan Ece',
+  previousPair?: [MiniGameType, MiniGameType]
 ): MissionState {
-  const selectedGames = getRandomMiniGames();
+  const selectedGames = getRandomMiniGames(previousPair);
 
   return {
     roomCode,
     status: 'entry',
     activeEnvironment: env,
     selectedMiniGames: selectedGames,
+    previousMiniGames: previousPair,
     currentPhaseIndex: 0,
     timeLeftSeconds: 300, // 5 minutes
     hullIntegrity: 100,
@@ -96,127 +447,17 @@ export function createInitialMissionState(
     feedbackState: 'idle',
     feedbackMessage: '',
 
-    // 1. Arıza Teşhisi
-    diagnostic: {
-      lines: {
-        reaktor: { temp: 68, press: 48, noise: 42, code: 'CIR-01' },
-        sogutucu: { temp: 45, press: 52, noise: 30, code: 'CIR-02' },
-        anten: { temp: 84, press: 38, noise: 68, code: 'CIR-03' }, // Meets all 3 thresholds!
-        yonlendirme: { temp: 58, press: 62, noise: 35, code: 'CIR-04' },
-      },
-      faultyLine: 'anten',
-      engineerSuggestedLine: null,
-      captainSelectedBreaker: null,
-      correctBreaker: 'K3',
-      isSolved: false,
-    },
+    diagnostic: generateDiagnostic(env),
+    signal: generateSignal(),
+    cable: generateCable(),
+    airlock: generateAirlock(),
+    radar: generateRadar(),
+    energy: generateEnergy(),
+    rescue: generateRescue(),
 
-    // 2. Sinyal Çözümü
-    signal: {
-      symbols: ['Δ', 'Ω', 'Σ', 'λ'],
-      ruleDescription: 'Sembol çiftlerini yer değiştirin (1-2 ve 3-4)',
-      ruleType: 'cift_degis',
-      symbolMap: { 'Δ': 4, 'Ω': 7, 'Σ': 2, 'λ': 9 },
-      // Original: 4, 7, 2, 9 -> Pairs swapped: 7, 4, 9, 2 => "7492"
-      computedCode: '7492',
-      frequencies: [
-        { freq: '142.4 MHz', code: '4729', label: 'Alfa Kanalı' },
-        { freq: '148.8 MHz', code: '7492', label: 'Acil Yardım Taşıyıcı' }, // Correct!
-        { freq: '154.2 MHz', code: '9274', label: 'Yedek Röle' },
-        { freq: '162.0 MHz', code: '2947', label: 'Gezegen Telsiz' },
-      ],
-      engineerTunedFreq: '142.4 MHz',
-      isLocked: false,
-      isSolved: false,
-    },
-
-    // 3. Kablo Bağlantısı
-    cable: {
-      cables: [
-        { id: 'gunes', name: 'Güneş Kablosu (Sarı)', color: '#ffb703', requiredHz: 240 },
-        { id: 'ay', name: 'Ay Kablosu (Cyan)', color: '#00f0ff', requiredHz: 480 },
-        { id: 'yildiz', name: 'Yıldız Kablosu (Mor)', color: '#dab5ff', requiredHz: 120 },
-      ],
-      sockets: [
-        { id: 'J1', measuredHz: 120 }, // Yıldız
-        { id: 'J2', measuredHz: 240 }, // Güneş
-        { id: 'J3', measuredHz: 360 }, // Boş / Yanlış
-        { id: 'J4', measuredHz: 480 }, // Ay
-      ],
-      connections: {
-        gunes: null,
-        ay: null,
-        yildiz: null,
-      },
-      isTested: false,
-      isSolved: false,
-    },
-
-    // 4. Hava Kilidi
-    airlock: {
-      rules: [
-        '1. Pompa çalıştırmadan önce Tahliye hattı açılmalıdır.',
-        '2. Filtreleme her zaman Tahliye öncesinde devreye girmelidir.',
-        '3. Mühür kilidi daima en son aktif edilmelidir.',
-      ],
-      // Correct order based on rules: V2 (Filtre) -> V3 (Tahliye) -> V1 (Pompa) -> V4 (Mühür)
-      correctSequence: ['V2', 'V3', 'V1', 'V4'],
-      engineerSequence: [],
-      valves: [
-        { id: 'V1', name: 'Basınç Pompası', icon: 'air' },
-        { id: 'V2', name: 'Hava Filtresi', icon: 'filter_alt' },
-        { id: 'V3', name: 'Gaz Tahliyesi', icon: 'mode_fan' },
-        { id: 'V4', name: 'Bölme Mührü', icon: 'lock' },
-      ],
-      isSolved: false,
-    },
-
-    // 5. Radar Yönlendirme
-    radar: {
-      beaconId: 'L2',
-      beaconCoord: { x: 1, y: 1 }, // L2 is at (1,1) in 0-indexed 5x5 grid
-      directionsText: "L2 işaretçisinden 2 hücre DOĞUYA, 1 hücre KUZEYE",
-      // If North is up: y - 1 = 0; East is right: x + 2 = 3. Target is (3, 0)
-      targetCoord: { x: 3, y: 0 },
-      compassRotationDeg: 0,
-      engineerSelectedCoord: null,
-      isScanned: false,
-      isSolved: false,
-    },
-
-    // 6. Enerji Dağıtımı (Aşama 3)
-    energy: {
-      totalBudget: 12,
-      engineerAllocation: {
-        yasamDestegi: 4,
-        itki: 4,
-        kalkan: 4,
-      },
-      lineLosses: {
-        yasamDestegi: 1, // Net = 4 - 1 = 3
-        itki: 1,         // Net = 4 - 1 = 3
-        kalkan: 2,       // Net = 4 - 2 = 2
-      },
-      captainMinRequirements: {
-        yasamDestegi: 3,
-        itki: 3,
-        kalkan: 2,
-      },
-      isDraftShared: false,
-      isLocked: false,
-    },
-
-    // 7. Ortak Kurtarma Kararı (Aşama 4A & 4B)
-    rescue: {
-      selectedRouteId: 'beta',
-      captainApproved: false,
-      engineerApproved: false,
-      routes: RESCUE_ROUTES,
-    },
-
-    rescuedCrewCount: 12,
-    completedTasksCount: 4,
-    finalScore: 880,
+    rescuedCrewCount: 0,
+    completedTasksCount: 0,
+    finalScore: 0,
     outcomeType: 'tam_basari',
   };
 }

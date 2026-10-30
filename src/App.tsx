@@ -96,14 +96,25 @@ export default function App() {
     return () => clearInterval(timer);
   }, [state.status, state.isPaused, state.isDisconnected]);
 
+  const lastAdvanceTimestampRef = React.useRef<number>(0);
+
   // Handle phase advance: Phase 0 -> Phase 1 -> Phase 2 (Energy) -> Phase 3 (Rescue)
+  // Debounce guard prevents double-advancing if both players click simultaneously
   const handleAdvancePhase = () => {
+    const now = Date.now();
+    if (now - lastAdvanceTimestampRef.current < 800) {
+      return; // Ignore concurrent / duplicate advance signals
+    }
+    lastAdvanceTimestampRef.current = now;
+
     updateState((prev) => {
       const nextPhaseIdx = prev.currentPhaseIndex + 1;
+      const nextCompleted = prev.currentPhaseIndex < 2 ? prev.completedTasksCount + 1 : prev.completedTasksCount;
       if (nextPhaseIdx === 1) {
         return {
           ...prev,
           currentPhaseIndex: 1,
+          completedTasksCount: nextCompleted,
           status: 'phase_game',
         };
       }
@@ -111,6 +122,7 @@ export default function App() {
         return {
           ...prev,
           currentPhaseIndex: 2,
+          completedTasksCount: nextCompleted,
           status: 'phase_energy',
         };
       }
@@ -118,6 +130,7 @@ export default function App() {
         return {
           ...prev,
           currentPhaseIndex: 3,
+          completedTasksCount: nextCompleted,
           status: 'phase_rescue',
         };
       }
@@ -308,8 +321,39 @@ export default function App() {
       return (
         <Screen17BResult 
           state={currentState} 
-          onRestartGame={() => updateState((p) => ({ ...createInitialMissionState(p.roomCode, p.activeEnvironment, p.players.kaptan.name) }))} 
-          onLobbyReturn={() => updateState((p) => ({ ...p, status: 'lobby' }))}
+          onRestartGame={() => updateState((p) => {
+            const nextState = createInitialMissionState(
+              p.roomCode,
+              p.activeEnvironment,
+              p.players.kaptan.name,
+              p.selectedMiniGames
+            );
+            return {
+              ...nextState,
+              players: {
+                kaptan: { ...p.players.kaptan, ready: true },
+                muhendis: { ...p.players.muhendis, ready: true },
+              },
+              status: 'phase_game',
+              currentPhaseIndex: 0,
+            };
+          })} 
+          onLobbyReturn={() => updateState((p) => {
+            const nextState = createInitialMissionState(
+              p.roomCode,
+              p.activeEnvironment,
+              p.players.kaptan.name,
+              p.selectedMiniGames
+            );
+            return {
+              ...nextState,
+              players: {
+                kaptan: { ...p.players.kaptan, ready: false },
+                muhendis: { ...p.players.muhendis, ready: false },
+              },
+              status: 'lobby',
+            };
+          })}
         />
       );
     }

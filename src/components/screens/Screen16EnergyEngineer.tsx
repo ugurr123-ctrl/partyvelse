@@ -39,14 +39,14 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
       energy: {
         ...prev.energy,
         engineerAllocation: updated,
-        isDraftShared: false,
+        isDraftShared: false, // Invalidate draft until re-shared
       },
     }));
   };
 
   const handleShareDraft = () => {
     if (remainingBudget < 0) {
-      setFeedbackMsg('Hata: Enerji bütçesi (12 Birim) aşıldı!');
+      setFeedbackMsg('Hata: Enerji bütçesi (15 MW) aşıldı!');
       return;
     }
 
@@ -62,240 +62,184 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
   };
 
   return (
-    <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe px-margin gap-space-md select-none animate-fadeIn text-[#e6dff9]">
-      {/* Top Telemetry & Role Pill */}
-      <div className="flex items-center justify-between gap-space-xs mt-space-sm">
-        <div className="flex items-center gap-space-xs bg-surface-container-high px-3 py-1.5 rounded-full shadow-sm">
-          <span className="material-symbols-outlined text-primary-fixed-dim text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>build</span>
-          <span className="font-label-telemetry text-label-telemetry text-primary tracking-wider uppercase font-bold">MÜHENDİS // REAKTÖR DAĞITIMI</span>
+    <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe px-margin gap-space-md select-none animate-fadeIn text-[#e6dff9] font-sans">
+      
+      {/* Role Header */}
+      <div className="flex flex-col gap-1 mt-2">
+        <div className="inline-flex items-center self-start gap-1.5 px-3 py-1 bg-[#00eefc]/15 text-[#00eefc] border border-[#00eefc]/30 rounded-full shadow-sm">
+          <span className="material-symbols-outlined text-[15px]">bolt</span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider">MÜHENDİS // ENERJİ DAĞITIM KONSOLU</span>
         </div>
-        <div className="flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-full shadow-inner">
-          <span className="w-2 h-2 rounded-full bg-secondary-fixed-dim animate-ping"></span>
-          <span className="font-label-status text-label-status text-secondary tracking-widest uppercase font-bold">CANLI BAĞLANTI</span>
-        </div>
-      </div>
-
-      {/* Briefing Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight font-extrabold uppercase">
+        <h1 className="font-sora text-2xl font-extrabold text-white tracking-tight mt-1">
           Enerjiyi Sistemlere Böl
         </h1>
-        <p className="font-body-md text-body-md text-on-surface-variant leading-snug">
-          12 MW toplam bütçeyi paylaştır. Hat kayıplarını hesaplayıp taslağı kaptana ilet.
+        <p className="text-xs text-[#d5c4ac] leading-relaxed">
+          15 MW toplam bütçeyi paylaştır. Her hattaki 1 MW hat kaybını hesaba katarak taslağı kaptana ilet.
         </p>
       </div>
 
-      {/* 12 MW Budget Display */}
-      <div className="p-space-md rounded-xl bg-surface-container-low shadow-xl flex items-center justify-between">
+      {/* 15 MW Total Budget Card */}
+      <div className="p-4 rounded-2xl bg-[#0f0c1e] border border-white/10 shadow-xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary-container shadow-inner">
-            <span className="material-symbols-outlined text-[28px]">bolt</span>
+          <div className="w-12 h-12 rounded-xl bg-[#00eefc]/15 text-[#00eefc] flex items-center justify-center shadow-inner">
+            <span className="material-symbols-outlined text-[26px]">bolt</span>
           </div>
-          <div>
-            <span className="font-label-status text-label-status text-on-surface-variant uppercase font-bold">TOPLAM REAKTÖR GÜCÜ</span>
-            <div className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-extrabold">
-              12 <span className="text-secondary-container text-sm">MW</span>
-            </div>
+          <div className="flex flex-col">
+            <span className="font-mono text-[10px] text-[#d5c4ac] uppercase font-bold">TOPLAM REAKTÖR GÜCÜ</span>
+            <span className="font-sora text-2xl font-black text-white">
+              {totalBudget} <span className="text-[#00eefc] text-sm">MW</span>
+            </span>
           </div>
         </div>
 
-        <div className="text-right">
-          <span className="font-label-status text-label-status text-on-surface-variant uppercase font-bold">KALAN GÜÇ</span>
-          <div className={`font-headline-lg-mobile text-headline-lg-mobile font-black ${
-            remainingBudget === 0 ? 'text-secondary-fixed' : remainingBudget < 0 ? 'text-error' : 'text-primary'
-          }`}>
+        <div className="flex flex-col items-end">
+          <span className="font-mono text-[10px] text-[#d5c4ac] uppercase font-bold">KALAN BÜTÇE</span>
+          <span className={`font-sora text-2xl font-black ${remainingBudget === 0 ? 'text-emerald-400' : remainingBudget > 0 ? 'text-[#ffb703]' : 'text-rose-400'}`}>
             {remainingBudget} <span className="text-xs">MW</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3 Power Adjustment Bars with Steppers */}
-      <div className="flex flex-col gap-space-sm">
-        {/* Yaşam */}
-        <div className="p-space-md rounded-xl bg-surface-container-low shadow-md flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-secondary-container text-[20px]">ecg_heart</span>
-              <span className="font-headline-sm text-headline-sm text-on-surface font-bold">YAŞAM DESTEĞİ</span>
-            </div>
-            <span className="font-label-telemetry text-label-telemetry text-error uppercase font-bold">
-              HAT KAYBI: -{lineLosses.yasamDestegi} MW
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 mt-1">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleAdjust('yasamDestegi', -1)}
-                disabled={isLocked || allocation.yasamDestegi <= 0}
-                className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex items-center justify-center text-on-surface font-bold active:scale-95 transition-transform cursor-pointer disabled:opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px]">remove</span>
-              </button>
-              <span className="w-12 text-center font-headline-md text-headline-md font-extrabold text-on-surface">
-                {allocation.yasamDestegi}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleAdjust('yasamDestegi', 1)}
-                disabled={isLocked || remainingBudget <= 0}
-                className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex items-center justify-center text-on-surface font-bold active:scale-95 transition-transform cursor-pointer disabled:opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px]">add</span>
-              </button>
-            </div>
-
-            <div className="text-right">
-              <span className="font-label-status text-label-status text-on-surface-variant block font-medium">NET ETKİLİ GÜÇ</span>
-              <span className="font-headline-sm text-headline-sm text-secondary-container font-black">
-                {effectivePower.yasamDestegi} MW
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* İtki */}
-        <div className="p-space-md rounded-xl bg-surface-container-low shadow-md flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-secondary-fixed text-[20px]">rocket_launch</span>
-              <span className="font-headline-sm text-headline-sm text-on-surface font-bold">İTKİ MOTORLARI</span>
-            </div>
-            <span className="font-label-telemetry text-label-telemetry text-error uppercase font-bold">
-              HAT KAYBI: -{lineLosses.itki} MW
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 mt-1">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleAdjust('itki', -1)}
-                disabled={isLocked || allocation.itki <= 0}
-                className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex items-center justify-center text-on-surface font-bold active:scale-95 transition-transform cursor-pointer disabled:opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px]">remove</span>
-              </button>
-              <span className="w-12 text-center font-headline-md text-headline-md font-extrabold text-on-surface">
-                {allocation.itki}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleAdjust('itki', 1)}
-                disabled={isLocked || remainingBudget <= 0}
-                className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex items-center justify-center text-on-surface font-bold active:scale-95 transition-transform cursor-pointer disabled:opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px]">add</span>
-              </button>
-            </div>
-
-            <div className="text-right">
-              <span className="font-label-status text-label-status text-on-surface-variant block font-medium">NET ETKİLİ GÜÇ</span>
-              <span className="font-headline-sm text-headline-sm text-secondary-fixed font-black">
-                {effectivePower.itki} MW
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Kalkan */}
-        <div className="p-space-md rounded-xl bg-surface-container-low shadow-md flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-primary-container text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
-              <span className="font-headline-sm text-headline-sm text-on-surface font-bold">GÖVDE KALKANI</span>
-            </div>
-            <span className="font-label-telemetry text-label-telemetry text-error uppercase font-bold">
-              HAT KAYBI: -{lineLosses.kalkan} MW
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 mt-1">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleAdjust('kalkan', -1)}
-                disabled={isLocked || allocation.kalkan <= 0}
-                className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex items-center justify-center text-on-surface font-bold active:scale-95 transition-transform cursor-pointer disabled:opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px]">remove</span>
-              </button>
-              <span className="w-12 text-center font-headline-md text-headline-md font-extrabold text-on-surface">
-                {allocation.kalkan}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleAdjust('kalkan', 1)}
-                disabled={isLocked || remainingBudget <= 0}
-                className="w-10 h-10 rounded-lg bg-surface-container-high hover:bg-surface-container-highest flex items-center justify-center text-on-surface font-bold active:scale-95 transition-transform cursor-pointer disabled:opacity-30"
-              >
-                <span className="material-symbols-outlined text-[20px]">add</span>
-              </button>
-            </div>
-
-            <div className="text-right">
-              <span className="font-label-status text-label-status text-on-surface-variant block font-medium">NET ETKİLİ GÜÇ</span>
-              <span className="font-headline-sm text-headline-sm text-primary-container font-black">
-                {effectivePower.kalkan} MW
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Routes Requirement Preview */}
-      <div className="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-1 text-[11px] font-mono">
-        <span className="text-[#a59db8] uppercase font-bold">ROTALARIN GÜÇ ŞARTLARI (MÜHENDİS BİLGİSİ):</span>
-        <div className="flex justify-between text-on-surface">
-          <span>Rota Alfa: <strong className="text-secondary-fixed">4 İtki</strong>, <strong className="text-primary-container">2 Kalkan</strong></span>
-          <span className={effectivePower.itki >= 4 && effectivePower.kalkan >= 2 ? 'text-emerald-400 font-bold' : 'text-error font-bold'}>
-            {effectivePower.itki >= 4 && effectivePower.kalkan >= 2 ? '✓ UYGUN' : '✗ YETERSİZ'}
-          </span>
-        </div>
-        <div className="flex justify-between text-on-surface">
-          <span>Rota Beta: <strong className="text-secondary-fixed">3 İtki</strong>, <strong className="text-primary-container">3 Kalkan</strong></span>
-          <span className={effectivePower.itki >= 3 && effectivePower.kalkan >= 3 ? 'text-emerald-400 font-bold' : 'text-error font-bold'}>
-            {effectivePower.itki >= 3 && effectivePower.kalkan >= 3 ? '✓ UYGUN' : '✗ YETERSİZ'}
-          </span>
-        </div>
-        <div className="flex justify-between text-on-surface">
-          <span>Rota Gama: <strong className="text-secondary-fixed">2 İtki</strong>, <strong className="text-primary-container">4 Kalkan</strong></span>
-          <span className={effectivePower.itki >= 2 && effectivePower.kalkan >= 4 ? 'text-emerald-400 font-bold' : 'text-error font-bold'}>
-            {effectivePower.itki >= 2 && effectivePower.kalkan >= 4 ? '✓ UYGUN' : '✗ YETERSİZ'}
           </span>
         </div>
       </div>
 
-      {/* Feedback banner */}
+      {/* 3 Energy Channel Controls */}
+      <div className="flex flex-col gap-2.5">
+        
+        {/* 1. Yaşam Desteği */}
+        <div className="p-3.5 rounded-2xl bg-[#1c192c] border border-white/5 shadow-md flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[20px]">ecg_heart</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-white font-bold">Yaşam Desteği</span>
+              <span className="text-[10px] text-[#d5c4ac]">Net Çıkış: {effectivePower.yasamDestegi} MW (-1 kayıp)</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleAdjust('yasamDestegi', -1)}
+              disabled={isLocked || allocation.yasamDestegi <= 0}
+              className="w-9 h-9 rounded-xl bg-[#0f0c1e] text-white flex items-center justify-center active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-40"
+            >
+              -
+            </button>
+            <span className="w-8 text-center font-sora font-extrabold text-base text-white">
+              {allocation.yasamDestegi}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleAdjust('yasamDestegi', 1)}
+              disabled={isLocked || remainingBudget <= 0}
+              className="w-9 h-9 rounded-xl bg-[#00eefc]/20 text-[#00eefc] flex items-center justify-center active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* 2. İtki Motorları */}
+        <div className="p-3.5 rounded-2xl bg-[#1c192c] border border-white/5 shadow-md flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#ffb703]/20 text-[#ffb703] flex items-center justify-center">
+              <span className="material-symbols-outlined text-[20px]">rocket_launch</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-white font-bold">İtki Motorları</span>
+              <span className="text-[10px] text-[#d5c4ac]">Net Çıkış: {effectivePower.itki} MW (-1 kayıp)</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleAdjust('itki', -1)}
+              disabled={isLocked || allocation.itki <= 0}
+              className="w-9 h-9 rounded-xl bg-[#0f0c1e] text-white flex items-center justify-center active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-40"
+            >
+              -
+            </button>
+            <span className="w-8 text-center font-sora font-extrabold text-base text-white">
+              {allocation.itki}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleAdjust('itki', 1)}
+              disabled={isLocked || remainingBudget <= 0}
+              className="w-9 h-9 rounded-xl bg-[#ffb703]/20 text-[#ffb703] flex items-center justify-center active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Gövde Kalkanı */}
+        <div className="p-3.5 rounded-2xl bg-[#1c192c] border border-white/5 shadow-md flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#dab5ff]/20 text-[#dab5ff] flex items-center justify-center">
+              <span className="material-symbols-outlined text-[20px]">shield</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-white font-bold">Gövde Kalkanı</span>
+              <span className="text-[10px] text-[#d5c4ac]">Net Çıkış: {effectivePower.kalkan} MW (-1 kayıp)</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleAdjust('kalkan', -1)}
+              disabled={isLocked || allocation.kalkan <= 0}
+              className="w-9 h-9 rounded-xl bg-[#0f0c1e] text-white flex items-center justify-center active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-40"
+            >
+              -
+            </button>
+            <span className="w-8 text-center font-sora font-extrabold text-base text-white">
+              {allocation.kalkan}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleAdjust('kalkan', 1)}
+              disabled={isLocked || remainingBudget <= 0}
+              className="w-9 h-9 rounded-xl bg-[#dab5ff]/20 text-[#dab5ff] flex items-center justify-center active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Feedback Message */}
       {feedbackMsg && (
-        <div className="p-3 rounded-xl bg-secondary-container/10 border border-secondary-container/30 text-xs font-mono text-secondary-container animate-fadeIn">
+        <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-[#00eefc]/30 text-[#00eefc] text-xs leading-relaxed animate-fadeIn">
           {feedbackMsg}
         </div>
       )}
 
       {/* Action Trigger */}
-      <div className="pt-space-xs pb-4">
+      <div className="mt-2 flex flex-col gap-2">
         {!isLocked ? (
           <button
-            type="button"
             onClick={handleShareDraft}
-            className="w-full h-14 rounded-xl bg-gradient-to-r from-secondary-container to-secondary-fixed text-on-secondary-container font-headline-sm text-headline-sm font-bold shadow-[0_6px_0_#00686f,0_12px_24px_rgba(0,238,252,0.3)] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer uppercase"
+            className="w-full h-14 rounded-2xl bg-[#00eefc] text-[#002022] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#00686f,0_0_24px_rgba(0,238,252,0.35)] active:translate-y-1 transition-all cursor-pointer"
+            type="button"
           >
-            <span className="material-symbols-outlined text-[24px]">send</span>
-            <span>ENERJİ TASLAĞINI KAPTANA PAYLAŞ</span>
+            <span className="material-symbols-outlined text-[20px]">send</span>
+            <span>Enerji Taslağını Kaptana İlet</span>
           </button>
         ) : (
           <button
-            type="button"
             onClick={onAdvancePhase}
-            className="w-full h-14 rounded-xl bg-gradient-to-r from-primary-container to-surface-tint text-on-primary-container font-headline-sm text-headline-sm font-bold shadow-[0_6px_0_#996500] active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer animate-pulse uppercase"
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ffba27] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 transition-all cursor-pointer animate-bounce"
+            type="button"
           >
-            <span className="material-symbols-outlined text-[24px]">check_circle</span>
-            <span>KAPTAN KİLİTLEDİ • KURTARMAYA GEÇ</span>
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+            <span>KAPTAN KİLİTLEDİ • KURTARMA ROTASI</span>
           </button>
         )}
       </div>
+
     </div>
   );
 };

@@ -8,21 +8,11 @@ interface Props {
 }
 
 export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
-  const [selectedGlyph, setSelectedGlyph] = useState<string | null>('odak');
+  const { signal } = state;
   const [feedbackText, setFeedbackText] = useState('');
 
-  const handleSelectGlyph = (key: string) => {
-    setSelectedGlyph(key);
-  };
-
   const handleTransmit = () => {
-    if (!selectedGlyph) {
-      setFeedbackText('LÜTFEN ÖNCE EKSİK DİZİ GLİFİNİ SEÇİN');
-      setTimeout(() => setFeedbackText(''), 2500);
-      return;
-    }
-
-    setFeedbackText('VERİ İLETİMİ BAŞARILI // MÜHENDİSE AKTARILDI');
+    setFeedbackText(`DÖNÜŞÜM KURALI MÜHENDİSE AKTARILDI: "${signal.ruleDescription}"`);
     onUpdate((prev) => ({
       ...prev,
       signal: {
@@ -33,89 +23,31 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
 
     setTimeout(() => {
       setFeedbackText('');
-    }, 3500);
-  };
-
-  const renderGlyphSvg = (key: string | null) => {
-    if (key === 'alfa') {
-      return (
-        <svg className="w-7 h-7 text-[#00eefc]" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="10" stroke="currentColor" strokeWidth="3"></circle>
-        </svg>
-      );
-    }
-    if (key === 'odak') {
-      return (
-        <svg className="w-7 h-7 text-[#ffb703]" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="9" stroke="currentColor" strokeWidth="2.5"></circle>
-          <circle cx="16" cy="16" fill="currentColor" r="3"></circle>
-          <path d="M16 2V7 M16 25V30 M2 16H7 M25 16H30" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
-        </svg>
-      );
-    }
-    if (key === 'prizma') {
-      return (
-        <svg className="w-7 h-7 text-[#00eefc]" viewBox="0 0 32 32" fill="none">
-          <polygon points="16,4 27,10 27,22 16,28 5,22 5,10" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"></polygon>
-        </svg>
-      );
-    }
-    if (key === 'wave') {
-      return (
-        <svg className="w-7 h-7 text-[#00eefc]" viewBox="0 0 32 32" fill="none">
-          <path d="M4 16 C8 8, 10 8, 14 16 C18 24, 20 24, 28 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"></path>
-        </svg>
-      );
-    }
-    return <span className="font-sora text-xl text-[#ffb703] font-bold">?</span>;
+    }, 4000);
   };
 
   return (
     <div className="w-full max-w-[420px] mx-auto flex flex-col text-on-surface select-none pb-8 animate-fadeIn font-sans">
       
-      {/* Sub-HUD Floating Status Telemetry Bar */}
-      <div className="pt-1 pb-3 flex items-center justify-between gap-2">
-        <div className="flex-1 bg-[#2b273b]/90 rounded-xl px-3 py-2 flex items-center gap-2 shadow-md backdrop-blur-md border border-white/5">
-          <span className="material-symbols-outlined text-[18px] text-[#ffb703]" style={{ fontVariationSettings: "'FILL' 1" }}>timer</span>
-          <div className="flex items-baseline gap-1">
-            <span className="font-mono text-sm tracking-widest text-[#ffdba0] font-bold">
-              03<span className="animate-pulse">:</span>12
-            </span>
-          </div>
-        </div>
-
-        <div className="flex-1 bg-[#2b273b]/90 rounded-xl px-3 py-2 flex items-center justify-between gap-2 shadow-md backdrop-blur-md border border-white/5">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="material-symbols-outlined text-[18px] text-[#00eefc]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
-            <span className="font-mono text-[10px] text-[#d5c4ac] truncate uppercase">Bütünlük</span>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="font-mono text-[11px] text-[#00eefc] font-bold">%{state.hullIntegrity}</span>
-            <div className="flex items-center gap-0.5">
-              <div className="w-1.5 h-3 rounded bg-[#00eefc] shadow-[0_0_6px_rgba(0,238,252,0.8)]"></div>
-              <div className="w-1.5 h-3 rounded bg-[#00eefc] shadow-[0_0_6px_rgba(0,238,252,0.8)]"></div>
-              <div className="w-1.5 h-3 rounded bg-[#00eefc] shadow-[0_0_6px_rgba(0,238,252,0.8)]"></div>
-              <div className="w-1.5 h-3 rounded bg-[#363246]"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Narrative & Mission Directive */}
       <div className="pt-1 pb-3 flex flex-col text-center items-center">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffb703]/20 text-[#ffb703] border border-[#ffb703]/30 mb-2">
+          <span className="material-symbols-outlined text-[15px]">military_tech</span>
+          <span className="font-mono text-[10px] tracking-widest uppercase font-bold">KAPTAN // SEMBOL VE KURAL ANAHTARI</span>
+        </div>
         <h2 className="font-sora text-2xl font-bold text-white tracking-tight">
-          Mesajı <span className="text-[#ffb703] drop-shadow-[0_0_12px_rgba(255,183,3,0.4)]">tamamla</span>
+          Sinyali <span className="text-[#ffb703] drop-shadow-[0_0_12px_rgba(255,183,3,0.4)]">çözümle</span>
         </h2>
         <p className="text-xs text-[#d5c4ac] max-w-[320px] mt-1">
-          Kayıp sinyalin bir kısmı çözüldü. Eksik sembolü bul ve diziyi tamamla.
+          Gelen sembolleri kuralına göre dönüştür, ortaya çıkan 4 haneli kodu telsizden mühendisine oku!
         </p>
       </div>
 
       {/* Holographic Observation Terminal Hero */}
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-[#0f0c1e] border border-white/10">
           <div 
-            className="bg-cover bg-center w-full h-[290px] relative" 
+            className="bg-cover bg-center w-full h-[260px] relative" 
             style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDI2W-31llkaN9ktmfQRsTPpmzITOhsQqcuW3sNrE7tLpejdNe6nRPNX7EcDHd9qsGO61j9QbD7_bqF6d4V9iSpUygB0Au-2R0zZSEmNt_2wtI5RJ7w_MLl7MzOLBKl7dSRjPDvT-ezdjqeSXEhkXIl1ISGSIB29OVB68cbEPNGrPpMuH8Y76uEf2mI-cxc6MB9yM1TCfGm4tYeipLMtZGMrqkOJ5PBeS5yhhznL5I')" }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c1e] via-[#141123]/60 to-[#141123]/40"></div>
@@ -125,152 +57,88 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
               <div className="flex items-center justify-between pb-1">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#00eefc] animate-pulse shadow-[0_0_8px_#00eefc]"></span>
-                  <span className="font-mono text-[9px] text-[#00eefc] tracking-wider uppercase font-bold">DİNLENEN İLETİM</span>
+                  <span className="font-mono text-[9px] text-[#00eefc] tracking-wider uppercase font-bold">HAM DİZİ GLİFLERİ</span>
                 </div>
                 <span className="font-mono text-[9px] text-[#ffdba0] tracking-widest uppercase font-bold">KAYIP SİNYAL</span>
               </div>
 
-              {/* Sequence Glyph Slots Display */}
-              <div className="my-auto py-1 flex items-center justify-between gap-1.5">
-                <div className="flex-1 aspect-square rounded-lg bg-[#201d30] flex items-center justify-center shadow-inner">
-                  <svg className="w-6 h-6 text-[#00eefc] drop-shadow-[0_0_6px_rgba(0,238,252,0.7)]" fill="none" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="10" stroke="currentColor" strokeWidth="3"></circle>
-                  </svg>
-                </div>
-                <div className="flex-1 aspect-square rounded-lg bg-[#201d30] flex items-center justify-center shadow-inner">
-                  <svg className="w-6 h-6 text-[#ffb703] drop-shadow-[0_0_6px_rgba(255,183,3,0.7)]" fill="none" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="9" stroke="currentColor" strokeWidth="2.5"></circle>
-                    <circle cx="16" cy="16" fill="currentColor" r="3"></circle>
-                    <path d="M16 2V7 M16 25V30 M2 16H7 M25 16H30" stroke="currentColor" strokeLinecap="round" strokeWidth="2.5"></path>
-                  </svg>
-                </div>
-                <div className="flex-1 aspect-square rounded-lg bg-[#201d30] flex items-center justify-center shadow-inner">
-                  <svg className="w-6 h-6 text-[#00eefc] drop-shadow-[0_0_6px_rgba(0,238,252,0.7)]" fill="none" viewBox="0 0 32 32">
-                    <polygon points="16,4 27,10 27,22 16,28 5,22 5,10" stroke="currentColor" strokeLinejoin="round" strokeWidth="2.5"></polygon>
-                  </svg>
-                </div>
-                {/* Target Slot (Missing [?]) */}
-                <div className="flex-1 aspect-square rounded-lg bg-[#ffb703]/20 border border-[#ffb703] flex flex-col items-center justify-center shadow-[0_0_16px_rgba(255,183,3,0.35)] transition-all">
-                  {renderGlyphSvg(selectedGlyph)}
-                </div>
-                <div className="flex-1 aspect-square rounded-lg bg-[#201d30] flex items-center justify-center shadow-inner">
-                  <svg className="w-6 h-6 text-[#00eefc] drop-shadow-[0_0_6px_rgba(0,238,252,0.7)]" fill="none" viewBox="0 0 32 32">
-                    <path d="M4 16 C8 8, 10 8, 14 16 C18 24, 20 24, 28 16" stroke="currentColor" strokeLinecap="round" strokeWidth="2.5"></path>
-                  </svg>
-                </div>
+              {/* 4 Dynamic Symbol Slots Display */}
+              <div className="my-auto py-1 grid grid-cols-4 gap-2">
+                {signal.symbols.map((glyph, idx) => (
+                  <div key={idx} className="aspect-square rounded-xl bg-[#201d30] border border-white/5 flex flex-col items-center justify-center p-1 shadow-inner">
+                    <span className="text-2xl font-bold text-[#ffb703] drop-shadow-[0_0_8px_rgba(255,183,3,0.5)]">
+                      {glyph}
+                    </span>
+                    <span className="font-mono text-[10px] text-[#00eefc] mt-0.5 font-bold">
+                      ={signal.symbolMap[glyph]}
+                    </span>
+                  </div>
+                ))}
               </div>
 
-              {/* Dynamic Waveform Equalizer */}
+              {/* Dynamic Waveform Visual */}
               <div className="pt-1 pb-1">
-                <div className="h-8 w-full flex items-center justify-between gap-[2px] px-1 opacity-90">
+                <div className="h-6 w-full flex items-center justify-between gap-[2px] px-1 opacity-90">
                   {[3, 5, 8, 6, 4, 9, 7, 4, 6, 8, 6, 3, 7, 9, 5, 3, 8, 6, 4, 7, 5].map((val, i) => (
                     <div 
                       key={i} 
                       className={`w-1 rounded-full ${i % 3 === 0 ? 'bg-[#ffb703]' : 'bg-[#00eefc]'}`}
-                      style={{ height: `${val * 3}px` }}
+                      style={{ height: `${val * 2.2}px` }}
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Telemetry Metadata Footer */}
-              <div className="pt-1 flex items-center justify-between text-left font-mono text-[9px] text-[#d5c4ac]">
-                <div className="flex flex-col">
-                  <span>KAYNAK: ? ? ?</span>
-                  <span className="text-[#00eefc]">KANAL: DERİN UZAY</span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[#ffb703] font-bold uppercase">SİNYAL PARÇALI</span>
-                </div>
+              <div className="pt-1 flex items-center justify-between font-mono text-[9px] text-[#d5c4ac]">
+                <span className="text-[#00eefc]">KOD PROTOKOLÜ: AKTİF</span>
+                <span className="text-[#ffb703] font-bold">MÜHENDİSE OKU</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* VIP Cipher Key Console (Level 1 Sub-Panel) */}
-      <div className="mb-4">
-        <div className="bg-[#2b273b] rounded-2xl p-3.5 shadow-lg flex flex-col gap-2.5 border border-white/10">
-          <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-[#ffdba0]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
-            <span className="font-sora text-xs font-bold text-[#ffdba0]">Sembol anahtarı yalnızca sende</span>
+      {/* Secret Cipher Rule Plaque */}
+      <div className="mb-3">
+        <div className="bg-[#2b273b] rounded-2xl p-3.5 shadow-lg flex flex-col gap-2 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-[#ffdba0]">vpn_key</span>
+              <span className="font-sora text-xs font-bold text-[#ffdba0]">Dönüşüm Kuralı (Yalnızca Sende)</span>
+            </div>
+            <span className="text-[9px] font-mono uppercase text-[#00eefc] font-bold">KAPTAN ŞİFRESİ</span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 font-mono">
-            <div className="bg-[#201d30] rounded-xl p-2.5 flex flex-col items-center justify-center gap-1.5 text-center border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-[#363246] flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00eefc]" fill="none" viewBox="0 0 32 32">
-                  <circle cx="16" cy="16" r="10" stroke="currentColor" strokeWidth="3"></circle>
-                </svg>
-              </div>
-              <span className="text-[10px] text-white uppercase tracking-wider font-bold">ALFA</span>
-            </div>
-
-            <div className="bg-[#201d30] rounded-xl p-2.5 flex flex-col items-center justify-center gap-1.5 text-center border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-[#363246] flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#ffb703]" fill="none" viewBox="0 0 32 32">
-                  <circle cx="16" cy="16" r="9" stroke="currentColor" strokeWidth="2.5"></circle>
-                  <circle cx="16" cy="16" fill="currentColor" r="3"></circle>
-                  <path d="M16 2V7 M16 25V30 M2 16H7 M25 16H30" stroke="currentColor" strokeLinecap="round" strokeWidth="2.5"></path>
-                </svg>
-              </div>
-              <span className="text-[10px] text-[#ffb703] uppercase tracking-wider font-bold">ODAK</span>
-            </div>
-
-            <div className="bg-[#201d30] rounded-xl p-2.5 flex flex-col items-center justify-center gap-1.5 text-center border border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-[#363246] flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#00eefc]" fill="none" viewBox="0 0 32 32">
-                  <polygon points="16,4 27,10 27,22 16,28 5,22 5,10" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"></polygon>
-                </svg>
-              </div>
-              <span className="text-[10px] text-white uppercase tracking-wider font-bold">PRİZMA</span>
+          <div className="bg-[#201d30] p-3 rounded-xl border border-white/5 flex flex-col gap-1.5">
+            <span className="text-xs text-white font-semibold leading-relaxed">
+              {signal.ruleDescription}
+            </span>
+            <div className="flex items-center justify-between pt-1 border-t border-white/5 font-mono text-xs">
+              <span className="text-[#d5c4ac]">Çözümlenmiş Kod:</span>
+              <span className="text-[#ffb703] font-extrabold text-sm tracking-widest bg-[#ffb703]/10 px-2 py-0.5 rounded border border-[#ffb703]/30">
+                {signal.computedCode}
+              </span>
             </div>
           </div>
 
           <div className="bg-[#201d30]/70 rounded-xl px-3 py-2 flex items-center gap-2 border border-white/5">
-            <span className="material-symbols-outlined text-[17px] text-[#ffdba0] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
-            <p className="text-xs text-[#d5c4ac]">Önce yönü, sonra merkezi bul.</p>
+            <span className="material-symbols-outlined text-[17px] text-[#ffdba0] shrink-0">info</span>
+            <p className="text-[11px] text-[#d5c4ac] leading-relaxed">
+              Mühendisin frekans tablosunda bu kodun ({signal.computedCode}) karşılık geldiği frekansı bulup kilitlemesi gerekiyor!
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Dizi Seçimi (Interactive Glyph Selector Rail) */}
-      <div className="mb-4 flex flex-col gap-1.5">
-        <div className="flex items-center justify-between font-mono">
-          <span className="text-[10px] text-white tracking-wider uppercase font-semibold">Dizi seçimi</span>
-          <span className="text-[9px] text-[#00eefc] font-bold">EKSİK GLİFİ SEÇ</span>
-        </div>
-
-        <div className="bg-[#2b273b] rounded-2xl p-2 flex items-center justify-between gap-1 shadow-md border border-white/5">
-          <div className="flex items-center justify-around flex-1 gap-1.5 px-1">
-            {(['alfa', 'odak', 'prizma', 'wave'] as const).map((key) => {
-              const isSelected = selectedGlyph === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleSelectGlyph(key)}
-                  className={`flex-1 aspect-square rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer ${
-                    isSelected ? 'bg-[#363246] border border-[#00eefc] shadow-[0_0_10px_rgba(0,238,252,0.4)]' : 'bg-[#201d30] border border-white/5'
-                  }`}
-                >
-                  {renderGlyphSvg(key)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Primary Arcade Transmission Action Trigger */}
+      {/* Primary Action Trigger */}
       <div className="mt-1 flex flex-col gap-2">
         <button
           onClick={handleTransmit}
           className="w-full h-14 rounded-2xl bg-[#00eefc] text-[#002022] font-sora font-extrabold text-sm flex items-center justify-center gap-2 shadow-[0_6px_0_#00686f,0_0_24px_rgba(0,238,252,0.4)] active:translate-y-1 transition-all cursor-pointer uppercase tracking-tight"
           type="button"
         >
-          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-          <span>Diziyi mühendise ilet</span>
+          <span className="material-symbols-outlined text-[20px]">send</span>
+          <span>Kuralı Mühendise Telsizle</span>
         </button>
 
         {feedbackText && (
@@ -279,13 +147,14 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
           </div>
         )}
 
-        {state.signal.isSolved && (
+        {signal.isSolved && (
           <button
             onClick={onAdvancePhase}
-            className="w-full py-3.5 px-4 rounded-xl font-bold font-sora text-sm text-black btn-3d-gold flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-500/25 animate-bounce mt-2"
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ffba27] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 transition-all cursor-pointer animate-bounce mt-2"
+            type="button"
           >
-            <span className="material-symbols-outlined text-[20px]">check</span>
-            <span>MÜHENDİS FREKANSI KİLİTLEDİ • DEVAM ET</span>
+            <span className="material-symbols-outlined text-[22px]">check_circle</span>
+            <span>FREKANS KİLİTLENDİ • DEVAM ET</span>
           </button>
         )}
       </div>

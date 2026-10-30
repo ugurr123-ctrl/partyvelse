@@ -8,22 +8,21 @@ interface Props {
 }
 
 export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
-  const { isSolved } = state.airlock;
+  const { airlock } = state;
+  const { isSolved } = airlock;
 
-  // Rotary Dial States: %50 Dengede (0deg), %75 Basınçlı (90deg), %100 Tahliye (180deg), %25 Düşük (270deg)
+  // Dial Levels: 0: %50 DENGEDE, 1: %75 BASINÇLI, 2: %100 TAHLİYE, 3: %25 DÜŞÜK
   const dialLevels = [
     { deg: 0, text: '%50 DENGEDE', val: 50 },
     { deg: 90, text: '%75 BASINÇLI', val: 75 },
     { deg: 180, text: '%100 TAHLİYE', val: 100 },
     { deg: 270, text: '%25 DÜŞÜK', val: 25 },
   ];
-  const [dialIndex, setDialIndex] = useState(0);
 
-  // Mechanical Seal Lever (isLocked = true: at top, false: at bottom)
-  const [isSealLocked, setIsSealLocked] = useState(true);
-
-  // Vacuum Pump Power (0 - 100)
-  const [vacuumPower, setVacuumPower] = useState(45);
+  // Starts from engineer initial settings (which are intentionally NOT the target!)
+  const [dialIndex, setDialIndex] = useState(airlock.engineerDialIndex ?? 2);
+  const [isSealLocked, setIsSealLocked] = useState(airlock.engineerSealLocked ?? false);
+  const [vacuumPower, setVacuumPower] = useState(airlock.engineerVacuumPower ?? 20);
 
   const [feedback, setFeedback] = useState<{ type: 'idle' | 'success' | 'error'; msg: string }>({
     type: isSolved ? 'success' : 'idle',
@@ -45,17 +44,14 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
     setVacuumPower(Number(e.target.value));
   };
 
-  // Pressure formula based on vacuum power:
   const calculatedPressure = (1.5 + (vacuumPower / 100) * 1.8).toFixed(2);
 
   const handleEngageAirlock = () => {
-    // Correct setup:
-    // 1. Dial is at %50 (index 0)
-    // 2. Seal lever is engaged (locked = true)
-    // 3. Vacuum power is between 40 and 50 (yielding 2.22 - 2.40 Bar)
-    const isDialOk = dialIndex === 0;
-    const isLeverOk = isSealLocked === true;
-    const isVacuumOk = vacuumPower >= 40 && vacuumPower <= 50;
+    if (isSolved) return;
+
+    const isDialOk = dialIndex === airlock.targetDialIndex;
+    const isLeverOk = isSealLocked === airlock.targetSealLocked;
+    const isVacuumOk = vacuumPower >= airlock.targetVacuumMin && vacuumPower <= airlock.targetVacuumMax;
 
     if (isDialOk && isLeverOk && isVacuumOk) {
       setFeedback({
@@ -66,18 +62,21 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
         ...prev,
         airlock: {
           ...prev.airlock,
+          engineerDialIndex: dialIndex,
+          engineerSealLocked: isSealLocked,
+          engineerVacuumPower: vacuumPower,
           isSolved: true,
         },
       }));
     } else {
       let reason = 'BASINÇ HATASI! ';
-      if (!isDialOk) reason += 'Birincil valfi %50 Dengede konumuna getirin. ';
-      if (!isLeverOk) reason += 'Sızdırmazlık mandalını kilitleyin. ';
-      if (!isVacuumOk) reason += 'Vakum pompasını 45 nominal seviyesine ayarlayın.';
+      if (!isDialOk) reason += `Valf yanlış konumda (Mevcut: ${dialLevels[dialIndex].text}). `;
+      if (!isLeverOk) reason += `Sızdırmazlık mandalı ${isSealLocked ? 'serbest bırakılmalı' : 'kilitlenmeli'}. `;
+      if (!isVacuumOk) reason += `Vakum gücü hatalı (Hedef aralık: ${airlock.targetVacuumMin}-${airlock.targetVacuumMax}). `;
 
       setFeedback({
         type: 'error',
-        msg: `${reason} Kabin bütünlüğü -%10, Süre -15 sn!`,
+        msg: `${reason}Kabin bütünlüğü -%10, Süre -15 sn!`,
       });
       onUpdate((prev) => ({
         ...prev,
@@ -90,258 +89,128 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   const currentDial = dialLevels[dialIndex];
 
   return (
-    <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe select-none animate-fadeIn text-[#e6dff9]">
-      {/* Live Tactical Mission Bar */}
-      <div className="px-margin pt-space-sm pb-space-xs flex items-center justify-between">
-        <div className="flex items-center gap-space-xs">
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-high shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span>
-            <span className="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">PARTYVERSE // CANLI</span>
-          </span>
-          <span className="font-label-status text-label-status text-on-surface-variant font-bold">KAYIP SİNYAL CONSOLE</span>
+    <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe select-none animate-fadeIn text-[#e6dff9] font-sans">
+      
+      {/* Sub-header */}
+      <div className="pt-1 flex flex-col gap-1">
+        <div className="inline-flex items-center self-start gap-1.5 px-3 py-1 rounded-full bg-[#00eefc]/15 text-[#00eefc] border border-[#00eefc]/30">
+          <span className="material-symbols-outlined text-[15px]">mode_fan</span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-wider">MÜHENDİS // BASINÇ VE VALF KONTROLÜ</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-lowest shadow-sm">
-            <span className="material-symbols-outlined text-primary text-[14px]">timer</span>
-            <span className="font-label-telemetry text-label-telemetry text-primary font-bold">
-              {Math.floor(state.timeLeftSeconds / 60).toString().padStart(2, '0')}:
-              {(state.timeLeftSeconds % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high shadow-sm">
-            <span className="font-label-status text-label-status text-on-surface-variant">BÜTÜNLÜK</span>
-            <span className="font-label-telemetry text-label-telemetry text-primary-fixed-dim font-bold">%{state.hullIntegrity}</span>
-          </div>
-        </div>
+        <h2 className="font-sora text-2xl font-extrabold text-white tracking-tight mt-1">Hava kilidini kur</h2>
+        <p className="text-xs text-[#d5c4ac] leading-relaxed">
+          Kaptanından aldığın prosedür talimatlarına göre döngü valfini, mandalı ve vakumu ayarla.
+        </p>
       </div>
 
-      {/* Role Badge & Directives */}
-      <div className="px-margin pt-space-xs pb-space-sm">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest shadow-sm mb-space-xs">
-          <span className="material-symbols-outlined text-primary-fixed-dim text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>build</span>
-          <span className="font-label-telemetry text-label-telemetry text-primary uppercase font-bold">MÜHENDİS // MEKANİK VALF VE KİLİT</span>
-        </div>
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface uppercase tracking-tight font-extrabold">Hava kilidini dengele</h1>
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Kaptanından gelen adımlara göre fiziksel valfleri çevir ve mandalları kilitle.</p>
-      </div>
-
-      {/* Main Telemetry Controls Stack */}
-      <div className="px-margin flex flex-col gap-space-md">
-        {/* Digital Pressure Barometer Gauge */}
-        <div className="p-space-md rounded-xl bg-surface-container-high shadow-xl relative overflow-hidden">
-          <div className="flex items-center justify-between mb-space-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-secondary-fixed-dim text-[18px]">speed</span>
-              <span className="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold">ODA BASINCI (BAROMETRE)</span>
-            </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-lowest">
-              <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim"></span>
-              <span className="font-label-status text-label-status text-secondary font-bold">STABİL SEVİYE</span>
-            </div>
-          </div>
-          <div className="flex items-end justify-between">
-            <div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display-hero-mobile text-display-hero-mobile text-primary tracking-tight font-extrabold" id="pressureValue">
-                  {calculatedPressure}
-                </span>
-                <span className="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold">BAR</span>
-              </div>
-              <span className="font-label-status text-label-status text-secondary-fixed font-semibold">ATMOSFERİK SİNYAL: %94 DİRENÇ</span>
-            </div>
-            {/* Inline Barometer Wave Sensor Visual */}
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-end gap-1 h-8">
-                <span className="w-1.5 h-3 rounded-full bg-secondary-fixed-dim/40"></span>
-                <span className="w-1.5 h-5 rounded-full bg-secondary-fixed-dim/60"></span>
-                <span className="w-1.5 h-7 rounded-full bg-secondary-fixed-dim"></span>
-                <span className="w-1.5 h-6 rounded-full bg-secondary-fixed-dim"></span>
-                <span className="w-1.5 h-4 rounded-full bg-secondary-fixed-dim/70"></span>
-                <span className="w-1.5 h-2 rounded-full bg-secondary-fixed-dim/30"></span>
-              </div>
-              <span className="font-label-status text-label-status text-on-surface-variant font-medium">DEKOMPRESYON AKTİF</span>
-            </div>
-          </div>
-          {/* Segmented Pressure Gradient Ribbon */}
-          <div className="grid grid-cols-12 gap-1 mt-space-sm">
-            <div className="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
-            <div className="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
-            <div className="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
-            <div className="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
-            <div className="h-1.5 rounded-full bg-secondary-fixed-dim"></div>
-            <div className="h-1.5 rounded-full bg-primary-container"></div>
-            <div className="h-1.5 rounded-full bg-primary-container"></div>
-            <div className="h-1.5 rounded-full bg-primary-container"></div>
-            <div className="h-1.5 rounded-full bg-surface-container-highest"></div>
-            <div className="h-1.5 rounded-full bg-surface-container-highest"></div>
-            <div className="h-1.5 rounded-full bg-surface-container-highest"></div>
-            <div className="h-1.5 rounded-full bg-surface-container-highest"></div>
-          </div>
-        </div>
-
-        {/* Dual Heavy Mechanical Tactile Panel (Dial & Lever) */}
-        <div className="grid grid-cols-2 gap-space-sm">
-          {/* LEFT: Circular Rotary Valve Dial */}
-          <div 
-            onClick={handleRotateDial}
-            className="p-space-md rounded-xl bg-surface-container-high shadow-xl flex flex-col items-center justify-between text-center relative overflow-hidden cursor-pointer hover:bg-surface-container-highest transition-colors"
-          >
-            <div className="w-full flex items-center justify-between mb-space-xs">
-              <span className="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold">BİRİNCİL VALF</span>
-              <span className="material-symbols-outlined text-secondary text-[16px]">sync</span>
-            </div>
-            {/* 2.5D Radial Dial Module */}
-            <div className="relative w-28 h-28 my-space-xs flex items-center justify-center select-none" id="rotaryDialContainer">
-              {/* Outer Ticks Track SVG */}
-              <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none" viewBox="0 0 100 100">
-                <circle className="text-surface-container-lowest" cx="50" cy="50" fill="none" r="42" stroke="currentColor" strokeWidth="4"></circle>
-                <circle className="text-secondary-fixed-dim" cx="50" cy="50" fill="none" r="42" stroke="currentColor" strokeDasharray="131 264" strokeWidth="4"></circle>
-              </svg>
-              {/* Tactile Rotary Core Knob */}
+      {/* Control Console */}
+      <div className="mt-2 bg-[#0f0c1e] p-3.5 rounded-2xl border border-white/10 flex flex-col gap-3 shadow-xl">
+        
+        {/* Dial & Lever Row */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Dial */}
+          <div className="p-3 rounded-xl bg-[#1c192c] border border-white/5 flex flex-col items-center justify-between">
+            <span className="text-[10px] font-mono text-[#d5c4ac] uppercase font-bold">BİRİNCİL DÖNGÜ VALFİ</span>
+            <button
+              type="button"
+              onClick={handleRotateDial}
+              className="w-18 h-18 rounded-full bg-[#2b273b] border border-white/10 shadow-[0_4px_0_#0f0c1e] active:translate-y-1 flex items-center justify-center cursor-pointer my-2 transition-transform"
+            >
               <div 
-                className="w-20 h-20 rounded-full bg-surface-container-lowest shadow-2xl flex items-center justify-center relative transition-transform duration-300"
+                className="w-3 h-9 rounded-full bg-[#3a374b] flex flex-col items-center justify-start pt-1 shadow transition-transform duration-300"
                 style={{ transform: `rotate(${currentDial.deg}deg)` }}
               >
-                {/* Center Screw Cap */}
-                <div className="w-10 h-10 rounded-full bg-surface-container-highest shadow-inner flex items-center justify-center">
-                  <span className="material-symbols-outlined text-secondary-fixed text-[18px]">radio_button_checked</span>
-                </div>
-                {/* Indicator Needle Pointer */}
-                <div className="absolute top-1 w-1.5 h-4 rounded-full bg-secondary-container shadow-md"></div>
+                <div className="w-1.5 h-2 rounded bg-[#00eefc]"></div>
               </div>
-            </div>
-            <div className="w-full bg-surface-container-lowest py-1 px-2 rounded-lg flex items-center justify-between">
-              <span className="font-label-status text-label-status text-on-surface-variant">KONUM</span>
-              <span className="font-label-telemetry text-label-telemetry text-secondary-fixed font-bold">
-                {currentDial.text}
-              </span>
-            </div>
+            </button>
+            <span className="font-mono text-xs font-bold text-[#00eefc]">{currentDial.text}</span>
           </div>
 
-          {/* RIGHT: Mechanical Seal Lock Lever */}
-          <div 
-            onClick={handleToggleLever}
-            className="p-space-md rounded-xl bg-surface-container-high shadow-xl flex flex-col items-center justify-between text-center relative overflow-hidden cursor-pointer hover:bg-surface-container-highest transition-colors"
-          >
-            <div className="w-full flex items-center justify-between mb-space-xs">
-              <span className="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold">SIZDIRMAZLIK</span>
-              <span className={`material-symbols-outlined text-[16px] ${isSealLocked ? 'text-primary-container' : 'text-secondary-fixed-dim'}`}>
-                {isSealLocked ? 'lock' : 'lock_open'}
-              </span>
-            </div>
-            {/* Heavy Physical Lever Switch Track */}
-            <div className="relative w-14 h-28 my-space-xs bg-surface-container-lowest rounded-full p-1.5 flex flex-col justify-between items-center shadow-inner">
-              <span className="font-label-status text-label-status text-primary-container font-extrabold uppercase">KİLİT</span>
-              <div 
-                className={`w-11 h-11 rounded-full shadow-2xl flex items-center justify-center transition-all duration-200 ${
-                  isSealLocked ? 'bg-primary-container' : 'bg-secondary-fixed-dim translate-y-14'
-                }`}
-              >
-                <span className="material-symbols-outlined text-on-primary-container text-[20px]">
-                  {isSealLocked ? 'shield_lock' : 'lock_open'}
-                </span>
-              </div>
-              <span className="font-label-status text-label-status text-on-surface-variant uppercase font-medium">AÇIK</span>
-            </div>
-            <div className="w-full bg-surface-container-lowest py-1 px-2 rounded-lg flex items-center justify-between">
-              <span className="font-label-status text-label-status text-on-surface-variant">DURUM</span>
-              <span className={`font-label-telemetry text-label-telemetry font-bold ${
-                isSealLocked ? 'text-primary-container' : 'text-secondary-fixed-dim'
+          {/* Seal Lever */}
+          <div className="p-3 rounded-xl bg-[#1c192c] border border-white/5 flex flex-col items-center justify-between">
+            <span className="text-[10px] font-mono text-[#d5c4ac] uppercase font-bold">SIZDIRMAZLIK MANDALI</span>
+            <button
+              type="button"
+              onClick={handleToggleLever}
+              className={`w-14 h-20 rounded-xl p-1 flex flex-col items-center transition-all cursor-pointer border ${
+                isSealLocked ? 'bg-emerald-950/40 border-emerald-500' : 'bg-rose-950/40 border-rose-500'
+              }`}
+            >
+              <div className={`w-full h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                isSealLocked ? 'bg-emerald-500 text-black' : 'bg-transparent text-white/30'
               }`}>
-                {isSealLocked ? 'KİLİTLİ' : 'DEVRE DIŞI'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Vacuum Pump Linear Power Console Slider */}
-        <div className="p-space-md rounded-xl bg-surface-container-high shadow-xl">
-          <div className="flex items-center justify-between mb-space-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-primary text-[18px]">air</span>
-              <span className="font-label-telemetry text-label-telemetry text-on-surface-variant uppercase font-bold">VAKUM POMPASI GÜCÜ</span>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="font-headline-sm text-headline-sm text-primary font-bold">%{vacuumPower}</span>
-              <span className="font-label-status text-label-status text-on-surface-variant">/ 100</span>
-            </div>
-          </div>
-          {/* Tactile Slider Shell Track */}
-          <div className="relative py-2">
-            <input 
-              className="w-full h-3 bg-surface-container-lowest rounded-full appearance-none cursor-pointer accent-amber-400 focus:outline-none" 
-              max="100" 
-              min="0" 
-              type="range" 
-              value={vacuumPower}
-              onChange={handleSliderChange}
-            />
-            <div className="flex justify-between items-center px-1 mt-1.5">
-              <span className="font-label-status text-label-status text-on-surface-variant">0 BARREL (BOŞTA)</span>
-              <span className="font-label-status text-label-status text-primary font-bold">45 NOMİNAL</span>
-              <span className="font-label-status text-label-status text-on-surface-variant">100 TAM TAHLİYE</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Feedback alert */}
-        {feedback.msg && (
-          <div className={`p-3 rounded-xl border text-xs font-mono leading-relaxed animate-fadeIn ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
-              : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
-          }`}>
-            {feedback.msg}
-          </div>
-        )}
-
-        {/* Interactive Tactical Co-op Mission Push Button */}
-        <div className="pt-space-xs">
-          {!isSolved ? (
-            <button 
-              type="button" 
-              onClick={handleEngageAirlock}
-              className="w-full py-4 px-space-md rounded-xl bg-secondary-container text-on-secondary-container shadow-2xl flex items-center justify-center gap-2 uppercase transition-all duration-150 active:translate-y-1 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>power_settings_new</span>
-              <span className="font-headline-sm text-headline-sm font-extrabold tracking-wider">VALF VE KİLİDİ DEVREYE SOK</span>
+                KİLİT
+              </div>
+              <div className={`w-full h-8 rounded-lg flex items-center justify-center font-bold text-xs mt-auto ${
+                !isSealLocked ? 'bg-rose-500 text-white' : 'bg-transparent text-white/30'
+              }`}>
+                AÇIK
+              </div>
             </button>
-          ) : (
-            <button 
-              type="button" 
-              onClick={onAdvancePhase}
-              className="w-full py-4 px-space-md rounded-xl bg-gradient-to-r from-primary-container to-surface-tint text-on-primary-container shadow-2xl flex items-center justify-center gap-2 uppercase transition-all duration-150 active:translate-y-1 cursor-pointer animate-pulse font-headline-sm text-headline-sm font-extrabold tracking-wider"
-            >
-              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>task_alt</span>
-              <span>GÖREV TAMAMLANDI • DEVAM ET</span>
-            </button>
-          )}
+            <span className={`font-mono text-xs font-bold ${isSealLocked ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {isSealLocked ? 'KİLİTLİ (YUKARI)' : 'SERBEST (AŞAĞI)'}
+            </span>
+          </div>
         </div>
 
-        {/* Co-op Radio Protocol Status Hint */}
-        <div className="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-2.5 mb-space-sm shadow-sm">
-          <span className="material-symbols-outlined text-primary-container text-[18px] shrink-0 mt-0.5">headset_mic</span>
-          <p className="font-body-sm text-body-sm text-on-surface-variant leading-snug">
-            Kaptan protokolü onayladıktan sonra dış kapağı güvenle açabilirsin. Bekleme frekansı: <span className="text-secondary-fixed font-bold">KANAL 4</span>.
-          </p>
-        </div>
+        {/* Vacuum Power Slider */}
+        <div className="p-3 rounded-xl bg-[#1c192c] border border-white/5 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-[#d5c4ac] uppercase font-bold">VAKUM POMPASI GÜCÜ</span>
+            <span className="font-mono text-xs text-[#ffb703] font-bold">
+              %{vacuumPower} ({calculatedPressure} Bar)
+            </span>
+          </div>
 
-        {/* Crew Station Quick Telemetry Row */}
-        <div className="grid grid-cols-3 gap-2 pb-space-sm">
-          <div className="p-2 rounded-lg bg-surface-container text-center flex flex-col items-center">
-            <span className="font-label-status text-label-status text-on-surface-variant">O2 SEVİYESİ</span>
-            <span className="font-label-telemetry text-label-telemetry text-secondary-fixed mt-0.5 font-bold">%98.4</span>
-          </div>
-          <div className="p-2 rounded-lg bg-surface-container text-center flex flex-col items-center">
-            <span className="font-label-status text-label-status text-on-surface-variant">KAPAK KİLİT #2</span>
-            <span className="font-label-telemetry text-label-telemetry text-primary-container mt-0.5 font-bold">KORUMALI</span>
-          </div>
-          <div className="p-2 rounded-lg bg-surface-container text-center flex flex-col items-center">
-            <span className="font-label-status text-label-status text-on-surface-variant">MANUEL BYPASS</span>
-            <span className="font-label-telemetry text-label-telemetry text-on-surface mt-0.5 font-bold">HAZIR</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={vacuumPower}
+            onChange={handleSliderChange}
+            className="w-full accent-[#ffb703] cursor-pointer"
+          />
+
+          <div className="flex items-center justify-between text-[9px] font-mono text-[#d5c4ac]">
+            <span>0% Düşük</span>
+            <span>Nominal: {airlock.targetVacuumMin} - {airlock.targetVacuumMax}%</span>
+            <span>100% Aşırı</span>
           </div>
         </div>
       </div>
+
+      {/* Feedback Alert */}
+      {feedback.msg && (
+        <div className={`mt-2 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
+          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+        }`}>
+          {feedback.msg}
+        </div>
+      )}
+
+      {/* Action Button */}
+      <div className="mt-2 flex flex-col gap-2">
+        {!isSolved ? (
+          <button
+            onClick={handleEngageAirlock}
+            className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#00dbe9] via-[#00eefc] to-[#7df4ff] text-[#002022] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#00686f,0_0_24px_rgba(0,238,252,0.35)] active:translate-y-1 transition-all cursor-pointer"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[20px]">air</span>
+            <span>Basınç Döngüsünü Devreye Sok</span>
+          </button>
+        ) : (
+          <button
+            onClick={onAdvancePhase}
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ffba27] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 transition-all cursor-pointer animate-bounce"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+            <span>HAVA KİLİDİ AKTİF • SONRAKİ AŞAMA</span>
+          </button>
+        )}
+      </div>
+
     </div>
   );
 };
