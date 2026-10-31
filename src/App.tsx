@@ -5,7 +5,7 @@ import {
   MiniGameType, 
   GameStatus 
 } from './types/game';
-import { createInitialMissionState } from './services/gameFactory';
+import { createInitialMissionState, calculateFinalScore } from './services/gameFactory';
 import { validateAndAdvancePhase } from './services/phaseTransition';
 import { syncService } from './services/multiplayerSync';
 import { ConsoleHeader } from './components/ConsoleHeader';
@@ -74,14 +74,23 @@ export default function App() {
     const timer = setInterval(() => {
       setState((prev) => {
         if (prev.timeLeftSeconds <= 1 || prev.hullIntegrity <= 0) {
-          // Mission Failure!
+          // Mission Failure! Calculate real score based on tasks and integrity
+          const finalHull = Math.max(0, prev.hullIntegrity);
+          const scoreData = calculateFinalScore(
+            prev.completedTasksCount,
+            0,
+            finalHull,
+            0
+          );
           const failNext: MissionState = {
             ...prev,
             status: 'phase_result',
             outcomeType: 'basarisizlik',
             rescuedCrewCount: 0,
-            finalScore: 120,
+            finalScore: scoreData.total,
+            scoreBreakdown: scoreData.breakdown,
             timeLeftSeconds: 0,
+            hullIntegrity: finalHull,
           };
           syncService.broadcast(failNext, failNext.myRole);
           return failNext;
@@ -98,12 +107,31 @@ export default function App() {
   }, [state.status, state.isPaused, state.isDisconnected]);
 
   // Handle phase advance: Phase 0 -> Phase 1 -> Phase 2 (Energy) -> Phase 3 (Rescue)
-  // Protected with roundId, expectedPhaseIndex, and puzzle completion verification
-  const handleAdvancePhase = (expectedPhaseIndex?: number) => {
+  // Protected with explicit roundId, expectedPhaseIndex, and puzzle completion verification
+  const handleAdvancePhase = (requestPayload?: { roundId?: string; expectedPhaseIndex?: number } | number | unknown) => {
     updateState((prev) => {
-      const targetExpected = expectedPhaseIndex !== undefined ? expectedPhaseIndex : prev.currentPhaseIndex;
+      let targetRoundId = prev.roundId;
+      let targetExpected = prev.currentPhaseIndex;
+
+      if (typeof requestPayload === 'number') {
+        targetExpected = requestPayload;
+      } else if (
+        requestPayload &&
+        typeof requestPayload === 'object' &&
+        !('nativeEvent' in requestPayload) &&
+        !('target' in requestPayload)
+      ) {
+        const payload = requestPayload as { roundId?: string; expectedPhaseIndex?: number };
+        if (typeof payload.roundId === 'string') {
+          targetRoundId = payload.roundId;
+        }
+        if (typeof payload.expectedPhaseIndex === 'number') {
+          targetExpected = payload.expectedPhaseIndex;
+        }
+      }
+
       const result = validateAndAdvancePhase(prev, {
-        roundId: prev.roundId,
+        roundId: targetRoundId,
         expectedPhaseIndex: targetExpected,
       });
 

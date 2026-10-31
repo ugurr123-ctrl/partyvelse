@@ -220,7 +220,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
               <div className="w-full mt-3 p-2.5 rounded-xl bg-surface-container border border-error/20 flex flex-col items-center">
                 <div className="text-[10px] font-mono text-on-surface-variant uppercase">HESAPLANAN SKOR</div>
                 <div className="text-xl font-sora font-black text-rose-300 mt-0.5">
-                  {finalScore || 200} PUAN
+                  {finalScore ?? 0} PUAN
                 </div>
                 <div className="text-[9px] font-mono text-[#d5c4ac] mt-1 text-center">
                   Formül: (Tamamlanan Görev × 200) + (Süre × 2) + (Bütünlük × 3) + (Mürettebat × 50)
@@ -281,7 +281,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container/60 border border-error/15">
                   <span className="material-symbols-outlined text-[18px] text-error mb-1">warning</span>
                   <span className="font-headline-sm text-headline-sm text-on-surface font-bold">
-                    {completedTasksCount || 2}/4
+                    {completedTasksCount}/4
                   </span>
                   <span className="font-label-status text-label-status text-error uppercase mt-0.5">kısmi</span>
                 </div>
@@ -396,7 +396,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 </div>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="font-display-hero-mobile text-display-hero-mobile text-primary drop-shadow-[0_2px_12px_rgba(255,183,3,0.45)] font-black">
-                    {rescuedCrewCount || 10}
+                    {rescuedCrewCount}
                   </span>
                   <span className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface-variant/80 font-bold">
                     / 10
@@ -411,14 +411,14 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
               <div className="w-full mt-3 p-3 rounded-xl bg-[#0f0c1e] border border-white/10 flex flex-col items-center shadow-inner">
                 <span className="text-[10px] font-mono text-[#ffb703] uppercase font-bold tracking-wider">HESAPLANAN SKOR</span>
                 <span className="text-2xl font-sora font-extrabold text-white mt-0.5">
-                  {finalScore || 1480} PUAN
+                  {finalScore ?? 0} PUAN
                 </span>
                 
                 {/* Score Formula Components */}
                 <div className="w-full grid grid-cols-4 gap-1 mt-2 pt-2 border-t border-white/5 text-center font-mono text-[9px]">
                   <div className="flex flex-col">
                     <span className="text-[#d5c4ac]">Görev</span>
-                    <span className="text-white font-bold">+{scoreBreakdown?.tasksScore ?? ((completedTasksCount || 4) * 200)}</span>
+                    <span className="text-white font-bold">+{scoreBreakdown?.tasksScore ?? (completedTasksCount * 200)}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#d5c4ac]">Süre</span>
@@ -429,8 +429,8 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                     <span className="text-[#00eefc] font-bold">+{scoreBreakdown?.hullBonus ?? (hullIntegrity * 3)}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[#d5c4ac]">Mürettebat</span>
-                    <span className="text-[#ffb703] font-bold">+{scoreBreakdown?.crewBonus ?? ((rescuedCrewCount || 10) * 50)}</span>
+                    <span className="text-[#ffb703]">Mürettebat</span>
+                    <span className="text-[#ffb703] font-bold">+{scoreBreakdown?.crewBonus ?? (rescuedCrewCount * 50)}</span>
                   </div>
                 </div>
 

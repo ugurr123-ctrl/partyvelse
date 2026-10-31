@@ -4,7 +4,7 @@ import { MissionState, ENVIRONMENTS } from '../../types/game';
 interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
-  onAdvancePhase: () => void;
+  onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
 }
 
 export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
@@ -286,7 +286,7 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
           </div>
         ) : (
           <button
-            onClick={onAdvancePhase}
+            onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
             className="w-full h-14 rounded-xl bg-gradient-to-r from-[#00eefc] to-[#00dbe9] text-[#002022] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#004f54,0_12px_24px_rgba(0,238,252,0.35)] active:translate-y-1 transition-all cursor-pointer animate-bounce"
             type="button"
           >

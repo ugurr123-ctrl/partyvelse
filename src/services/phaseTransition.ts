@@ -51,6 +51,14 @@ export function validateAndAdvancePhase(
     };
   }
 
+  // 1.1 Type Safety: Protect against object/event injection
+  if (typeof request.expectedPhaseIndex !== 'number' || isNaN(request.expectedPhaseIndex)) {
+    return {
+      success: false,
+      error: `Aşama uyumsuzluğu: Beklenen aşama [object Object], mevcut aşama ${currentState.currentPhaseIndex}. İşlem engellendi.`,
+    };
+  }
+
   // 2. Strict phase index check:
   // If request expects phase X, but state is already X+1 (e.g., partner already triggered it),
   // reject immediately!
@@ -142,9 +150,58 @@ export function validateRescueDecision(
   route: RescueRoute
 ): RescueValidationResult {
   const { energy, rescue, timeLeftSeconds, hullIntegrity } = state;
+  const currentTasks = state.completedTasksCount ?? 0;
   const netLife = Math.max(0, energy.engineerAllocation.yasamDestegi - energy.lineLosses.yasamDestegi);
   const netThrust = Math.max(0, energy.engineerAllocation.itki - energy.lineLosses.itki);
   const netShield = Math.max(0, energy.engineerAllocation.kalkan - energy.lineLosses.kalkan);
+
+  // 0. Hull Integrity Check (Station hull must be intact; 0% hull means breach and destruction)
+  if (hullIntegrity <= 0) {
+    const failScore = calculateFinalScore(currentTasks, 0, 0, 0);
+    return {
+      success: false,
+      outcomeType: 'basarisizlik',
+      rescuedCrewCount: 0,
+      remainingTimeAfterTravel: 0,
+      score: failScore,
+      error: 'İSTASYON GÖVDESİ PARÇALANDI! Gövde bütünlüğü %0 olduğu için tahliye gerçekleştirilemez.',
+      nextState: {
+        ...state,
+        status: 'phase_result',
+        outcomeType: 'basarisizlik',
+        rescuedCrewCount: 0,
+        completedTasksCount: currentTasks,
+        timeLeftSeconds: 0,
+        hullIntegrity: 0,
+        finalScore: failScore.total,
+        scoreBreakdown: failScore.breakdown,
+      },
+    };
+  }
+
+  // 0.1 Time Depleted Check
+  if (timeLeftSeconds <= 0) {
+    const failScore = calculateFinalScore(currentTasks, 0, Math.max(0, hullIntegrity), 0);
+    return {
+      success: false,
+      outcomeType: 'basarisizlik',
+      rescuedCrewCount: 0,
+      remainingTimeAfterTravel: 0,
+      score: failScore,
+      error: 'SÜRE TÜKENDİ! İstasyon patlamadan önce tahliye başlatılamadı.',
+      nextState: {
+        ...state,
+        status: 'phase_result',
+        outcomeType: 'basarisizlik',
+        rescuedCrewCount: 0,
+        completedTasksCount: currentTasks,
+        timeLeftSeconds: 0,
+        hullIntegrity: Math.max(0, hullIntegrity),
+        finalScore: failScore.total,
+        scoreBreakdown: failScore.breakdown,
+      },
+    };
+  }
 
   // 1. Partner Approvals Check
   if (!rescue.captainApproved || !rescue.engineerApproved) {
@@ -153,7 +210,7 @@ export function validateRescueDecision(
       outcomeType: 'basarisizlik',
       rescuedCrewCount: 0,
       remainingTimeAfterTravel: timeLeftSeconds,
-      score: calculateFinalScore(3, 0, 0, 0),
+      score: calculateFinalScore(currentTasks, 0, hullIntegrity, 0),
       error: 'İki oyuncunun onayı bekleniyor (Kaptan ve Mühendis çift onayı zorunludur).',
     };
   }
@@ -165,7 +222,7 @@ export function validateRescueDecision(
       outcomeType: 'basarisizlik',
       rescuedCrewCount: 0,
       remainingTimeAfterTravel: timeLeftSeconds,
-      score: calculateFinalScore(3, 0, 0, 0),
+      score: calculateFinalScore(currentTasks, 0, hullIntegrity, 0),
       error: 'HATA: Reaktör enerjisi kilitlenmedi! Önceki aşamada güç dağılımı onaylanmalıdır.',
     };
   }
@@ -177,7 +234,7 @@ export function validateRescueDecision(
       outcomeType: 'basarisizlik',
       rescuedCrewCount: 0,
       remainingTimeAfterTravel: timeLeftSeconds,
-      score: calculateFinalScore(3, 0, 0, 0),
+      score: calculateFinalScore(currentTasks, 0, hullIntegrity, 0),
       error: `YETERSİZ YAŞAM DESTEĞİ! Net ${netLife} MW sağlandı (Asgari 3 MW gereklidir).`,
     };
   }
@@ -189,7 +246,7 @@ export function validateRescueDecision(
       outcomeType: 'basarisizlik',
       rescuedCrewCount: 0,
       remainingTimeAfterTravel: timeLeftSeconds,
-      score: calculateFinalScore(3, 0, 0, 0),
+      score: calculateFinalScore(currentTasks, 0, hullIntegrity, 0),
       error: `YETERSİZ İTKİ GÜCÜ! ${route.name} için net ${route.powerRequirements.itki} MW itki gerekiyor, sağlanan: ${netThrust} MW.`,
     };
   }
@@ -201,14 +258,14 @@ export function validateRescueDecision(
       outcomeType: 'basarisizlik',
       rescuedCrewCount: 0,
       remainingTimeAfterTravel: timeLeftSeconds,
-      score: calculateFinalScore(3, 0, 0, 0),
+      score: calculateFinalScore(currentTasks, 0, hullIntegrity, 0),
       error: `YETERSİZ KALKAN GÜCÜ! ${route.name} için net ${route.powerRequirements.kalkan} MW kalkan gerekiyor, sağlanan: ${netShield} MW.`,
     };
   }
 
   // 6. Time Remaining vs Travel Time Check
   if (timeLeftSeconds < route.travelTimeSeconds) {
-    const failScore = calculateFinalScore(3, 0, 0, 0);
+    const failScore = calculateFinalScore(currentTasks, 0, 0, 0);
     return {
       success: false,
       outcomeType: 'basarisizlik',
@@ -221,7 +278,7 @@ export function validateRescueDecision(
         status: 'phase_result',
         outcomeType: 'basarisizlik',
         rescuedCrewCount: 0,
-        completedTasksCount: 3,
+        completedTasksCount: currentTasks,
         timeLeftSeconds: 0,
         hullIntegrity: 0,
         finalScore: failScore.total,

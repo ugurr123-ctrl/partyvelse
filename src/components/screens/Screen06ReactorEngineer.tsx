@@ -5,7 +5,7 @@ import { isLineAnomaly } from '../../services/gameFactory';
 interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
-  onAdvancePhase: () => void;
+  onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
 }
 
 export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
@@ -275,7 +275,7 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
           </button>
         ) : (
           <button
-            onClick={onAdvancePhase}
+            onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
             className="w-full h-14 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ffba27] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 transition-all cursor-pointer animate-bounce"
             type="button"
           >
