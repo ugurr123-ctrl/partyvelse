@@ -7,9 +7,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onFinalizeMission: () => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMission }) => {
+export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMission, onAction }) => {
   const { rescue, energy, myRole, hullIntegrity, timeLeftSeconds } = state;
   const { selectedRouteId, captainApproved, engineerApproved, routes } = rescue;
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -28,6 +29,10 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
 
   const handleSelectRoute = (routeId: 'alfa' | 'beta' | 'gama') => {
     setValidationError(null);
+    if (onAction) {
+      onAction('rescue_select_route', { routeId });
+      return;
+    }
     onUpdate((prev) => ({
       ...prev,
       rescue: {
@@ -41,6 +46,12 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
 
   const handleToggleMyApproval = () => {
     setValidationError(null);
+    if (onAction) {
+      const isCaptain = myRole === 'kaptan';
+      const current = isCaptain ? captainApproved : engineerApproved;
+      onAction('rescue_toggle_approval', { approved: !current });
+      return;
+    }
     onUpdate((prev) => {
       const isCaptain = prev.myRole === 'kaptan';
       return {
@@ -55,6 +66,10 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
   };
 
   const handleSimulatePartnerApproval = () => {
+    if (onAction) {
+      // In online multiplayer, player cannot simulate partner approval
+      return;
+    }
     setValidationError(null);
     onUpdate((prev) => {
       const isCaptain = prev.myRole === 'kaptan';
@@ -240,9 +255,9 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
       </div>
 
       {/* Validation Error Message */}
-      {validationError && (
+      {(state.rescue.validationError || validationError) && (
         <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/50 text-rose-300 text-xs leading-relaxed animate-fadeIn">
-          {validationError}
+          {state.rescue.validationError || validationError}
         </div>
       )}
 

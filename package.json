@@ -9,7 +9,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "tsx scripts/testReviewRegressions.ts && tsx scripts/testColyseusMultiplayer.ts && tsx scripts/verifyGameLogic.ts && tsx scripts/testDualViewMode.ts && tsx scripts/testAdvancedScenario.ts",
+    "test:regressions": "tsx scripts/testReviewRegressions.ts",
+    "test:multiplayer": "tsx scripts/testColyseusMultiplayer.ts",
+    "test:logic": "tsx scripts/verifyGameLogic.ts",
+    "test:dualview": "tsx scripts/testDualViewMode.ts",
+    "test:advanced": "tsx scripts/testAdvancedScenario.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

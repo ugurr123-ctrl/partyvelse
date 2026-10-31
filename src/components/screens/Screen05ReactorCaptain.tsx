@@ -5,9 +5,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { diagnostic, activeEnvironment } = state;
   const envInfo = ENVIRONMENTS[activeEnvironment];
 
@@ -34,6 +35,11 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
 
   const handleUnlockAction = () => {
     if (diagnostic.isSolved) return;
+
+    if (onAction) {
+      onAction('diagnostic_captain_breaker', { breaker: selectedBreaker });
+      return;
+    }
 
     if (selectedBreaker === diagnostic.correctBreaker) {
       const willSolve = diagnostic.engineerActionTaken;
@@ -258,11 +264,13 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
         </div>
 
         {/* Feedback Alert if any */}
-        {feedback.msg && (
+        {(state.feedbackMessage || feedback.msg) && (
           <div className={`p-3 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-            feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+            (state.feedbackState === 'success' || (!state.feedbackState && feedback.type === 'success'))
+              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
+              : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
           }`}>
-            {feedback.msg}
+            {state.feedbackMessage || feedback.msg}
           </div>
         )}
 

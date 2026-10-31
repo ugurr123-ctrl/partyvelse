@@ -22,17 +22,51 @@ export const Screen01Entry: React.FC<Props> = ({
 }) => {
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState(state.players[state.myRole].name || 'Kaptan Ece');
-  const [pinDigits, setPinDigits] = useState<string[]>(['P', 'V', '7', 'K', '', '']);
+  const [pinDigits, setPinDigits] = useState<string[]>(() => {
+    const raw = (state.roomCode || '7024').replace(/^KYP-?/i, '');
+    const chars = raw.slice(0, 4).toUpperCase().split('');
+    while (chars.length < 4) chars.push('');
+    return chars;
+  });
   const [stationSector, setStationSector] = useState('Aurora-7 Çekirdek Güvertesi');
   const [selectedRole, setSelectedRole] = useState<Role>(state.myRole);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const applyNormalizedCode = (codeStr: string) => {
+    const cleaned = codeStr.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const suffix = cleaned.startsWith('KYP') ? cleaned.slice(3) : cleaned;
+    const digits = suffix.slice(0, 4).split('');
+    while (digits.length < 4) digits.push('');
+    setPinDigits(digits);
+  };
 
   const handleDigitChange = (index: number, val: string) => {
     const char = val.toUpperCase().slice(-1);
     const next = [...pinDigits];
     next[index] = char;
     setPinDigits(next);
+
+    // Auto advance to next slot if a character was entered
+    if (char && index < 3) {
+      const nextInput = document.getElementById(`pin-slot-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !pinDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`pin-slot-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    if (pasted) {
+      applyNormalizedCode(pasted);
+    }
   };
 
   const handleCreateRoom = async () => {
@@ -66,8 +100,12 @@ export const Screen01Entry: React.FC<Props> = ({
 
   const handleJoinRoom = async () => {
     setErrorMsg(null);
-    const entered = pinDigits.join('').trim();
-    const targetCode = entered.length >= 4 ? entered : state.roomCode;
+    const suffix = pinDigits.join('').trim().toUpperCase();
+    if (suffix.length < 4) {
+      setErrorMsg('Lütfen 4 karakterli oda kodunu eksiksiz girin (Örn: KYP-7024).');
+      return;
+    }
+    const targetCode = `KYP-${suffix}`;
 
     if (isOnlineMode && onJoinOnlineRoom) {
       setIsLoading(true);
@@ -300,33 +338,51 @@ export const Screen01Entry: React.FC<Props> = ({
                 <span className="material-symbols-outlined text-[#9e8f78] text-[22px]">dialpad</span>
               </div>
 
-              {/* Segmented PIN Input Slots */}
-              <div className="grid grid-cols-6 gap-2 my-1">
-                {pinDigits.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    type="text"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleDigitChange(idx, e.target.value)}
-                    className="h-12 text-center bg-[#0f0c1e] text-[#00eefc] font-sora text-lg font-bold rounded-xl border border-white/15 focus:border-[#00eefc] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_0_8px_rgba(0,238,252,0.2)] focus:outline-none uppercase"
-                  />
-                ))}
+              {/* Segmented PIN Input Slots with KYP- Prefix */}
+              <div className="flex items-center justify-center gap-2 my-2 font-mono">
+                <div className="h-12 px-3 rounded-xl bg-[#0f0c1e] border border-[#00eefc]/30 flex items-center justify-center font-bold text-[#00eefc] text-sm tracking-widest select-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
+                  KYP -
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {pinDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      id={`pin-slot-${idx}`}
+                      type="text"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleDigitChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(idx, e)}
+                      onPaste={handlePaste}
+                      placeholder="•"
+                      className="w-12 h-12 text-center bg-[#0f0c1e] text-[#00eefc] font-sora text-lg font-bold rounded-xl border border-white/15 focus:border-[#00eefc] shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_0_8px_rgba(0,238,252,0.2)] focus:outline-none uppercase placeholder:text-white/20"
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* Quick Action Utilities */}
               <div className="flex items-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => setPinDigits(['K', 'Y', 'P', '7', '0', '2'])}
+                  onClick={() => applyNormalizedCode('7024')}
                   className="flex-1 py-2 px-3 rounded-xl bg-[#201d30] hover:bg-[#2b273b] text-white flex items-center justify-center gap-1.5 transition-colors border border-white/5 text-xs font-mono"
                 >
-                  <span className="material-symbols-outlined text-[#00eefc] text-[16px]">qr_code_scanner</span>
-                  <span>QR Tara</span>
+                  <span className="material-symbols-outlined text-[#00eefc] text-[16px]">restart_alt</span>
+                  <span>Varsayılan Kod</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPinDigits(['K', 'Y', 'P', '8', '8', 'A'])}
+                  onClick={async () => {
+                    try {
+                      if (navigator?.clipboard?.readText) {
+                        const clip = await navigator.clipboard.readText();
+                        if (clip) applyNormalizedCode(clip);
+                      }
+                    } catch {
+                      applyNormalizedCode(state.roomCode);
+                    }
+                  }}
                   className="flex-1 py-2 px-3 rounded-xl bg-[#201d30] hover:bg-[#2b273b] text-white flex items-center justify-center gap-1.5 transition-colors border border-white/5 text-xs font-mono"
                 >
                   <span className="material-symbols-outlined text-[#ffba27] text-[16px]">content_paste</span>

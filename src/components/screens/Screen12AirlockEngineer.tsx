@@ -5,9 +5,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { airlock } = state;
   const { isSolved } = airlock;
 
@@ -20,7 +21,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   ];
 
   // Starts from engineer initial settings (which are intentionally NOT the target!)
-  const [dialIndex, setDialIndex] = useState(airlock.engineerDialIndex ?? 2);
+  const [dialIndex, setDialIndex] = useState(airlock.engineerDialIndex >= 0 ? airlock.engineerDialIndex : 2);
   const [isSealLocked, setIsSealLocked] = useState(airlock.engineerSealLocked ?? false);
   const [vacuumPower, setVacuumPower] = useState(airlock.engineerVacuumPower ?? 20);
 
@@ -31,17 +32,23 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
 
   const handleRotateDial = () => {
     if (isSolved) return;
-    setDialIndex((prev) => (prev + 1) % dialLevels.length);
+    const nextIdx = (dialIndex + 1) % dialLevels.length;
+    setDialIndex(nextIdx);
+    onAction?.('airlock_set_params', { dialIndex: nextIdx, sealLocked: isSealLocked, vacuumPower });
   };
 
   const handleToggleLever = () => {
     if (isSolved) return;
-    setIsSealLocked((prev) => !prev);
+    const nextSeal = !isSealLocked;
+    setIsSealLocked(nextSeal);
+    onAction?.('airlock_set_params', { dialIndex, sealLocked: nextSeal, vacuumPower });
   };
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isSolved) return;
-    setVacuumPower(Number(e.target.value));
+    const nextPower = Number(e.target.value);
+    setVacuumPower(nextPower);
+    onAction?.('airlock_set_params', { dialIndex, sealLocked: isSealLocked, vacuumPower: nextPower });
   };
 
   const calculatedPressure = (1.5 + (vacuumPower / 100) * 1.8).toFixed(2);
@@ -49,6 +56,16 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   const handleEngageAirlock = () => {
     if (isSolved) return;
 
+    if (onAction) {
+      onAction('airlock_verify', {
+        dialIndex,
+        sealLocked: isSealLocked,
+        vacuumPower,
+      });
+      return;
+    }
+
+    // Local demo fallback
     const isDialOk = dialIndex === airlock.targetDialIndex;
     const isLeverOk = isSealLocked === airlock.targetSealLocked;
     const isVacuumOk = vacuumPower >= airlock.targetVacuumMin && vacuumPower <= airlock.targetVacuumMax;
@@ -85,6 +102,13 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
       }));
     }
   };
+
+  const activeFeedback = state.feedbackMessage
+    ? {
+        type: (state.feedbackState === 'success' ? 'success' : state.feedbackState === 'error' ? 'error' : 'idle') as 'idle' | 'success' | 'error',
+        msg: state.feedbackMessage,
+      }
+    : feedback;
 
   const currentDial = dialLevels[dialIndex];
 
@@ -173,18 +197,18 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
 
           <div className="flex items-center justify-between text-[9px] font-mono text-[#d5c4ac]">
             <span>0% Düşük</span>
-            <span>Nominal: {airlock.targetVacuumMin} - {airlock.targetVacuumMax}%</span>
+            <span>Nominal: {airlock.targetVacuumMin > 0 ? `${airlock.targetVacuumMin} - ${airlock.targetVacuumMax}%` : 'Kaptanın Belirttiği Aralık'}</span>
             <span>100% Aşırı</span>
           </div>
         </div>
       </div>
 
       {/* Feedback Alert */}
-      {feedback.msg && (
+      {activeFeedback.msg && (
         <div className={`mt-2 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+          activeFeedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
         }`}>
-          {feedback.msg}
+          {activeFeedback.msg}
         </div>
       )}
 

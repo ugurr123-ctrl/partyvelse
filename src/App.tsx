@@ -7,6 +7,7 @@ import {
 } from './types/game';
 import { createInitialMissionState, calculateFinalScore, getRandomMiniGames, generateRoundId } from './services/gameFactory';
 import { validateAndAdvancePhase } from './services/phaseTransition';
+import { applyLocalGameAction } from './services/localGameEngine';
 import { syncService } from './services/multiplayerSync';
 import { colyseusClient } from './services/colyseusClient';
 import { ConsoleHeader } from './components/ConsoleHeader';
@@ -33,19 +34,28 @@ import { Screen15EnergyCaptain } from './components/screens/Screen15EnergyCaptai
 import { Screen16EnergyEngineer } from './components/screens/Screen16EnergyEngineer';
 import { Screen17ARescue } from './components/screens/Screen17ARescue';
 import { Screen17BResult } from './components/screens/Screen17BResult';
+import { ScreenAdvancedMission } from './components/screens/ScreenAdvancedMission';
 
 import { Columns2, Smartphone, ArrowRightLeft, Radio, Wifi } from 'lucide-react';
 
 export default function App() {
   const [state, setState] = useState<MissionState>(() => createInitialMissionState());
   const [isOnline, setIsOnline] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'reconnecting'>('disconnected');
   const [showRules, setShowRules] = useState(false);
   const [showExplorer, setShowExplorer] = useState(false);
   const [dualViewMode, setDualViewMode] = useState(false); // Side-by-side dual phone testing mode
 
-  // 1. Subscribe to Colyseus Server updates
+  // 1. Subscribe to Colyseus Server updates and attempt auto-reconnect
   useEffect(() => {
+    // Attempt auto-reconnect if stored token exists
+    const storedToken = sessionStorage.getItem('partyverse_reconnect_token');
+    if (storedToken && !colyseusClient.isConnected()) {
+      colyseusClient.attemptReconnect().catch((err) => {
+        console.info('[Colyseus Auto-reconnect]:', err.message);
+      });
+    }
+
     const unsubState = colyseusClient.onState((serverState) => {
       setState(serverState);
       setIsOnline(true);
@@ -84,17 +94,24 @@ export default function App() {
     return () => unsubscribe();
   }, [isOnline]);
 
-  // State dispatcher: routes to Colyseus server in online mode, or local demo state
+  // State dispatcher: routes to local state and demo broadcast when offline
   const updateState = (updater: (prev: MissionState) => MissionState) => {
     setState((prev) => {
       const next = updater(prev);
-      if (isOnline && colyseusClient.isConnected()) {
-        colyseusClient.sendAction('sync_mission_step', next, prev.roundId, prev.currentPhaseIndex);
-      } else {
+      if (!isOnline || !colyseusClient.isConnected()) {
         syncService.broadcast(next, next.myRole);
       }
       return next;
     });
+  };
+
+  // Authoritative action dispatcher for online multiplayer or local/dual view
+  const handleAction = (actionType: string, data: any, actingRole: Role = state.myRole) => {
+    if (isOnline && colyseusClient.isConnected() && !dualViewMode) {
+      colyseusClient.sendAction(actionType, data, state.roundId, state.currentPhaseIndex);
+    } else {
+      updateState((prev) => applyLocalGameAction(prev, actionType, data, actingRole));
+    }
   };
 
   // Local demo timer countdown (only active when NOT connected to server)
@@ -164,7 +181,7 @@ export default function App() {
       }
     }
 
-    if (isOnline && colyseusClient.isConnected()) {
+    if (isOnline && colyseusClient.isConnected() && !dualViewMode) {
       colyseusClient.advancePhase(targetRoundId, targetExpected);
     } else {
       updateState((prev) => {
@@ -223,7 +240,7 @@ export default function App() {
   };
 
   const handleRestartGame = () => {
-    if (isOnline && colyseusClient.isConnected()) {
+    if (isOnline && colyseusClient.isConnected() && !dualViewMode) {
       colyseusClient.restartRound();
     } else {
       updateState((prev) => {
@@ -293,6 +310,7 @@ export default function App() {
   // Helper to render active screen for a specific role
   const renderScreenForRole = (role: Role) => {
     const currentState = { ...state, myRole: role };
+    const roleAction = (actionType: string, data: any) => handleAction(actionType, data, role);
 
     // 1. Entry Screen
     if (state.status === 'entry') {
@@ -301,7 +319,7 @@ export default function App() {
           state={currentState} 
           onUpdate={updateState} 
           onStartLobby={() => updateState((p) => ({ ...p, status: 'lobby' }))}
-          isOnlineMode={true}
+          isOnlineMode={isOnline && !dualViewMode}
           onCreateOnlineRoom={async (code, name, preferredRole) => {
             await colyseusClient.createRoom(code, name, preferredRole);
           }}
@@ -319,16 +337,29 @@ export default function App() {
           state={currentState} 
           onUpdate={updateState} 
           onStartGame={() => {
-            if (isOnline) {
+            if (isOnline && !dualViewMode) {
               colyseusClient.startGame();
             } else {
               updateState((p) => ({ ...p, status: 'role_intro' }));
             }
           }}
-          isOnline={isOnline}
-          isHost={isLeader}
+          isOnline={isOnline && !dualViewMode}
+          isHost={role === 'kaptan'}
           onToggleMyReady={() => {
-            if (isOnline) colyseusClient.toggleReady();
+            if (isOnline && !dualViewMode) {
+              colyseusClient.toggleReady();
+            } else {
+              updateState((prev) => ({
+                ...prev,
+                players: {
+                  ...prev.players,
+                  [role]: {
+                    ...prev.players[role],
+                    ready: !prev.players[role].ready,
+                  },
+                },
+              }));
+            }
           }}
         />
       );
@@ -337,10 +368,27 @@ export default function App() {
     // 3 & 4. Role Intro
     if (state.status === 'role_intro') {
       const onConfirm = () => {
-        if (isOnline) {
+        if (isOnline && !dualViewMode) {
           colyseusClient.confirmRole();
         } else {
-          updateState((p) => ({ ...p, status: 'phase_game', currentPhaseIndex: 0 }));
+          updateState((prev) => {
+            const nextPlayers = {
+              ...prev.players,
+              [role]: {
+                ...prev.players[role],
+                roleConfirmed: true,
+              },
+            };
+            const bothConfirmed = dualViewMode
+              ? (nextPlayers.kaptan.roleConfirmed && nextPlayers.muhendis.roleConfirmed)
+              : true;
+            return {
+              ...prev,
+              players: nextPlayers,
+              status: bothConfirmed ? 'phase_game' : 'role_intro',
+              currentPhaseIndex: 0,
+            };
+          });
         }
       };
 
@@ -353,6 +401,17 @@ export default function App() {
 
     // 5 to 14. Phase Games (Phase Index 0 & 1)
     if (state.status === 'phase_game') {
+      if (state.gameMode === 'gelismis') {
+        return (
+          <ScreenAdvancedMission
+            state={currentState}
+            onUpdate={updateState}
+            onAction={roleAction}
+            role={role}
+          />
+        );
+      }
+
       const activeGameType = state.currentPhaseIndex === 0 
         ? state.selectedMiniGames[0] 
         : state.selectedMiniGames[1];
@@ -364,12 +423,14 @@ export default function App() {
             state={currentState} 
             onUpdate={updateState} 
             onAdvancePhase={handleAdvancePhase} 
+            onAction={roleAction}
           />
         ) : (
           <Screen06ReactorEngineer 
             state={currentState} 
             onUpdate={updateState} 
             onAdvancePhase={handleAdvancePhase} 
+            onAction={roleAction}
           />
         );
       }
@@ -387,6 +448,7 @@ export default function App() {
             state={currentState} 
             onUpdate={updateState} 
             onAdvancePhase={handleAdvancePhase} 
+            onAction={roleAction}
           />
         );
       }
@@ -404,6 +466,7 @@ export default function App() {
             state={currentState} 
             onUpdate={updateState} 
             onAdvancePhase={handleAdvancePhase} 
+            onAction={roleAction}
           />
         );
       }
@@ -421,6 +484,7 @@ export default function App() {
             state={currentState} 
             onUpdate={updateState} 
             onAdvancePhase={handleAdvancePhase} 
+            onAction={roleAction}
           />
         );
       }
@@ -438,6 +502,7 @@ export default function App() {
             state={currentState} 
             onUpdate={updateState} 
             onAdvancePhase={handleAdvancePhase} 
+            onAction={roleAction}
           />
         );
       }
@@ -450,12 +515,14 @@ export default function App() {
           state={currentState} 
           onUpdate={updateState} 
           onAdvancePhase={handleAdvancePhase} 
+          onAction={roleAction}
         />
       ) : (
         <Screen16EnergyEngineer 
           state={currentState} 
           onUpdate={updateState} 
           onAdvancePhase={handleAdvancePhase} 
+          onAction={roleAction}
         />
       );
     }
@@ -466,10 +533,9 @@ export default function App() {
         <Screen17ARescue 
           state={currentState} 
           onUpdate={updateState} 
+          onAction={roleAction}
           onFinalizeMission={() => {
-            if (isOnline) {
-              colyseusClient.sendAction('sync_mission_step', state, state.roundId, state.currentPhaseIndex);
-            } else {
+            if (!isOnline || dualViewMode) {
               updateState((p) => ({ ...p, status: 'phase_result' }));
             }
           }} 
@@ -577,6 +643,10 @@ export default function App() {
       <NetworkDisconnectModal
         isOpen={state.isDisconnected}
         onReconnect={handleReconnect}
+        countdownSeconds={(() => {
+          const matchSec = state.feedbackMessage?.match(/(\d+)s/);
+          return matchSec ? parseInt(matchSec[1], 10) : 45;
+        })()}
       />
 
       {/* Rule Evaluation Drawer */}

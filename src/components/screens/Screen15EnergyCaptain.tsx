@@ -5,9 +5,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { energy } = state;
   const { engineerAllocation, lineLosses, captainMinRequirements, isDraftShared, isLocked } = energy;
   
@@ -23,6 +24,11 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
   };
 
   const handleLockEnergy = () => {
+    if (onAction) {
+      onAction('energy_lock', {});
+      return;
+    }
+
     if (!isDraftShared) {
       setFeedback({
         type: 'error',
@@ -151,11 +157,13 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
       </div>
 
       {/* Feedback Message */}
-      {feedback.msg && (
+      {(state.feedbackMessage || feedback.msg) && (
         <div className={`p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+          (state.feedbackState === 'success' || (!state.feedbackState && feedback.type === 'success'))
+            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
+            : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
         }`}>
-          {feedback.msg}
+          {state.feedbackMessage || feedback.msg}
         </div>
       )}
 

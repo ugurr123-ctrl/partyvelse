@@ -5,12 +5,17 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { totalBudget, engineerAllocation, lineLosses, isDraftShared, isLocked } = state.energy;
   const [allocation, setAllocation] = useState(engineerAllocation);
   const [feedbackMsg, setFeedbackMsg] = useState('');
+
+  React.useEffect(() => {
+    setAllocation(engineerAllocation);
+  }, [engineerAllocation]);
 
   const totalUsed = allocation.yasamDestegi + allocation.itki + allocation.kalkan;
   const remainingBudget = totalBudget - totalUsed;
@@ -34,6 +39,11 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
     };
     setAllocation(updated);
 
+    if (onAction) {
+      onAction('energy_set_allocation', { allocation: updated });
+      return;
+    }
+
     onUpdate((prev) => ({
       ...prev,
       energy: {
@@ -47,6 +57,11 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
   const handleShareDraft = () => {
     if (remainingBudget < 0) {
       setFeedbackMsg('Hata: Enerji bütçesi (15 MW) aşıldı!');
+      return;
+    }
+
+    if (onAction) {
+      onAction('energy_share_draft', {});
       return;
     }
 
@@ -211,9 +226,9 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
       </div>
 
       {/* Feedback Message */}
-      {feedbackMsg && (
+      {(state.feedbackMessage || feedbackMsg) && (
         <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-[#00eefc]/30 text-[#00eefc] text-xs leading-relaxed animate-fadeIn">
-          {feedbackMsg}
+          {state.feedbackMessage || feedbackMsg}
         </div>
       )}
 

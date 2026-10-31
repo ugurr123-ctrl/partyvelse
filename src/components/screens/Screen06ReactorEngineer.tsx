@@ -6,9 +6,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { diagnostic, activeEnvironment } = state;
   const [activeCartridge, setActiveCartridge] = useState<'CIR-01' | 'CIR-02' | 'CIR-03' | 'CIR-04'>('CIR-03');
   const [coolingValveAngle, setCoolingValveAngle] = useState(45);
@@ -45,6 +46,11 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
 
   const handlePurgePressure = () => {
     if (diagnostic.isSolved) return;
+
+    if (onAction) {
+      onAction('diagnostic_engineer_purge', { line: selectedLineKey });
+      return;
+    }
 
     // Check if the currently selected cartridge corresponds to the actual faulty line
     const isAnomalous = isLineAnomaly(activeEnvironment, selectedTelemetry);
@@ -254,11 +260,13 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
       </div>
 
       {/* Feedback Message */}
-      {feedback.msg && (
+      {(state.feedbackMessage || feedback.msg) && (
         <div className={`mt-2 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+          (state.feedbackState === 'success' || (!state.feedbackState && feedback.type === 'success'))
+            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
+            : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
         }`}>
-          {feedback.msg}
+          {state.feedbackMessage || feedback.msg}
         </div>
       )}
 

@@ -5,9 +5,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { radar } = state;
   const { isSolved } = radar;
 
@@ -52,18 +53,27 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
     let deg = Math.round(rad * (180 / Math.PI)) + 90;
     if (deg < 0) deg += 360;
     setAzimuthAngle(deg);
+    onAction?.('radar_set_coordinates', { azimuth: deg, elevation: elevationAngle });
   };
 
   const handleAdjustElevation = (delta: number) => {
     if (isSolved) return;
-    setElevationAngle(prev => Math.max(0, Math.min(90, prev + delta)));
+    const nextElev = Math.max(0, Math.min(90, elevationAngle + delta));
+    setElevationAngle(nextElev);
+    onAction?.('radar_set_coordinates', { azimuth: azimuthAngle, elevation: nextElev });
   };
 
   const handleLockAntenna = () => {
     if (isSolved) return;
 
+    if (onAction) {
+      onAction('radar_scan', { azimuth: azimuthAngle, elevation: elevationAngle });
+      return;
+    }
+
+    // Local fallback
     const isAzimuthOk = Math.abs(azimuthAngle - radar.targetAzimuth) <= 5;
-    const isElevationOk = Math.abs(elevationAngle - radar.targetElevation) <= 2;
+    const isElevationOk = Math.abs(elevationAngle - radar.targetElevation) <= 5;
 
     if (isAzimuthOk && isElevationOk) {
       setFeedback({
@@ -81,12 +91,9 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
         },
       }));
     } else {
-      let err = 'HİZALAMA SAPMASI! ';
-      if (!isAzimuthOk) err += `Azimut ${azimuthAngle}° (Hedef: ${radar.targetAzimuth}°). `;
-      if (!isElevationOk) err += `Elevasyon +${elevationAngle}° (Hedef: +${radar.targetElevation}°). `;
       setFeedback({
         type: 'error',
-        msg: `${err}Sinyal kaybı: Gövde Bütünlüğü -%10, Süre -15 sn!`,
+        msg: `HİZALAMA SAPMASI! Sinyal kaybı: Gövde Bütünlüğü -%10, Süre -15 sn!`,
       });
       onUpdate(prev => ({
         ...prev,
@@ -95,6 +102,13 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
       }));
     }
   };
+
+  const activeFeedback = state.feedbackMessage
+    ? {
+        type: (state.feedbackState === 'success' ? 'success' : state.feedbackState === 'error' ? 'error' : 'idle') as 'idle' | 'success' | 'error',
+        msg: state.feedbackMessage,
+      }
+    : feedback;
 
   return (
     <div className="w-full max-w-[420px] mx-auto flex flex-col pb-safe px-margin gap-space-md select-none animate-fadeIn text-[#e6dff9] font-sans">
@@ -207,11 +221,11 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
       </div>
 
       {/* Feedback Message */}
-      {feedback.msg && (
+      {activeFeedback.msg && (
         <div className={`mt-2 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+          activeFeedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
         }`}>
-          {feedback.msg}
+          {activeFeedback.msg}
         </div>
       )}
 

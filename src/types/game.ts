@@ -72,6 +72,7 @@ export interface PlayerInfo {
   name: string;
   role: Role;
   ready: boolean;
+  roleConfirmed?: boolean;
 }
 
 export type GameStatus = 
@@ -210,10 +211,77 @@ export interface RescueData {
   validationError: string | null;
 }
 
+export type GameMode = 'standart' | 'gelismis';
+
+export type AdvancedSubsystemId = 'reaktor' | 'sinyal' | 'hava_kilidi' | 'guc_matrisi' | 'tahliye';
+
+export interface AdvancedEventData {
+  id: 'plasma_surge';
+  name: string;
+  desc: string;
+  warningTriggerTime: number; // e.g. at 210s left
+  strikeTime: number; // e.g. at 170s left
+  isActive: boolean;
+  isResolved: boolean;
+  chosenReaction?: 'kalkan' | 'tahliye' | 'ihmal';
+  narrativeResult?: string;
+}
+
+export interface AdvancedPowerGrid {
+  totalBudget: number; // 10 MW
+  coolingPumps: number; // e.g. 4 MW needed for reactor stability
+  antennaBooster: number; // e.g. 3 MW needed for clean signal
+  airlockCompressor: number; // e.g. 3 MW needed for airlock seal
+  shieldReserve: number; // Diverted power for deflector shield
+}
+
+export interface AdvancedScenarioData {
+  subsystems: {
+    reaktor: {
+      isStabilized: boolean;
+      coolantPumpsPower: number; // MW
+      isPurged: boolean;
+      breakerActivated: boolean;
+      liveTelemetry: {
+        coreTemp: number; // e.g. 88°C
+        coolantPressure: number; // e.g. 39 kPa
+        lineNoise: number; // e.g. 78 dB
+        criticalLine: 'anten' | 'reaktor' | 'sogutucu';
+      };
+      targetBreaker: 'K1' | 'K2' | 'K3' | 'K4';
+    };
+    sinyal: {
+      isLocked: boolean;
+      antennaPower: number; // MW
+      noiseLevel: number; // %
+      targetFrequency: string; // e.g. "143.6 MHz"
+      currentFrequency: string;
+      symbols: string[];
+      symbolValueSum: number;
+    };
+    hava_kilidi: {
+      isSealed: boolean;
+      compressorPower: number; // MW
+      currentDialIndex: number;
+      currentVacuum: number;
+      targetDialIndex: number;
+      targetVacuumMin: number;
+      targetVacuumMax: number;
+      externalPressureKpa: number;
+    };
+  };
+  powerGrid: AdvancedPowerGrid;
+  event: AdvancedEventData;
+  activeSubsystemTab: AdvancedSubsystemId;
+  evacuationUnlocked: boolean;
+  evacuationLog: string[];
+}
+
 export interface MissionState {
   roomCode: string;
   roundId: string; // Unique identifier regenerated on each new round
   status: GameStatus;
+  gameMode?: GameMode; // 'standart' (classic) or 'gelismis' (interdependent tactical)
   activeEnvironment: EnvironmentType;
   selectedMiniGames: [MiniGameType, MiniGameType];
   previousMiniGames?: [MiniGameType, MiniGameType];
@@ -238,6 +306,9 @@ export interface MissionState {
   radar: RadarData;
   energy: EnergyData;
   rescue: RescueData;
+
+  // Advanced interdependent scenario payload
+  advancedScenario?: AdvancedScenarioData;
 
   // Final stats
   rescuedCrewCount: number;

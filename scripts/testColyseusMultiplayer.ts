@@ -34,14 +34,14 @@ async function runMultiplayerTests() {
 
   gameServer.define('lost_signal', LostSignalRoom).filterBy(['roomCode']);
 
-  const TEST_PORT = 3199;
-  await new Promise<void>((resolve) => server.listen(TEST_PORT, () => resolve()));
-  console.log(`📡 Colyseus Test Sunucusu Başlatıldı (Port: ${TEST_PORT})\n`);
+  await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+  const actualPort = (server.address() as any).port;
+  console.log(`📡 Colyseus Test Sunucusu Başlatıldı (Port: ${actualPort})\n`);
 
   try {
-    const clientA = new Client(`ws://localhost:${TEST_PORT}`);
-    const clientB = new Client(`ws://localhost:${TEST_PORT}`);
-    const clientC = new Client(`ws://localhost:${TEST_PORT}`);
+    const clientA = new Client(`ws://localhost:${actualPort}`);
+    const clientB = new Client(`ws://localhost:${actualPort}`);
+    const clientC = new Client(`ws://localhost:${actualPort}`);
 
     const TEST_ROOM_CODE = 'KYP-MLT1';
 
@@ -54,6 +54,7 @@ async function runMultiplayerTests() {
       roomCode: TEST_ROOM_CODE,
       playerName: 'Kaptan Ece',
       role: 'kaptan',
+      selectedMiniGames: ['sinyal_cozumu', 'kablo_baglantisi'],
     });
 
     roomA.onMessage('state_update', (msg: MissionState) => {
@@ -218,7 +219,7 @@ async function runMultiplayerTests() {
     assertTrue(stateA?.isDisconnected === true, 'Kopma durumu bildirim olarak yayınlandı');
 
     // Oyuncu 2 45 saniye dolmadan token ile yeniden bağlanır
-    const reconnectedClientB = new Client(`ws://localhost:${TEST_PORT}`);
+    const reconnectedClientB = new Client(`ws://localhost:${actualPort}`);
     const reconnectedRoomB = await reconnectedClientB.reconnect(tokenB);
     await new Promise((r) => setTimeout(r, 100));
 

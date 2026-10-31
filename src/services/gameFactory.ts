@@ -10,7 +10,8 @@ import {
   AirlockData,
   RadarData,
   EnergyData,
-  RescueData
+  RescueData,
+  AdvancedScenarioData
 } from '../types/game';
 
 export const ALL_MINI_GAMES: MiniGameType[] = [
@@ -416,6 +417,68 @@ export function calculateFinalScore(
   };
 }
 
+export function generateAdvancedScenario(): AdvancedScenarioData {
+  return {
+    subsystems: {
+      reaktor: {
+        isStabilized: false,
+        coolantPumpsPower: 4,
+        isPurged: false,
+        breakerActivated: false,
+        liveTelemetry: {
+          coreTemp: 84,
+          coolantPressure: 38,
+          lineNoise: 76,
+          criticalLine: 'anten',
+        },
+        targetBreaker: 'K2',
+      },
+      sinyal: {
+        isLocked: false,
+        antennaPower: 3,
+        noiseLevel: 4,
+        targetFrequency: '143.6 MHz',
+        currentFrequency: '140.0 MHz',
+        symbols: ['Δ', 'Ω', 'Σ', 'λ'],
+        symbolValueSum: 3.6,
+      },
+      hava_kilidi: {
+        isSealed: false,
+        compressorPower: 3,
+        currentDialIndex: 0,
+        currentVacuum: 50,
+        targetDialIndex: 2,
+        targetVacuumMin: 70,
+        targetVacuumMax: 85,
+        externalPressureKpa: 36,
+      },
+    },
+    powerGrid: {
+      totalBudget: 10,
+      coolingPumps: 4,
+      antennaBooster: 3,
+      airlockCompressor: 3,
+      shieldReserve: 0,
+    },
+    event: {
+      id: 'plasma_surge',
+      name: 'Yaklaşan Plazma Fırtınası Dalgası',
+      desc: 'İstasyon gövdesine doğru ilerleyen yüksek yoğunluklu plazma cephesi tespit edildi.',
+      warningTriggerTime: 210,
+      strikeTime: 175,
+      isActive: false,
+      isResolved: false,
+    },
+    activeSubsystemTab: 'reaktor',
+    evacuationUnlocked: false,
+    evacuationLog: [
+      'OPERASYON ÇÖKÜŞ EŞİĞİ BAŞLATILDI.',
+      'Yardımcı Güç Matrisi: 10 MW aktif rezerv dağıtıldı.',
+      'Sistem bağımlılıkları devrede: Anten, Soğutma ve Kompresör hatları izleniyor.',
+    ],
+  };
+}
+
 export function createInitialMissionState(
   roomCode: string = generateRoomCode(),
   env: EnvironmentType = 'kayip_sinyal',
@@ -428,6 +491,7 @@ export function createInitialMissionState(
     roomCode,
     roundId: generateRoundId(),
     status: 'entry',
+    gameMode: 'standart',
     activeEnvironment: env,
     selectedMiniGames: selectedGames,
     previousMiniGames: previousPair,
@@ -461,6 +525,7 @@ export function createInitialMissionState(
     radar: generateRadar(),
     energy: generateEnergy(),
     rescue: generateRescue(),
+    advancedScenario: generateAdvancedScenario(),
 
     rescuedCrewCount: 0,
     completedTasksCount: 0,

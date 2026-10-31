@@ -1,9 +1,9 @@
 import { Client, Room } from 'colyseus.js';
-import { MissionState, Role, EnvironmentType } from '../types/game';
+import { MissionState, Role, EnvironmentType, GameMode } from '../types/game';
 
 type StateCallback = (state: MissionState) => void;
 type ErrorCallback = (error: string) => void;
-type ConnectionCallback = (status: 'disconnected' | 'connecting' | 'connected') => void;
+type ConnectionCallback = (status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting') => void;
 
 class ColyseusClientService {
   private client: Client | null = null;
@@ -12,6 +12,7 @@ class ColyseusClientService {
   private errorCallbacks: Set<ErrorCallback> = new Set();
   private connectionCallbacks: Set<ConnectionCallback> = new Set();
   private actionCounter: number = 0;
+  private intentionalLeave: boolean = false;
 
   constructor() {
     this.initClient();
@@ -45,8 +46,15 @@ class ColyseusClientService {
     return this.room ? this.room.roomId : null;
   }
 
+  public getReconnectionToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('partyverse_reconnect_token');
+    }
+    return this.room?.reconnectionToken || null;
+  }
+
   /**
-   * Create a new room with roomCode (Host flow)
+   * Create a new room with roomCode (Host flow - strictly uses client.create)
    */
   public async createRoom(
     roomCode: string,
@@ -55,11 +63,15 @@ class ColyseusClientService {
     environment: EnvironmentType = 'kayip_sinyal'
   ): Promise<void> {
     if (!this.client) this.initClient();
+    this.intentionalLeave = false;
     this.notifyConnection('connecting');
 
+    const clean = roomCode.toUpperCase().trim();
+    const normalizedCode = clean.startsWith('KYP-') ? clean : `KYP-${clean}`;
+
     try {
-      this.room = await this.client!.joinOrCreate('lost_signal', {
-        roomCode,
+      this.room = await this.client!.create('lost_signal', {
+        roomCode: normalizedCode,
         playerName,
         role,
         environment,
@@ -70,24 +82,31 @@ class ColyseusClientService {
       this.notifyConnection('connected');
     } catch (err: any) {
       this.notifyConnection('disconnected');
-      this.notifyError(err.message || 'Oda oluşturulamadı.');
-      throw err;
+      const msg = err.message?.includes('zaten') 
+        ? err.message 
+        : `Oda oluşturulamadı: ${err.message || 'Sunucu hatası'}`;
+      this.notifyError(msg);
+      throw new Error(msg);
     }
   }
 
   /**
-   * Join an existing room with roomCode (Joiner flow)
+   * Join an existing room with roomCode (Joiner flow - strictly uses client.join)
    */
   public async joinRoom(
     roomCode: string,
     playerName: string
   ): Promise<void> {
     if (!this.client) this.initClient();
+    this.intentionalLeave = false;
     this.notifyConnection('connecting');
 
+    const clean = roomCode.toUpperCase().trim();
+    const normalizedCode = clean.startsWith('KYP-') ? clean : `KYP-${clean}`;
+
     try {
-      this.room = await this.client!.joinOrCreate('lost_signal', {
-        roomCode,
+      this.room = await this.client!.join('lost_signal', {
+        roomCode: normalizedCode,
         playerName,
       });
 
@@ -96,8 +115,14 @@ class ColyseusClientService {
       this.notifyConnection('connected');
     } catch (err: any) {
       this.notifyConnection('disconnected');
-      this.notifyError(err.message || 'Odaya katılınamadı. Kod geçersiz veya oda dolu olabilir.');
-      throw err;
+      let msg = `Odaya (${normalizedCode}) katılınamadı.`;
+      if (err.message?.includes('no rooms found') || err.message?.includes('not found')) {
+        msg = `Girdiğiniz kodla (${normalizedCode}) aktif bir oda bulunamadı veya oda dolu (2/2).`;
+      } else if (err.message) {
+        msg += ` (${err.message})`;
+      }
+      this.notifyError(msg);
+      throw new Error(msg);
     }
   }
 
@@ -105,8 +130,7 @@ class ColyseusClientService {
    * Reconnect within the 45-second grace period using stored token
    */
   public async attemptReconnect(): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
-    const token = sessionStorage.getItem('partyverse_reconnect_token');
+    const token = this.getReconnectionToken();
     if (!token) return false;
 
     if (!this.client) this.initClient();
@@ -119,7 +143,10 @@ class ColyseusClientService {
       this.notifyConnection('connected');
       return true;
     } catch (err) {
-      sessionStorage.removeItem('partyverse_reconnect_token');
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('partyverse_reconnect_token');
+        sessionStorage.removeItem('partyverse_room_id');
+      }
       this.notifyConnection('disconnected');
       return false;
     }
@@ -142,14 +169,26 @@ class ColyseusClientService {
 
     this.room.onLeave((code) => {
       console.warn(`[Colyseus] Left room with code: ${code}`);
+      const wasIntentional = this.intentionalLeave;
       this.room = null;
-      this.notifyConnection('disconnected');
+
+      if (wasIntentional) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('partyverse_reconnect_token');
+          sessionStorage.removeItem('partyverse_room_id');
+        }
+        this.notifyConnection('disconnected');
+      } else {
+        // Unintentional drop (network loss, refresh)
+        this.notifyConnection('reconnecting');
+      }
     });
   }
 
   private saveSessionToken() {
     if (typeof window !== 'undefined' && this.room && this.room.reconnectionToken) {
       sessionStorage.setItem('partyverse_reconnect_token', this.room.reconnectionToken);
+      sessionStorage.setItem('partyverse_room_id', this.room.roomId);
     }
   }
 
@@ -162,6 +201,12 @@ class ColyseusClientService {
   public selectRole(targetRole: Role) {
     if (this.room) {
       this.room.send('select_role', { targetRole });
+    }
+  }
+
+  public setGameMode(mode: GameMode) {
+    if (this.room) {
+      this.room.send('set_game_mode', { mode });
     }
   }
 
@@ -212,10 +257,12 @@ class ColyseusClientService {
   }
 
   public async leaveRoom() {
+    this.intentionalLeave = true;
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('partyverse_reconnect_token');
+      sessionStorage.removeItem('partyverse_room_id');
+    }
     if (this.room) {
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('partyverse_reconnect_token');
-      }
       await this.room.leave();
       this.room = null;
       this.notifyConnection('disconnected');
@@ -258,7 +305,7 @@ class ColyseusClientService {
     });
   }
 
-  private notifyConnection(status: 'disconnected' | 'connecting' | 'connected') {
+  private notifyConnection(status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting') {
     this.connectionCallbacks.forEach((cb) => {
       try {
         cb(status);

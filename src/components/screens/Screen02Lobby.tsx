@@ -3,8 +3,10 @@ import {
   MissionState, 
   EnvironmentType, 
   ENVIRONMENTS,
-  MiniGameType 
+  MiniGameType,
+  GameMode
 } from '../../types/game';
+import { colyseusClient } from '../../services/colyseusClient';
 
 interface Props {
   state: MissionState;
@@ -35,17 +37,18 @@ export const Screen02Lobby: React.FC<Props> = ({
   };
 
   const toggleMyReady = () => {
-    if (isOnline && onToggleMyReady) {
+    if (onToggleMyReady) {
       onToggleMyReady();
       return;
     }
+    const currentRole = state.myRole;
     onUpdate((prev) => ({
       ...prev,
       players: {
         ...prev.players,
-        [prev.myRole]: {
-          ...prev.players[prev.myRole],
-          ready: !prev.players[prev.myRole].ready,
+        [currentRole]: {
+          ...prev.players[currentRole],
+          ready: !prev.players[currentRole].ready,
         },
       },
     }));
@@ -182,6 +185,68 @@ export const Screen02Lobby: React.FC<Props> = ({
           <p className="text-[11px] text-slate-400 mt-1 font-medium leading-none">
             {copied ? 'Kopyalandı! Arkadaşın bu kodla katılabilir.' : 'Arkadaşın bu kodla katılabilir ya da QR kodu paylaşabilirsin.'}
           </p>
+        </section>
+
+        {/* Game Mode Selection Card */}
+        <section className="rounded-2xl p-3 bg-gradient-to-r from-[#171333] to-[#121026] border border-white/10 shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] tracking-widest font-semibold uppercase text-cyan-400 font-mono">
+              GÖREV SENARYO MODU
+            </span>
+            <span className="text-[9px] font-mono text-slate-400 uppercase">
+              {(state.gameMode || 'standart') === 'gelismis' ? 'EŞZAMANLI SİSTEMLER' : 'SIRALI AŞAMALAR'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* Standart Mod Button */}
+            <button
+              onClick={() => {
+                if (isOnline) {
+                  colyseusClient.setGameMode('standart');
+                }
+                onUpdate((prev) => ({ ...prev, gameMode: 'standart' }));
+              }}
+              className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                (state.gameMode || 'standart') === 'standart'
+                  ? 'bg-amber-500/20 border-[#ffb703] text-white shadow-[0_0_12px_rgba(255,183,3,0.3)]'
+                  : 'bg-[#1a1733] border-white/5 text-slate-400 hover:text-white'
+              }`}
+              type="button"
+            >
+              <div className="flex items-center space-x-1.5 mb-1">
+                <span className="text-xs">🌟</span>
+                <span className="text-xs font-bold font-sora">Standart Mod</span>
+              </div>
+              <p className="text-[9px] text-slate-400 leading-tight">
+                Klasik 4 aşamalı sıralı görevler.
+              </p>
+            </button>
+
+            {/* Gelişmiş Taktik Mod Button */}
+            <button
+              onClick={() => {
+                if (isOnline) {
+                  colyseusClient.setGameMode('gelismis');
+                }
+                onUpdate((prev) => ({ ...prev, gameMode: 'gelismis' }));
+              }}
+              className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+                state.gameMode === 'gelismis'
+                  ? 'bg-cyan-500/20 border-[#00eefc] text-white shadow-[0_0_12px_rgba(0,238,252,0.3)]'
+                  : 'bg-[#1a1733] border-white/5 text-slate-400 hover:text-white'
+              }`}
+              type="button"
+            >
+              <div className="flex items-center space-x-1.5 mb-1">
+                <span className="text-xs">⚡</span>
+                <span className="text-xs font-bold font-sora text-cyan-300">Gelişmiş Taktik</span>
+              </div>
+              <p className="text-[9px] text-slate-400 leading-tight">
+                Operasyon Çöküş Eşiği: Eşzamanlı 3 sistem ve güç matrisi.
+              </p>
+            </button>
+          </div>
         </section>
 
         {/* Crew Selection Lobby (Player 1 & Player 2 Side-by-Side) */}

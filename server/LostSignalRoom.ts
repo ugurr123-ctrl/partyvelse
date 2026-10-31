@@ -1,4 +1,4 @@
-import { Room, Client } from 'colyseus';
+import { Room, Client, ServerError } from 'colyseus';
 import { 
   MissionState, 
   Role, 
@@ -12,6 +12,7 @@ import {
   EnergyData,
   RescueData,
   RescueRoute,
+  GameMode,
 } from '../src/types/game';
 import { 
   createInitialMissionState, 
@@ -25,6 +26,7 @@ import {
   validateRescueDecision, 
   isMiniGameCompleted 
 } from '../src/services/phaseTransition';
+import { applyAdvancedAction } from '../src/services/advancedScenarioLogic';
 
 interface PlayerSession {
   sessionId: string;
@@ -36,6 +38,7 @@ interface PlayerSession {
 }
 
 export class LostSignalRoom extends Room {
+  public static activeRooms: Map<string, string> = new Map(); // roomCode -> roomId
   public maxClients = 2;
   public roomCode!: string;
   public hostSessionId!: string;
@@ -46,12 +49,23 @@ export class LostSignalRoom extends Room {
   private tickInterval: any = null;
 
   onCreate(options: any) {
-    this.roomCode = (options.roomCode || 'KYP-' + Math.random().toString(36).substring(2, 6).toUpperCase()).toUpperCase();
+    const rawCode = (options.roomCode || 'KYP-' + Math.random().toString(36).substring(2, 6).toUpperCase()).toUpperCase().trim();
+    this.roomCode = rawCode.startsWith('KYP-') ? rawCode : `KYP-${rawCode}`;
+
+    // Prevent duplicate room creation with same code
+    if (LostSignalRoom.activeRooms.has(this.roomCode)) {
+      throw new ServerError(409, `Bu oda kodu (${this.roomCode}) zaten başka bir ekip tarafından kullanılıyor.`);
+    }
+    LostSignalRoom.activeRooms.set(this.roomCode, this.roomId);
+
     this.setMetadata({ roomCode: this.roomCode });
 
     const env: EnvironmentType = options.environment || 'kayip_sinyal';
     const hostName: string = options.playerName || 'Kaptan Ece';
     this.missionState = createInitialMissionState(this.roomCode, env, hostName);
+    if (options.selectedMiniGames && Array.isArray(options.selectedMiniGames)) {
+      this.missionState.selectedMiniGames = options.selectedMiniGames;
+    }
     this.missionState.status = 'lobby';
 
     // Set up 1-second authoritative server clock
@@ -72,6 +86,13 @@ export class LostSignalRoom extends Room {
 
       player.ready = !player.ready;
       this.missionState.players[player.role].ready = player.ready;
+      this.broadcastFilteredState();
+    });
+
+    // 1B. Game Mode Select in Lobby (Host or either player)
+    this.onMessage('set_game_mode', (client, payload: { mode: GameMode }) => {
+      if (this.missionState.status !== 'lobby') return;
+      this.missionState.gameMode = payload.mode;
       this.broadcastFilteredState();
     });
 
@@ -135,18 +156,28 @@ export class LostSignalRoom extends Room {
       this.missionState.status = 'role_intro';
       for (const p of this.playerSessions.values()) {
         p.roleConfirmed = false;
+        if (this.missionState.players[p.role]) {
+          this.missionState.players[p.role].roleConfirmed = false;
+        }
       }
       this.broadcastFilteredState();
     });
 
-    // 4. Confirm Role Intro: moves to Phase 1 when confirmed
+    // 4. Confirm Role Intro: moves to Phase 1 ONLY when both connected players have confirmed
     this.onMessage('confirm_role', (client) => {
+      if (this.missionState.status !== 'role_intro') return;
       const player = this.playerSessions.get(client.sessionId);
       if (!player) return;
       player.roleConfirmed = true;
+      if (this.missionState.players[player.role]) {
+        this.missionState.players[player.role].roleConfirmed = true;
+      }
 
-      const allConfirmed = Array.from(this.playerSessions.values()).every(p => p.roleConfirmed);
-      if (allConfirmed || client.sessionId === this.hostSessionId) {
+      const bothConnectedAndConfirmed = 
+        this.playerSessions.size === 2 &&
+        Array.from(this.playerSessions.values()).every(p => p.connected && p.roleConfirmed);
+
+      if (bothConnectedAndConfirmed) {
         this.missionState.status = 'phase_game';
         this.missionState.currentPhaseIndex = 0;
       }
@@ -154,15 +185,24 @@ export class LostSignalRoom extends Room {
     });
 
     // 5. Authoritative Game Actions (Deduplicated, RoundId and PhaseIndex verified)
-    this.onMessage('game_action', (client, payload: {
-      actionId: string;
+    const handleActionPayload = (client: Client, payload: {
+      actionId?: string;
       roundId: string;
       phaseIndex: number;
       actionType: string;
       data: any;
     }) => {
-      this.handleGameAction(client, payload);
-    });
+      this.handleGameAction(client, {
+        actionId: payload.actionId || ('ACT-' + Math.random().toString(36).substring(2, 8)),
+        roundId: payload.roundId,
+        phaseIndex: payload.phaseIndex,
+        actionType: payload.actionType,
+        data: payload.data,
+      });
+    };
+
+    this.onMessage('game_action', handleActionPayload);
+    this.onMessage('action', handleActionPayload);
 
     // 6. Phase Advance Request
     this.onMessage('advance_phase', (client, payload: {
@@ -254,337 +294,287 @@ export class LostSignalRoom extends Room {
       return;
     }
 
-    // 4. Action dispatcher
+    // 4. Strict Role & Task Authorization
     const { actionType, data } = payload;
-    let penaltyApplied = false;
+    const currentStatus = this.missionState.status;
 
-    switch (actionType) {
-      // Comprehensive Authoritative Game Step Sync
-      case 'sync_mission_step': {
-        const next = data as Partial<MissionState>;
-
-        // 1. Diagnostic update
-        if (next.diagnostic) {
-          if (next.diagnostic.captainSelectedBreaker !== undefined) {
-            this.missionState.diagnostic.captainSelectedBreaker = next.diagnostic.captainSelectedBreaker;
-          }
-          if (next.diagnostic.engineerSuggestedLine !== undefined) {
-            this.missionState.diagnostic.engineerSuggestedLine = next.diagnostic.engineerSuggestedLine;
-            this.missionState.diagnostic.engineerActionTaken = true;
-          }
-          if (this.missionState.diagnostic.captainSelectedBreaker) {
-            const isCorrect = this.missionState.diagnostic.captainSelectedBreaker === this.missionState.diagnostic.correctBreaker;
-            if (isCorrect && this.missionState.diagnostic.engineerActionTaken) {
-              this.missionState.diagnostic.isSolved = true;
-              this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Reaktör arızası başarıyla giderildi!';
-            }
-          }
-        }
-
-        // 2. Signal update
-        if (next.signal) {
-          if (next.signal.engineerTunedFreq !== undefined) {
-            this.missionState.signal.engineerTunedFreq = next.signal.engineerTunedFreq;
-          }
-          if (next.signal.isLocked) {
-            this.missionState.signal.isLocked = true;
-            if (this.missionState.signal.engineerTunedFreq === this.missionState.signal.correctFrequency) {
-              this.missionState.signal.isSolved = true;
-              this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Sinyal frekansı kilitlendi!';
-            } else {
-              this.applyPenalty('Hatalı frekans seçimi!');
-            }
-          }
-        }
-
-        // 3. Cable update
-        if (next.cable) {
-          if (next.cable.portAssignments) {
-            this.missionState.cable.portAssignments = {
-              ...this.missionState.cable.portAssignments,
-              ...next.cable.portAssignments,
-            };
-          }
-          if (next.cable.isTested) {
-            this.missionState.cable.isTested = true;
-            let allMatched = true;
-            for (const port of this.missionState.cable.ports) {
-              if (this.missionState.cable.portAssignments[port.id] !== port.requiredCableId) {
-                allMatched = false;
-                break;
-              }
-            }
-            if (allMatched) {
-              this.missionState.cable.isSolved = true;
-              this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Kablo bağlantıları hatasız kuruldu!';
-            } else {
-              this.applyPenalty('Hatalı kablo bağlantısı!');
-            }
-          }
-        }
-
-        // 4. Airlock update
-        if (next.airlock) {
-          if (next.airlock.engineerDialIndex !== undefined) this.missionState.airlock.engineerDialIndex = next.airlock.engineerDialIndex;
-          if (next.airlock.engineerSealLocked !== undefined) this.missionState.airlock.engineerSealLocked = next.airlock.engineerSealLocked;
-          if (next.airlock.engineerVacuumPower !== undefined) this.missionState.airlock.engineerVacuumPower = next.airlock.engineerVacuumPower;
-          
-          const al = this.missionState.airlock;
-          const dialOk = al.engineerDialIndex === al.targetDialIndex;
-          const sealOk = al.engineerSealLocked === al.targetSealLocked;
-          const vacOk = al.engineerVacuumPower >= al.targetVacuumMin && al.engineerVacuumPower <= al.targetVacuumMax;
-          if (dialOk && sealOk && vacOk) {
-            al.isSolved = true;
-            this.missionState.feedbackState = 'success';
-            this.missionState.feedbackMessage = 'Hava kilidi basıncı dengelendi ve mühürlendi!';
-          }
-        }
-
-        // 5. Radar update
-        if (next.radar) {
-          if (next.radar.engineerAzimuth !== undefined) this.missionState.radar.engineerAzimuth = next.radar.engineerAzimuth;
-          if (next.radar.engineerElevation !== undefined) this.missionState.radar.engineerElevation = next.radar.engineerElevation;
-          if (next.radar.isScanned) {
-            this.missionState.radar.isScanned = true;
-            const azDiff = Math.abs(this.missionState.radar.engineerAzimuth - this.missionState.radar.targetAzimuth);
-            const elDiff = Math.abs(this.missionState.radar.engineerElevation - this.missionState.radar.targetElevation);
-            if (azDiff <= 5 && elDiff <= 5) {
-              this.missionState.radar.isSolved = true;
-              this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Kurtarma feneri radarda tespit edildi!';
-            } else {
-              this.applyPenalty('Radar taraması hedefi kaçırdı!');
-            }
-          }
-        }
-
-        // 6. Energy update
-        if (next.energy) {
-          if (next.energy.engineerAllocation) {
-            const alloc = next.energy.engineerAllocation;
-            const sum = alloc.yasamDestegi + alloc.itki + alloc.kalkan;
-            if (sum <= this.missionState.energy.totalBudget) {
-              this.missionState.energy.engineerAllocation = alloc;
-            }
-          }
-          if (next.energy.isDraftShared !== undefined) {
-            this.missionState.energy.isDraftShared = next.energy.isDraftShared;
-          }
-          if (next.energy.isLocked) {
-            const e = this.missionState.energy;
-            const netLife = Math.max(0, e.engineerAllocation.yasamDestegi - e.lineLosses.yasamDestegi);
-            const netThrust = Math.max(0, e.engineerAllocation.itki - e.lineLosses.itki);
-            const netShield = Math.max(0, e.engineerAllocation.kalkan - e.lineLosses.kalkan);
-            if (netLife >= 3 && (netThrust + netShield >= 4)) {
-              e.isLocked = true;
-              this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Enerji dağılımı onaylandı ve kilitlendi!';
-            } else {
-              this.applyPenalty('Enerji dağılımı asgari eşiklerin altında kaldı!');
-            }
-          }
-        }
-
-        // 7. Rescue update
-        if (next.rescue) {
-          if (next.rescue.selectedRouteId) {
-            this.missionState.rescue.selectedRouteId = next.rescue.selectedRouteId;
-          }
-          if (next.rescue.captainApproved !== undefined) {
-            this.missionState.rescue.captainApproved = next.rescue.captainApproved;
-          }
-          if (next.rescue.engineerApproved !== undefined) {
-            this.missionState.rescue.engineerApproved = next.rescue.engineerApproved;
-          }
-          if (this.missionState.rescue.captainApproved && this.missionState.rescue.engineerApproved) {
-            const selectedRoute = RESCUE_ROUTES.find(r => r.id === this.missionState.rescue.selectedRouteId)!;
-            const validation = validateRescueDecision(this.missionState, selectedRoute);
-            if (validation.success && validation.nextState) {
-              this.missionState = validation.nextState;
-            } else {
-              this.missionState.rescue.validationError = validation.error || 'Kurtarma planı doğrulanamadı.';
-              this.missionState.rescue.captainApproved = false;
-              this.missionState.rescue.engineerApproved = false;
-            }
-          }
-        }
-        break;
+    // Handle Advanced Interdependent Scenario Actions
+    if (actionType.startsWith('advanced_')) {
+      const result = applyAdvancedAction(this.missionState, actionType, data, player.role);
+      if (result.error) {
+        client.send('error_message', result.error);
+        return;
       }
+      this.missionState = result.nextState;
+      this.broadcastFilteredState();
+      return;
+    }
+
+    // Handle Phase 0 & 1 Mini-games
+    if (currentStatus === 'phase_game') {
+      const activeMiniGame = this.missionState.selectedMiniGames[this.missionState.currentPhaseIndex];
 
       // Arıza Teşhisi
-      case 'diagnostic_captain_breaker': {
-        if (player.role !== 'kaptan') return;
-        this.missionState.diagnostic.captainSelectedBreaker = data.breaker;
-        if (data.breaker === this.missionState.diagnostic.correctBreaker) {
-          this.missionState.diagnostic.isSolved = true;
-          this.missionState.feedbackState = 'success';
-          this.missionState.feedbackMessage = 'Doğru kesici tetiklendi! Reaktör kararlı.';
-        } else {
-          penaltyApplied = true;
-          this.applyPenalty('Hatalı kesici seçimi! Reaktör aşırı yüklendi.');
-        }
-        break;
-      }
+      if (activeMiniGame === 'ariza_teshisi') {
+        if (actionType === 'diagnostic_captain_breaker') {
+          if (player.role !== 'kaptan') {
+            client.send('error_message', 'Yalnızca Kaptan reaktör kesicisini devreye alabilir.');
+            return;
+          }
+          if (this.missionState.diagnostic.isSolved) return;
 
-      case 'diagnostic_engineer_purge': {
-        if (player.role !== 'muhendis') return;
-        this.missionState.diagnostic.engineerActionTaken = true;
-        this.missionState.diagnostic.engineerSuggestedLine = data.line;
-        // Purge action without correct breaker does not complete task
-        break;
+          this.missionState.diagnostic.captainSelectedBreaker = data.breaker;
+          if (data.breaker === this.missionState.diagnostic.correctBreaker) {
+            if (this.missionState.diagnostic.engineerActionTaken) {
+              this.missionState.diagnostic.isSolved = true;
+              this.missionState.feedbackState = 'success';
+              this.missionState.feedbackMessage = 'Doğru kesici tetiklendi! Reaktör kararlı.';
+            } else {
+              this.missionState.feedbackState = 'idle';
+              this.missionState.feedbackMessage = 'Kesici seçildi. Mühendisin tahliyesi bekleniyor.';
+            }
+          } else {
+            this.applyPenalty('Hatalı kesici seçimi! Reaktör aşırı yüklendi.');
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'diagnostic_engineer_purge') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Mühendis hat tahliyesi yapabilir.');
+            return;
+          }
+          if (this.missionState.diagnostic.isSolved) return;
+
+          if (data.line === this.missionState.diagnostic.faultyLine) {
+            this.missionState.diagnostic.engineerActionTaken = true;
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            if (this.missionState.diagnostic.captainSelectedBreaker === this.missionState.diagnostic.correctBreaker) {
+              this.missionState.diagnostic.isSolved = true;
+              this.missionState.feedbackState = 'success';
+              this.missionState.feedbackMessage = 'Arızalı hat tahliye edildi ve doğru kesici açıldı! Reaktör kararlı.';
+            } else {
+              this.missionState.feedbackState = 'idle';
+              this.missionState.feedbackMessage = 'Arızalı hat tahliye edildi. Kaptanın kesiciyi açması bekleniyor.';
+            }
+          } else {
+            this.applyPenalty('Hatalı hat tahliyesi! Sağlam hatta müdahale edildi.');
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+
+        // Unknown action for ariza_teshisi
+        return;
       }
 
       // Sinyal Çözümü
-      case 'signal_engineer_tune': {
-        if (player.role !== 'muhendis') return;
-        this.missionState.signal.engineerTunedFreq = data.freq;
-        this.missionState.signal.isLocked = true;
+      if (activeMiniGame === 'sinyal_cozumu') {
+        if (actionType === 'signal_engineer_tune') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Mühendis frekans ayarı ve kilitlemesi yapabilir.');
+            return;
+          }
+          if (this.missionState.signal.isSolved) return;
 
-        if (data.freq === this.missionState.signal.correctFrequency) {
-          this.missionState.signal.isSolved = true;
-          this.missionState.feedbackState = 'success';
-          this.missionState.feedbackMessage = 'Sinyal frekansı kilitlendi! İletişim sağlandı.';
-        } else {
-          penaltyApplied = true;
-          this.applyPenalty('Hatalı frekans seçimi! Parazit rezonansı gövdeyi sarstı.');
+          this.missionState.signal.engineerTunedFreq = data.freq;
+          this.missionState.signal.isLocked = true;
+
+          if (data.freq === this.missionState.signal.correctFrequency) {
+            this.missionState.signal.isSolved = true;
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage = 'Sinyal frekansı kilitlendi! İletişim sağlandı.';
+          } else {
+            this.applyPenalty('Hatalı frekans seçimi! Parazit rezonansı gövdeyi sarstı.');
+          }
+          this.broadcastFilteredState();
+          return;
         }
-        break;
+        return;
       }
 
       // Kablo Bağlantısı
-      case 'cable_assign_port': {
-        if (player.role !== 'muhendis') return;
-        this.missionState.cable.portAssignments[data.portId] = data.cableId;
-        break;
-      }
+      if (activeMiniGame === 'kablo_baglantisi') {
+        if (actionType === 'cable_assign_port') {
+          if (player.role !== 'muhendis') return;
+          this.missionState.cable.portAssignments[data.portId] = data.cableId;
+          this.broadcastFilteredState();
+          return;
+        }
 
-      case 'cable_test_connections': {
-        if (player.role !== 'muhendis') return;
-        this.missionState.cable.isTested = true;
-
-        let allCorrect = true;
-        for (const port of this.missionState.cable.ports) {
-          if (this.missionState.cable.portAssignments[port.id] !== port.requiredCableId) {
-            allCorrect = false;
-            break;
+        if (actionType === 'cable_test_connections') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Mühendis kablo devresini test edebilir.');
+            return;
           }
-        }
+          if (this.missionState.cable.isSolved) return;
 
-        if (allCorrect) {
-          this.missionState.cable.isSolved = true;
-          this.missionState.feedbackState = 'success';
-          this.missionState.feedbackMessage = 'Kablo bağlantıları hatasız kuruldu!';
-        } else {
-          penaltyApplied = true;
-          this.applyPenalty('Hatalı kablo bağlantısı! Kısa devre oluştu.');
+          this.missionState.cable.isTested = true;
+          let allCorrect = true;
+          for (const port of this.missionState.cable.ports) {
+            if (this.missionState.cable.portAssignments[port.id] !== port.requiredCableId) {
+              allCorrect = false;
+              break;
+            }
+          }
+
+          if (allCorrect) {
+            this.missionState.cable.isSolved = true;
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage = 'Kablo bağlantıları hatasız kuruldu!';
+          } else {
+            this.applyPenalty('Hatalı kablo bağlantısı! Kısa devre oluştu.');
+          }
+          this.broadcastFilteredState();
+          return;
         }
-        break;
+        return;
       }
 
       // Hava Kilidi
-      case 'airlock_set_params': {
-        if (player.role !== 'muhendis') return;
-        if (data.dialIndex !== undefined) this.missionState.airlock.engineerDialIndex = data.dialIndex;
-        if (data.sealLocked !== undefined) this.missionState.airlock.engineerSealLocked = data.sealLocked;
-        if (data.vacuumPower !== undefined) this.missionState.airlock.engineerVacuumPower = data.vacuumPower;
-        break;
-      }
-
-      case 'airlock_verify': {
-        if (player.role !== 'muhendis') return;
-        const al = this.missionState.airlock;
-        const dialCorrect = al.engineerDialIndex === al.targetDialIndex;
-        const sealCorrect = al.engineerSealLocked === al.targetSealLocked;
-        const vacuumCorrect = al.engineerVacuumPower >= al.targetVacuumMin && al.engineerVacuumPower <= al.targetVacuumMax;
-
-        if (dialCorrect && sealCorrect && vacuumCorrect) {
-          al.isSolved = true;
-          this.missionState.feedbackState = 'success';
-          this.missionState.feedbackMessage = 'Hava kilidi basıncı dengelendi ve mühürlendi!';
-        } else {
-          penaltyApplied = true;
-          this.applyPenalty('Hava kilidi parametreleri uyumsuz! Basınç kaçağı meydana geldi.');
+      if (activeMiniGame === 'hava_kilidi') {
+        if (actionType === 'airlock_set_params') {
+          if (player.role !== 'muhendis') return;
+          if (data.dialIndex !== undefined) this.missionState.airlock.engineerDialIndex = data.dialIndex;
+          if (data.sealLocked !== undefined) this.missionState.airlock.engineerSealLocked = data.sealLocked;
+          if (data.vacuumPower !== undefined) this.missionState.airlock.engineerVacuumPower = data.vacuumPower;
+          this.broadcastFilteredState();
+          return;
         }
-        break;
+
+        if (actionType === 'airlock_verify') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Mühendis hava kilidi parametrelerini doğrulayabilir.');
+            return;
+          }
+          if (this.missionState.airlock.isSolved) return;
+
+          const al = this.missionState.airlock;
+          const dialCorrect = al.engineerDialIndex === al.targetDialIndex;
+          const sealCorrect = al.engineerSealLocked === al.targetSealLocked;
+          const vacuumCorrect = al.engineerVacuumPower >= al.targetVacuumMin && al.engineerVacuumPower <= al.targetVacuumMax;
+
+          if (dialCorrect && sealCorrect && vacuumCorrect) {
+            al.isSolved = true;
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage = 'Hava kilidi basıncı dengelendi ve mühürlendi!';
+          } else {
+            this.applyPenalty('Hava kilidi parametreleri uyumsuz! Basınç kaçağı meydana geldi.');
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+        return;
       }
 
       // Radar Yönlendirme
-      case 'radar_set_coordinates': {
-        if (player.role !== 'muhendis') return;
-        if (data.azimuth !== undefined) this.missionState.radar.engineerAzimuth = data.azimuth;
-        if (data.elevation !== undefined) this.missionState.radar.engineerElevation = data.elevation;
-        break;
-      }
-
-      case 'radar_scan': {
-        if (player.role !== 'muhendis') return;
-        this.missionState.radar.isScanned = true;
-        const r = this.missionState.radar;
-        const azDiff = Math.abs(r.engineerAzimuth - r.targetAzimuth);
-        const elDiff = Math.abs(r.engineerElevation - r.targetElevation);
-
-        if (azDiff <= 5 && elDiff <= 5) {
-          r.isSolved = true;
-          this.missionState.feedbackState = 'success';
-          this.missionState.feedbackMessage = 'Kurtarma feneri radarda tespit edildi!';
-        } else {
-          penaltyApplied = true;
-          this.applyPenalty('Radar taraması hedef koordinatlardan saptı! Parazit arttı.');
+      if (activeMiniGame === 'radar_yonlendirme') {
+        if (actionType === 'radar_set_coordinates') {
+          if (player.role !== 'muhendis') return;
+          if (data.azimuth !== undefined) this.missionState.radar.engineerAzimuth = data.azimuth;
+          if (data.elevation !== undefined) this.missionState.radar.engineerElevation = data.elevation;
+          this.broadcastFilteredState();
+          return;
         }
-        break;
-      }
 
-      // Enerji Dağıtımı
-      case 'energy_set_allocation': {
+        if (actionType === 'radar_scan') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Mühendis radar taraması yapabilir.');
+            return;
+          }
+          if (this.missionState.radar.isSolved) return;
+
+          this.missionState.radar.isScanned = true;
+          const r = this.missionState.radar;
+          const azDiff = Math.abs(r.engineerAzimuth - r.targetAzimuth);
+          const elDiff = Math.abs(r.engineerElevation - r.targetElevation);
+
+          if (azDiff <= 5 && elDiff <= 5) {
+            r.isSolved = true;
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage = 'Kurtarma feneri radarda tespit edildi!';
+          } else {
+            this.applyPenalty('Radar taraması hedef koordinatlardan saptı! Parazit arttı.');
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+        return;
+      }
+    }
+
+    // Handle Phase 2: Enerji Dağıtımı
+    if (currentStatus === 'phase_energy') {
+      if (actionType === 'energy_set_allocation') {
         if (player.role !== 'muhendis') return;
+        if (this.missionState.energy.isLocked) return;
+
         const alloc = data.allocation;
         const sum = alloc.yasamDestegi + alloc.itki + alloc.kalkan;
         if (sum <= this.missionState.energy.totalBudget) {
           this.missionState.energy.engineerAllocation = alloc;
         }
-        break;
+        this.broadcastFilteredState();
+        return;
       }
 
-      case 'energy_share_draft': {
+      if (actionType === 'energy_share_draft') {
         if (player.role !== 'muhendis') return;
         this.missionState.energy.isDraftShared = true;
-        break;
+        this.broadcastFilteredState();
+        return;
       }
 
-      case 'energy_lock': {
-        if (player.role !== 'muhendis') return;
+      if (actionType === 'energy_lock') {
+        if (player.role !== 'kaptan') {
+          client.send('error_message', 'Yalnızca Kaptan enerji dağılımını onaylayıp kilitleyebilir.');
+          return;
+        }
+        if (!this.missionState.energy.isDraftShared) {
+          client.send('error_message', 'Mühendisin enerji taslağını iletmesi bekleniyor.');
+          return;
+        }
+        if (this.missionState.energy.isLocked) return;
+
         const e = this.missionState.energy;
         const netLife = Math.max(0, e.engineerAllocation.yasamDestegi - e.lineLosses.yasamDestegi);
         const netThrust = Math.max(0, e.engineerAllocation.itki - e.lineLosses.itki);
         const netShield = Math.max(0, e.engineerAllocation.kalkan - e.lineLosses.kalkan);
 
-        if (netLife >= 3 && (netThrust + netShield >= 4)) {
+        const meetsLife = netLife >= e.captainMinRequirements.yasamDestegi;
+        const meetsThrust = netThrust >= e.captainMinRequirements.itki;
+        const meetsShield = netShield >= e.captainMinRequirements.kalkan;
+
+        if (meetsLife && meetsThrust && meetsShield) {
           e.isLocked = true;
           this.missionState.feedbackState = 'success';
           this.missionState.feedbackMessage = 'Enerji dağılımı kilitlendi ve ana hatta aktarıldı!';
         } else {
-          penaltyApplied = true;
           this.applyPenalty('Enerji dağılımı kritik güvenlik eşiklerinin altında kaldı!');
         }
-        break;
+        this.broadcastFilteredState();
+        return;
       }
+      return;
+    }
 
-      // Kurtarma Kararı
-      case 'rescue_select_route': {
+    // Handle Phase 3: Kurtarma Kararı
+    if (currentStatus === 'phase_rescue') {
+      if (actionType === 'rescue_select_route') {
         this.missionState.rescue.selectedRouteId = data.routeId;
         this.missionState.rescue.captainApproved = false;
         this.missionState.rescue.engineerApproved = false;
         this.missionState.rescue.validationError = null;
-        break;
+        this.broadcastFilteredState();
+        return;
       }
 
-      case 'rescue_toggle_approval': {
+      if (actionType === 'rescue_toggle_approval') {
+        // Player can ONLY toggle their OWN approval!
         if (player.role === 'kaptan') {
           this.missionState.rescue.captainApproved = !this.missionState.rescue.captainApproved;
-        } else {
+        } else if (player.role === 'muhendis') {
           this.missionState.rescue.engineerApproved = !this.missionState.rescue.engineerApproved;
         }
 
@@ -601,11 +591,11 @@ export class LostSignalRoom extends Room {
             this.missionState.rescue.engineerApproved = false;
           }
         }
-        break;
+        this.broadcastFilteredState();
+        return;
       }
+      return;
     }
-
-    this.broadcastFilteredState();
   }
 
   private applyPenalty(reason: string) {
@@ -649,6 +639,25 @@ export class LostSignalRoom extends Room {
 
     if (this.missionState.timeLeftSeconds > 0) {
       this.missionState.timeLeftSeconds--;
+    }
+
+    // Advanced Scenario Plasma Surge Event warning & strike check
+    if (this.missionState.gameMode === 'gelismis' && this.missionState.advancedScenario) {
+      const adv = this.missionState.advancedScenario;
+      if (!adv.event.isResolved) {
+        if (this.missionState.timeLeftSeconds <= adv.event.warningTriggerTime && !adv.event.isActive) {
+          adv.event.isActive = true;
+          adv.evacuationLog.push(`[${this.missionState.timeLeftSeconds}s] ⚠️ DİKKAT: Plazma Fırtınası Dalgası yaklaşıyor! 35 saniye içinde temas.`);
+        }
+        if (this.missionState.timeLeftSeconds <= adv.event.strikeTime && adv.event.isActive && !adv.event.isResolved) {
+          adv.event.isResolved = true;
+          adv.event.isActive = false;
+          adv.event.chosenReaction = 'ihmal';
+          adv.event.narrativeResult = 'Savunmasız gövdeye plazma çarptı! -%15 Gövde hasarı.';
+          this.missionState.hullIntegrity = Math.max(1, this.missionState.hullIntegrity - 15);
+          adv.evacuationLog.push(`[${this.missionState.timeLeftSeconds}s] 💥 PLAZMA TEMASI: İstasyon kalkanlanmadı. Gövde %15 hasar aldı.`);
+        }
+      }
     }
 
     if (this.missionState.timeLeftSeconds <= 0 || this.missionState.hullIntegrity <= 0) {
@@ -736,7 +745,14 @@ export class LostSignalRoom extends Room {
     if (consented) {
       // Voluntary leave
       this.playerSessions.delete(client.sessionId);
-      if (this.missionState.status === 'lobby') {
+      const isGameInProgress = 
+        this.missionState.status === 'phase_game' || 
+        this.missionState.status === 'phase_energy' || 
+        this.missionState.status === 'phase_rescue';
+
+      if (isGameInProgress) {
+        this.handleMissionFailure(`Mürettebat üyesi (${player.name}) görevden ayrıldı. Görev sonlandırıldı.`);
+      } else if (this.missionState.status === 'lobby') {
         this.missionState.players[player.role].ready = false;
         this.broadcastFilteredState();
       }
@@ -776,6 +792,7 @@ export class LostSignalRoom extends Room {
   }
 
   onDispose() {
+    LostSignalRoom.activeRooms.delete(this.roomCode);
     if (this.tickInterval) {
       this.tickInterval.clear();
     }
@@ -793,34 +810,53 @@ export class LostSignalRoom extends Room {
     };
 
     if (role === 'kaptan') {
-      // Captain sees diagnostic notes, rule descriptions, cheat-sheet solutions,
-      // but NOT engineer's live sliders, test triggers, or frequency tuner answers.
       return {
         ...base,
         diagnostic: {
           ...this.missionState.diagnostic,
-          // Hide engineer's internal breaker actions from captain until confirmed
         },
         signal: {
           ...this.missionState.signal,
-          // Captain sees symbols, ruleDescription, computedCode, correctFrequency
         },
         cable: {
           ...this.missionState.cable,
-          // Captain sees wire specs and requiredCableId on ports
         },
         airlock: {
           ...this.missionState.airlock,
-          // Captain sees target ranges
         },
         radar: {
           ...this.missionState.radar,
-          // Captain sees beacon target azimuth & elevation
         },
         energy: {
           ...this.missionState.energy,
-          // Captain sees minimum requirements and draft/locked values
         },
+        advancedScenario: this.missionState.advancedScenario ? {
+          ...this.missionState.advancedScenario,
+          subsystems: {
+            ...this.missionState.advancedScenario.subsystems,
+            reaktor: {
+              ...this.missionState.advancedScenario.subsystems.reaktor,
+              targetBreaker: undefined as any,
+              liveTelemetry: {
+                coreTemp: 0,
+                coolantPressure: 0,
+                lineNoise: 0,
+                criticalLine: 'anten',
+              },
+            },
+            sinyal: {
+              ...this.missionState.advancedScenario.subsystems.sinyal,
+              targetFrequency: '??? MHz',
+            },
+            hava_kilidi: {
+              ...this.missionState.advancedScenario.subsystems.hava_kilidi,
+              targetDialIndex: -1,
+              targetVacuumMin: 0,
+              targetVacuumMax: 0,
+              externalPressureKpa: 0,
+            },
+          },
+        } : undefined,
       };
     } else {
       // Engineer sees interactive consoles, live telemetry, and dials,
@@ -829,19 +865,16 @@ export class LostSignalRoom extends Room {
         ...base,
         diagnostic: {
           ...this.missionState.diagnostic,
-          // Redact captain's secret correctBreaker and faultyLine identifier
           faultyLine: 'reaktor', // generic fallback label
           correctBreaker: null as any,
         },
         signal: {
           ...this.missionState.signal,
-          // Redact captain's computed code & expected frequency
           computedCode: '????',
           correctFrequency: '??? MHz',
         },
         cable: {
           ...this.missionState.cable,
-          // Redact requiredCableId from ports on engineer view
           ports: this.missionState.cable.ports.map(p => ({
             ...p,
             requiredCableId: '???',
@@ -849,7 +882,6 @@ export class LostSignalRoom extends Room {
         },
         airlock: {
           ...this.missionState.airlock,
-          // Redact captain's target numbers
           targetDialIndex: -1,
           targetDialText: 'Gizli Protokol',
           targetPressureRange: 'Kaptan Onaylı Aralık',
@@ -858,7 +890,6 @@ export class LostSignalRoom extends Room {
         },
         radar: {
           ...this.missionState.radar,
-          // Redact target azimuth and elevation
           targetAzimuth: 0,
           targetElevation: 0,
           beaconLabel: 'Hedef Kaptanda',
@@ -866,6 +897,28 @@ export class LostSignalRoom extends Room {
         energy: {
           ...this.missionState.energy,
         },
+        advancedScenario: this.missionState.advancedScenario ? {
+          ...this.missionState.advancedScenario,
+          subsystems: {
+            ...this.missionState.advancedScenario.subsystems,
+            reaktor: {
+              ...this.missionState.advancedScenario.subsystems.reaktor,
+              targetBreaker: undefined as any,
+            },
+            sinyal: {
+              ...this.missionState.advancedScenario.subsystems.sinyal,
+              targetFrequency: '??? MHz',
+              symbols: ['?', '?', '?', '?'],
+              symbolValueSum: 0,
+            },
+            hava_kilidi: {
+              ...this.missionState.advancedScenario.subsystems.hava_kilidi,
+              targetDialIndex: -1,
+              targetVacuumMin: 0,
+              targetVacuumMax: 0,
+            },
+          },
+        } : undefined,
       };
     }
   }

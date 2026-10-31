@@ -5,16 +5,17 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { signal } = state;
   const [currentFreq, setCurrentFreq] = useState(
     parseFloat(signal.engineerTunedFreq.replace(' MHz', '')) || 140.5
   );
   const [feedback, setFeedback] = useState<{ type: 'idle' | 'success' | 'error'; msg: string }>({
     type: signal.isSolved ? 'success' : 'idle',
-    msg: signal.isSolved ? `FREKANS KİLİTLENDİ (${signal.correctFrequency}) • SİNYAL YAKALANDI` : '',
+    msg: signal.isSolved ? `FREKANS KİLİTLENDİ (${signal.engineerTunedFreq}) • SİNYAL YAKALANDI` : '',
   });
 
   const handleStepDown = () => {
@@ -33,8 +34,14 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
     if (signal.isSolved) return;
 
     const tunedString = `${formattedFreq} MHz`;
-    const isCorrect = tunedString === signal.correctFrequency;
 
+    if (onAction) {
+      onAction('signal_engineer_tune', { freq: tunedString });
+      return;
+    }
+
+    // Local demo fallback
+    const isCorrect = tunedString === signal.correctFrequency;
     if (isCorrect) {
       setFeedback({
         type: 'success',
@@ -61,6 +68,13 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
       }));
     }
   };
+
+  const activeFeedback = state.feedbackMessage
+    ? {
+        type: (state.feedbackState === 'success' ? 'success' : state.feedbackState === 'error' ? 'error' : 'idle') as 'idle' | 'success' | 'error',
+        msg: state.feedbackMessage,
+      }
+    : feedback;
 
   return (
     <div className="w-full max-w-[420px] mx-auto flex flex-col text-on-surface select-none pb-8 animate-fadeIn font-sans">
@@ -169,11 +183,11 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         </div>
 
         {/* Feedback Alert */}
-        {feedback.msg && (
+        {activeFeedback.msg && (
           <div className={`p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-            feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+            activeFeedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
           }`}>
-            {feedback.msg}
+            {activeFeedback.msg}
           </div>
         )}
 

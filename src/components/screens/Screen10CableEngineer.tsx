@@ -5,9 +5,10 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { cable } = state;
   const { isSolved, cables, ports } = cable;
 
@@ -33,6 +34,7 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
       if (current) {
         // Unplug
         const updated = { ...prev, [portId]: null };
+        onAction?.('cable_assign_port', { portId, cableId: null });
         onUpdate(p => ({ ...p, cable: { ...p.cable, portAssignments: updated } }));
         return updated;
       } else {
@@ -42,6 +44,7 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
           if (updated[p] === selectedCableId) updated[p] = null;
         });
         updated[portId] = selectedCableId;
+        onAction?.('cable_assign_port', { portId, cableId: selectedCableId });
         onUpdate(p => ({ ...p, cable: { ...p.cable, portAssignments: updated } }));
         return updated;
       }
@@ -61,7 +64,12 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
       return;
     }
 
-    // Check against each port's requiredCableId
+    if (onAction) {
+      onAction('cable_test_connections', { portAssignments });
+      return;
+    }
+
+    // Local fallback
     const isAllCorrect = ports.every(port => portAssignments[port.id] === port.requiredCableId);
 
     if (isAllCorrect) {
@@ -90,6 +98,13 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
       }));
     }
   };
+
+  const activeFeedback = state.feedbackMessage
+    ? {
+        type: (state.feedbackState === 'success' ? 'success' : state.feedbackState === 'error' ? 'error' : 'idle') as 'idle' | 'success' | 'error',
+        msg: state.feedbackMessage,
+      }
+    : feedback;
 
   const getCableById = (id: string | null) => {
     if (!id) return null;
@@ -198,11 +213,11 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
       </div>
 
       {/* Feedback Message */}
-      {feedback.msg && (
+      {activeFeedback.msg && (
         <div className={`mt-2 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
-          feedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+          activeFeedback.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
         }`}>
-          {feedback.msg}
+          {activeFeedback.msg}
         </div>
       )}
 
