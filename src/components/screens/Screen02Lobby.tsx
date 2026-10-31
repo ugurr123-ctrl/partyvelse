@@ -10,9 +10,19 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onStartGame: () => void;
+  isOnline?: boolean;
+  isHost?: boolean;
+  onToggleMyReady?: () => void;
 }
 
-export const Screen02Lobby: React.FC<Props> = ({ state, onUpdate, onStartGame }) => {
+export const Screen02Lobby: React.FC<Props> = ({ 
+  state, 
+  onUpdate, 
+  onStartGame,
+  isOnline = false,
+  isHost = true,
+  onToggleMyReady,
+}) => {
   const [copied, setCopied] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
@@ -25,6 +35,10 @@ export const Screen02Lobby: React.FC<Props> = ({ state, onUpdate, onStartGame })
   };
 
   const toggleMyReady = () => {
+    if (isOnline && onToggleMyReady) {
+      onToggleMyReady();
+      return;
+    }
     onUpdate((prev) => ({
       ...prev,
       players: {
@@ -38,6 +52,10 @@ export const Screen02Lobby: React.FC<Props> = ({ state, onUpdate, onStartGame })
   };
 
   const togglePartnerReady = () => {
+    if (isOnline) {
+      alert('Gerçek çevrimiçi odada partneriniz kendi cihazından hazır olmalıdır.');
+      return;
+    }
     const otherRole = state.myRole === 'kaptan' ? 'muhendis' : 'kaptan';
     onUpdate((prev) => ({
       ...prev,
@@ -318,10 +336,24 @@ export const Screen02Lobby: React.FC<Props> = ({ state, onUpdate, onStartGame })
 
             {/* Central Round Golden Neon Push Button */}
             <button 
-              onClick={isBothReady ? onStartGame : () => { togglePartnerReady(); }}
+              onClick={() => {
+                if (isOnline) {
+                  if (isBothReady) {
+                    if (isHost) onStartGame();
+                  } else {
+                    toggleMyReady();
+                  }
+                } else {
+                  if (isBothReady) {
+                    onStartGame();
+                  } else {
+                    togglePartnerReady();
+                  }
+                }
+              }}
               aria-label="Görevi başlat" 
               className={`w-full h-full rounded-full flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-150 group focus:outline-none relative z-20 ${
-                isBothReady 
+                isBothReady && (!isOnline || isHost)
                   ? 'launch-btn-neon-active scale-100 cursor-pointer' 
                   : 'bg-[radial-gradient(circle_at_45%_35%,#544b36_0%,#3d3420_40%,#261d0f_80%,#140e06_100%)] shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),inset_0_-4px_8px_rgba(0,0,0,0.8)] border border-amber-500/20 text-[#a89066] hover:brightness-110 active:scale-95'
               }`}
@@ -335,16 +367,20 @@ export const Screen02Lobby: React.FC<Props> = ({ state, onUpdate, onStartGame })
               </div>
               
               {/* Button Typography */}
-              <span className={`text-[15px] font-black leading-tight uppercase tracking-wide font-sora ${
-                isBothReady ? 'text-[#251000] drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]' : 'text-[#c2ab80]'
+              <span className={`text-[13px] font-black leading-tight uppercase tracking-wide font-sora ${
+                isBothReady && (!isOnline || isHost) ? 'text-[#251000] drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]' : 'text-[#c2ab80]'
               }`}>
-                Görevi<br />başlat
+                {isOnline && isBothReady && !isHost ? (
+                  <>Lideri<br />Bekliyor</>
+                ) : (
+                  <>Görevi<br />başlat</>
+                )}
               </span>
 
               {/* Ready Indicator Hint if waiting */}
               {!isBothReady && (
                 <span className="text-[8px] font-mono font-bold text-amber-400 mt-0.5 opacity-90">
-                  (Hazırla)
+                  {isOnline ? (state.players[state.myRole].ready ? '(Eşlikçi Bekleniyor)' : '(Hazır Ol)') : '(Hazırla)'}
                 </span>
               )}
             </button>

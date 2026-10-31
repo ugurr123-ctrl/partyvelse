@@ -75,27 +75,30 @@ export const ConsoleHeader: React.FC<Props> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#120f2d]/90 backdrop-blur-md border-b border-white/10 shadow-lg text-[#e6dff9]">
+    <header className="sticky top-0 z-40 w-full overflow-hidden bg-[#120f2d]/90 backdrop-blur-md border-b border-white/10 shadow-lg text-[#e6dff9]">
       {/* Top telemetry bar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-1 sm:gap-2 text-xs">
         
         {/* Brand & Room Info */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#ffb703] rotate-45 shadow-[0_0_8px_#ffb703]"></span>
-            <span className="font-extrabold text-[#ffb703] tracking-widest font-sora text-sm">PARTYVERSE</span>
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink">
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm bg-[#ffb703] rotate-45 shadow-[0_0_8px_#ffb703]"></span>
+            <span className="font-extrabold text-[#ffb703] tracking-wider sm:tracking-widest font-sora text-xs sm:text-sm truncate">
+              <span className="hidden xs:inline">PARTYVERSE</span>
+              <span className="xs:hidden">PV</span>
+            </span>
           </div>
-          <span className="text-white/20">|</span>
-          <div className="flex items-center gap-1 bg-[#1a163b] px-2 py-0.5 rounded-md border border-white/10">
-            <span className="text-[10px] text-[#9e8f78] uppercase font-mono">ODA:</span>
-            <span className="font-mono font-bold text-[#00f0ff]">{roomCode}</span>
+          <span className="text-white/20 hidden xs:inline">|</span>
+          <div className="flex items-center gap-1 bg-[#1a163b] px-1.5 sm:px-2 py-0.5 rounded border border-white/10 shrink-0">
+            <span className="text-[9px] sm:text-[10px] text-[#9e8f78] uppercase font-mono">ODA:</span>
+            <span className="font-mono font-bold text-[10px] sm:text-xs text-[#00f0ff]">{roomCode}</span>
           </div>
 
           {/* Role badge */}
           <button
             onClick={onSwitchRole}
             title="Rolü Değiştir (Kaptan ⇄ Mühendis)"
-            className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold transition-all shadow-sm ${
+            className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold transition-all shadow-sm shrink-0 ${
               myRole === 'kaptan' 
                 ? 'bg-amber-500/20 text-[#ffb703] border border-[#ffb703]/40 hover:bg-amber-500/30' 
                 : 'bg-cyan-500/20 text-[#00f0ff] border border-[#00f0ff]/40 hover:bg-cyan-500/30'
@@ -105,23 +108,23 @@ export const ConsoleHeader: React.FC<Props> = ({
             <span className="uppercase tracking-wider font-sora">
               {myRole === 'kaptan' ? 'KAPTAN' : 'MÜHENDİS'}
             </span>
-            <ArrowRightLeft className="w-3 h-3 ml-0.5 opacity-70" />
+            <ArrowRightLeft className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-70" />
           </button>
         </div>
 
         {/* Global Live Indicators (Timer, Hull Health, Phase) */}
-        <div className="flex items-center gap-3 sm:gap-4 ml-auto">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
           
           {/* Time Remaining */}
-          <div className="flex items-center gap-1.5 bg-[#0b081a] px-2.5 py-1 rounded-md border border-white/10 font-mono text-xs">
-            <Clock className={`w-3.5 h-3.5 ${timeLeft < 60 ? 'text-rose-400 animate-pulse' : 'text-[#ffb703]'}`} />
+          <div className="flex items-center gap-1 bg-[#0b081a] px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded border border-white/10 font-mono text-[11px] sm:text-xs shrink-0">
+            <Clock className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${timeLeft < 60 ? 'text-rose-400 animate-pulse' : 'text-[#ffb703]'}`} />
             <span className={`font-bold ${timeLeft < 60 ? 'text-rose-400' : 'text-white'}`}>
               {formatTime(timeLeft)}
             </span>
           </div>
 
           {/* Hull Integrity Bar */}
-          <div className="hidden sm:flex items-center gap-2 bg-[#0b081a] px-2.5 py-1 rounded-md border border-white/10">
+          <div className="hidden md:flex items-center gap-2 bg-[#0b081a] px-2.5 py-1 rounded-md border border-white/10">
             <ShieldAlert className={`w-3.5 h-3.5 ${hullIntegrity < 40 ? 'text-rose-400 animate-bounce' : 'text-[#00f0ff]'}`} />
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
@@ -130,7 +133,7 @@ export const ConsoleHeader: React.FC<Props> = ({
                   %{hullIntegrity}
                 </span>
               </div>
-              <div className="w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="w-16 lg:w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-300 ${
                     hullIntegrity > 60 ? 'bg-[#00f0ff]' :
@@ -145,31 +148,32 @@ export const ConsoleHeader: React.FC<Props> = ({
           {/* Disconnect Simulation Toggle */}
           <button
             onClick={onToggleDisconnect}
-            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-mono transition-colors border ${
+            className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[11px] font-mono transition-colors border ${
               isDisconnected 
                 ? 'bg-rose-500/30 text-rose-300 border-rose-500/50' 
                 : 'bg-white/5 text-[#9e8f78] border-white/10 hover:text-white'
             }`}
             title="Bağlantı Kesintisini Test Et (Süreyi durdurur, kontrolleri kilitler)"
           >
-            {isDisconnected ? <WifiOff className="w-3.5 h-3.5 text-rose-400" /> : <Wifi className="w-3.5 h-3.5 text-emerald-400" />}
-            <span className="hidden md:inline">{isDisconnected ? 'Bağlantı Koptu' : 'Canlı Bağlantı'}</span>
+            {isDisconnected ? <WifiOff className="w-3 h-3 text-rose-400" /> : <Wifi className="w-3 h-3 text-emerald-400" />}
+            <span className="hidden lg:inline">{isDisconnected ? 'Bağlantı Koptu' : 'Canlı Bağlantı'}</span>
           </button>
 
           {/* Screen Explorer Trigger */}
           <button
             onClick={onOpenScreenExplorer}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#1a163b] hover:bg-[#231e48] border border-[#ffb703]/40 text-[#ffb703] text-xs font-medium transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-[#1a163b] hover:bg-[#231e48] border border-[#ffb703]/40 text-[#ffb703] text-[10px] sm:text-xs font-medium transition-all shadow-sm active:scale-95 shrink-0"
             title="Tüm 17 Ekranı İncele & Dışa Aktar"
           >
-            <Layers className="w-3.5 h-3.5 text-[#ffb703]" />
-            <span className="font-sora font-semibold">17 Ekran Gezgini</span>
+            <Layers className="w-3 h-3 text-[#ffb703]" />
+            <span className="font-sora font-semibold hidden sm:inline">17 Ekran Gezgini</span>
+            <span className="font-sora font-semibold sm:hidden">Gezgin</span>
           </button>
 
           {/* Rule Evaluation Drawer Trigger */}
           <button
             onClick={onOpenRules}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs transition-colors"
+            className="hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs transition-colors"
             title="Oyun Kuralları & Çift Yönlü Akış Şeması"
           >
             <FileText className="w-3.5 h-3.5 text-[#00f0ff]" />
@@ -179,10 +183,10 @@ export const ConsoleHeader: React.FC<Props> = ({
           {/* Audio toggle */}
           <button 
             onClick={() => setSoundOn(!soundOn)}
-            className="p-1 rounded text-white/50 hover:text-white transition-colors"
+            className="p-1 rounded text-white/50 hover:text-white transition-colors shrink-0"
             title={soundOn ? 'Sesi Kapat' : 'Sesi Aç'}
           >
-            {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>

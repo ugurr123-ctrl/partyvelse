@@ -5,9 +5,10 @@ import {
   MiniGameType, 
   GameStatus 
 } from './types/game';
-import { createInitialMissionState, calculateFinalScore } from './services/gameFactory';
+import { createInitialMissionState, calculateFinalScore, getRandomMiniGames, generateRoundId } from './services/gameFactory';
 import { validateAndAdvancePhase } from './services/phaseTransition';
 import { syncService } from './services/multiplayerSync';
+import { colyseusClient } from './services/colyseusClient';
 import { ConsoleHeader } from './components/ConsoleHeader';
 import { NetworkDisconnectModal } from './components/NetworkDisconnectModal';
 import { RuleEvaluationDrawer } from './components/RuleEvaluationDrawer';
@@ -33,37 +34,73 @@ import { Screen16EnergyEngineer } from './components/screens/Screen16EnergyEngin
 import { Screen17ARescue } from './components/screens/Screen17ARescue';
 import { Screen17BResult } from './components/screens/Screen17BResult';
 
-import { Columns2, Smartphone, ArrowRightLeft } from 'lucide-react';
+import { Columns2, Smartphone, ArrowRightLeft, Radio, Wifi } from 'lucide-react';
 
 export default function App() {
   const [state, setState] = useState<MissionState>(() => createInitialMissionState());
+  const [isOnline, setIsOnline] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
   const [showRules, setShowRules] = useState(false);
   const [showExplorer, setShowExplorer] = useState(false);
   const [dualViewMode, setDualViewMode] = useState(false); // Side-by-side dual phone testing mode
 
-  // Sync subscription across tabs / windows
+  // 1. Subscribe to Colyseus Server updates
   useEffect(() => {
-    const unsubscribe = syncService.subscribe((incomingState, sourceRole) => {
-      // If message came from another role, adopt state but keep local role view preference
-      setState((prev) => ({
-        ...incomingState,
-        myRole: prev.myRole, // preserve local role view
-      }));
+    const unsubState = colyseusClient.onState((serverState) => {
+      setState(serverState);
+      setIsOnline(true);
     });
-    return () => unsubscribe();
+
+    const unsubConn = colyseusClient.onConnection((status) => {
+      setConnectionStatus(status);
+      if (status === 'connected') {
+        setIsOnline(true);
+      } else if (status === 'disconnected') {
+        setIsOnline(false);
+      }
+    });
+
+    const unsubError = colyseusClient.onError((err) => {
+      console.warn('[Colyseus Client Warning]:', err);
+    });
+
+    return () => {
+      unsubState();
+      unsubConn();
+      unsubError();
+    };
   }, []);
 
-  // Broadcast state changes
+  // 2. Demo fallback sync across tabs if not online
+  useEffect(() => {
+    const unsubscribe = syncService.subscribe((incomingState, sourceRole) => {
+      if (!isOnline) {
+        setState((prev) => ({
+          ...incomingState,
+          myRole: prev.myRole,
+        }));
+      }
+    });
+    return () => unsubscribe();
+  }, [isOnline]);
+
+  // State dispatcher: routes to Colyseus server in online mode, or local demo state
   const updateState = (updater: (prev: MissionState) => MissionState) => {
     setState((prev) => {
       const next = updater(prev);
-      syncService.broadcast(next, next.myRole);
+      if (isOnline && colyseusClient.isConnected()) {
+        colyseusClient.sendAction('sync_mission_step', next, prev.roundId, prev.currentPhaseIndex);
+      } else {
+        syncService.broadcast(next, next.myRole);
+      }
       return next;
     });
   };
 
-  // 1-second mission timer countdown
+  // Local demo timer countdown (only active when NOT connected to server)
   useEffect(() => {
+    if (isOnline) return; // Server manages authoritative timer in online mode
+
     const isGameRunning = 
       (state.status === 'phase_game' || state.status === 'phase_energy' || state.status === 'phase_rescue') &&
       !state.isPaused &&
@@ -74,10 +111,9 @@ export default function App() {
     const timer = setInterval(() => {
       setState((prev) => {
         if (prev.timeLeftSeconds <= 1 || prev.hullIntegrity <= 0) {
-          // Mission Failure! Calculate real score based on tasks and integrity
           const finalHull = Math.max(0, prev.hullIntegrity);
           const scoreData = calculateFinalScore(
-            prev.completedTasksCount,
+            prev.completedTasksCount || 0,
             0,
             finalHull,
             0
@@ -104,70 +140,115 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [state.status, state.isPaused, state.isDisconnected]);
+  }, [state.status, state.isPaused, state.isDisconnected, isOnline]);
 
   // Handle phase advance: Phase 0 -> Phase 1 -> Phase 2 (Energy) -> Phase 3 (Rescue)
-  // Protected with explicit roundId, expectedPhaseIndex, and puzzle completion verification
   const handleAdvancePhase = (requestPayload?: { roundId?: string; expectedPhaseIndex?: number } | number | unknown) => {
-    updateState((prev) => {
-      let targetRoundId = prev.roundId;
-      let targetExpected = prev.currentPhaseIndex;
+    let targetRoundId = state.roundId;
+    let targetExpected = state.currentPhaseIndex;
 
-      if (typeof requestPayload === 'number') {
-        targetExpected = requestPayload;
-      } else if (
-        requestPayload &&
-        typeof requestPayload === 'object' &&
-        !('nativeEvent' in requestPayload) &&
-        !('target' in requestPayload)
-      ) {
-        const payload = requestPayload as { roundId?: string; expectedPhaseIndex?: number };
-        if (typeof payload.roundId === 'string') {
-          targetRoundId = payload.roundId;
-        }
-        if (typeof payload.expectedPhaseIndex === 'number') {
-          targetExpected = payload.expectedPhaseIndex;
-        }
+    if (typeof requestPayload === 'number') {
+      targetExpected = requestPayload;
+    } else if (
+      requestPayload &&
+      typeof requestPayload === 'object' &&
+      !('nativeEvent' in requestPayload) &&
+      !('target' in requestPayload)
+    ) {
+      const payload = requestPayload as { roundId?: string; expectedPhaseIndex?: number };
+      if (typeof payload.roundId === 'string') {
+        targetRoundId = payload.roundId;
       }
+      if (typeof payload.expectedPhaseIndex === 'number') {
+        targetExpected = payload.expectedPhaseIndex;
+      }
+    }
 
-      const result = validateAndAdvancePhase(prev, {
-        roundId: targetRoundId,
-        expectedPhaseIndex: targetExpected,
+    if (isOnline && colyseusClient.isConnected()) {
+      colyseusClient.advancePhase(targetRoundId, targetExpected);
+    } else {
+      updateState((prev) => {
+        const result = validateAndAdvancePhase(prev, {
+          roundId: targetRoundId,
+          expectedPhaseIndex: targetExpected,
+        });
+
+        if (!result.success) {
+          console.warn(`[Phase Advance Blocked]: ${result.error}`);
+          return prev;
+        }
+
+        return result.nextState || prev;
       });
-
-      if (!result.success) {
-        console.warn(`[Phase Advance Blocked]: ${result.error}`);
-        return prev;
-      }
-
-      return result.nextState || prev;
-    });
+    }
   };
 
   const handleSwitchRole = () => {
-    updateState((prev) => ({
-      ...prev,
-      myRole: prev.myRole === 'kaptan' ? 'muhendis' : 'kaptan',
-    }));
+    const nextRole = state.myRole === 'kaptan' ? 'muhendis' : 'kaptan';
+    if (isOnline && state.status === 'lobby') {
+      colyseusClient.selectRole(nextRole);
+    } else {
+      updateState((prev) => ({
+        ...prev,
+        myRole: nextRole,
+      }));
+    }
   };
 
   const handleToggleDisconnect = () => {
     updateState((prev) => ({
       ...prev,
       isDisconnected: !prev.isDisconnected,
-      isPaused: !prev.isDisconnected, // pause timer if disconnected
+      isPaused: !prev.isDisconnected,
     }));
   };
 
-  const handleReconnect = () => {
-    updateState((prev) => ({
-      ...prev,
-      isDisconnected: false,
-      isPaused: false,
-    }));
+  const handleReconnect = async () => {
+    if (isOnline) {
+      const ok = await colyseusClient.attemptReconnect();
+      if (!ok) {
+        updateState((prev) => ({
+          ...prev,
+          isDisconnected: false,
+          isPaused: false,
+        }));
+      }
+    } else {
+      updateState((prev) => ({
+        ...prev,
+        isDisconnected: false,
+        isPaused: false,
+      }));
+    }
+  };
+
+  const handleRestartGame = () => {
+    if (isOnline && colyseusClient.isConnected()) {
+      colyseusClient.restartRound();
+    } else {
+      updateState((prev) => {
+        const prevPair = prev.selectedMiniGames;
+        const newPair = getRandomMiniGames(prevPair);
+        const newRoundId = generateRoundId();
+        const fresh = createInitialMissionState(
+          prev.roomCode,
+          prev.activeEnvironment,
+          prev.players.kaptan.name,
+          prevPair
+        );
+        fresh.roundId = newRoundId;
+        fresh.selectedMiniGames = newPair;
+        fresh.status = 'lobby';
+        fresh.players.kaptan.name = prev.players.kaptan.name;
+        fresh.players.muhendis.name = prev.players.muhendis.name;
+        return fresh;
+      });
+    }
   };
 
   const handleNavigateFromExplorer = (screenMeta: typeof ALL_17_SCREENS[0], targetRole: Role) => {
+    // Explorer runs in separate demo view
+    setIsOnline(false);
     updateState((prev) => {
       const updated: MissionState = {
         ...prev,
@@ -179,7 +260,6 @@ export default function App() {
         updated.currentPhaseIndex = screenMeta.phaseIndex;
       }
       if (screenMeta.miniGameKey) {
-        // Place selected mini-game in active phase
         const newSelected = [...prev.selectedMiniGames] as [MiniGameType, MiniGameType];
         if (screenMeta.phaseIndex === 0) {
           newSelected[0] = screenMeta.miniGameKey as MiniGameType;
@@ -205,6 +285,11 @@ export default function App() {
     });
   };
 
+  // Helper to determine if current client is the room leader (host)
+  const isLeader = !isOnline || (
+    colyseusClient.getSessionId() ? colyseusClient.getSessionId() === state.players.kaptan.id : true
+  );
+
   // Helper to render active screen for a specific role
   const renderScreenForRole = (role: Role) => {
     const currentState = { ...state, myRole: role };
@@ -215,7 +300,14 @@ export default function App() {
         <Screen01Entry 
           state={currentState} 
           onUpdate={updateState} 
-          onStartLobby={() => updateState((p) => ({ ...p, status: 'lobby' }))} 
+          onStartLobby={() => updateState((p) => ({ ...p, status: 'lobby' }))}
+          isOnlineMode={true}
+          onCreateOnlineRoom={async (code, name, preferredRole) => {
+            await colyseusClient.createRoom(code, name, preferredRole);
+          }}
+          onJoinOnlineRoom={async (code, name) => {
+            await colyseusClient.joinRoom(code, name);
+          }}
         />
       );
     }
@@ -226,27 +318,36 @@ export default function App() {
         <Screen02Lobby 
           state={currentState} 
           onUpdate={updateState} 
-          onStartGame={() => updateState((p) => ({ ...p, status: 'role_intro' }))} 
+          onStartGame={() => {
+            if (isOnline) {
+              colyseusClient.startGame();
+            } else {
+              updateState((p) => ({ ...p, status: 'role_intro' }));
+            }
+          }}
+          isOnline={isOnline}
+          isHost={isLeader}
+          onToggleMyReady={() => {
+            if (isOnline) colyseusClient.toggleReady();
+          }}
         />
       );
     }
 
     // 3 & 4. Role Intro
     if (state.status === 'role_intro') {
+      const onConfirm = () => {
+        if (isOnline) {
+          colyseusClient.confirmRole();
+        } else {
+          updateState((p) => ({ ...p, status: 'phase_game', currentPhaseIndex: 0 }));
+        }
+      };
+
       if (role === 'kaptan') {
-        return (
-          <Screen03CaptainRole 
-            state={currentState} 
-            onConfirmRole={() => updateState((p) => ({ ...p, status: 'phase_game', currentPhaseIndex: 0 }))} 
-          />
-        );
+        return <Screen03CaptainRole state={currentState} onConfirmRole={onConfirm} />;
       } else {
-        return (
-          <Screen04EngineerRole 
-            state={currentState} 
-            onConfirmRole={() => updateState((p) => ({ ...p, status: 'phase_game', currentPhaseIndex: 0 }))} 
-          />
-        );
+        return <Screen04EngineerRole state={currentState} onConfirmRole={onConfirm} />;
       }
     }
 
@@ -259,45 +360,85 @@ export default function App() {
       // Arıza Teşhisi (Reaktör)
       if (activeGameType === 'ariza_teshisi') {
         return role === 'kaptan' ? (
-          <Screen05ReactorCaptain state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen05ReactorCaptain 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         ) : (
-          <Screen06ReactorEngineer state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen06ReactorEngineer 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         );
       }
 
       // Sinyal Çözümü
       if (activeGameType === 'sinyal_cozumu') {
         return role === 'kaptan' ? (
-          <Screen07SignalCaptain state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen07SignalCaptain 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         ) : (
-          <Screen08SignalEngineer state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen08SignalEngineer 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         );
       }
 
       // Kablo Bağlantısı
       if (activeGameType === 'kablo_baglantisi') {
         return role === 'kaptan' ? (
-          <Screen09CableCaptain state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen09CableCaptain 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         ) : (
-          <Screen10CableEngineer state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen10CableEngineer 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         );
       }
 
       // Hava Kilidi
       if (activeGameType === 'hava_kilidi') {
         return role === 'kaptan' ? (
-          <Screen11AirlockCaptain state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen11AirlockCaptain 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         ) : (
-          <Screen12AirlockEngineer state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen12AirlockEngineer 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         );
       }
 
       // Radar Yönlendirme
       if (activeGameType === 'radar_yonlendirme') {
         return role === 'kaptan' ? (
-          <Screen13RadarCaptain state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen13RadarCaptain 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         ) : (
-          <Screen14RadarEngineer state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+          <Screen14RadarEngineer 
+            state={currentState} 
+            onUpdate={updateState} 
+            onAdvancePhase={handleAdvancePhase} 
+          />
         );
       }
     }
@@ -305,61 +446,44 @@ export default function App() {
     // 15 & 16. Phase 3: Energy Allocation
     if (state.status === 'phase_energy') {
       return role === 'kaptan' ? (
-        <Screen15EnergyCaptain state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+        <Screen15EnergyCaptain 
+          state={currentState} 
+          onUpdate={updateState} 
+          onAdvancePhase={handleAdvancePhase} 
+        />
       ) : (
-        <Screen16EnergyEngineer state={currentState} onUpdate={updateState} onAdvancePhase={handleAdvancePhase} />
+        <Screen16EnergyEngineer 
+          state={currentState} 
+          onUpdate={updateState} 
+          onAdvancePhase={handleAdvancePhase} 
+        />
       );
     }
 
-    // 17A. Phase 4A: Shared Rescue Decision
+    // 17A. Phase 4: Rescue Choice
     if (state.status === 'phase_rescue') {
       return (
         <Screen17ARescue 
           state={currentState} 
           onUpdate={updateState} 
-          onFinalizeMission={() => updateState((p) => ({ ...p, status: 'phase_result' }))} 
+          onFinalizeMission={() => {
+            if (isOnline) {
+              colyseusClient.sendAction('sync_mission_step', state, state.roundId, state.currentPhaseIndex);
+            } else {
+              updateState((p) => ({ ...p, status: 'phase_result' }));
+            }
+          }} 
         />
       );
     }
 
-    // 17B. Phase 4B: Final Mission Result & Victory / Failure
+    // 17B. Phase 4B: Final Result
     if (state.status === 'phase_result') {
       return (
         <Screen17BResult 
           state={currentState} 
-          onRestartGame={() => updateState((p) => {
-            const nextState = createInitialMissionState(
-              p.roomCode,
-              p.activeEnvironment,
-              p.players.kaptan.name,
-              p.selectedMiniGames
-            );
-            return {
-              ...nextState,
-              players: {
-                kaptan: { ...p.players.kaptan, ready: true },
-                muhendis: { ...p.players.muhendis, ready: true },
-              },
-              status: 'phase_game',
-              currentPhaseIndex: 0,
-            };
-          })} 
-          onLobbyReturn={() => updateState((p) => {
-            const nextState = createInitialMissionState(
-              p.roomCode,
-              p.activeEnvironment,
-              p.players.kaptan.name,
-              p.selectedMiniGames
-            );
-            return {
-              ...nextState,
-              players: {
-                kaptan: { ...p.players.kaptan, ready: false },
-                muhendis: { ...p.players.muhendis, ready: false },
-              },
-              status: 'lobby',
-            };
-          })}
+          onRestartGame={handleRestartGame} 
+          onLobbyReturn={handleRestartGame}
         />
       );
     }
@@ -368,9 +492,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b081a] text-[#e6dff9] flex flex-col font-manrope selection:bg-[#ffb703] selection:text-black">
-      
-      {/* Space Station Telemetry & Navigation Header */}
+    <div className="min-h-screen bg-[#070510] text-[#e6dff9] flex flex-col font-manrope antialiased">
+      {/* Top Application Telemetry Navigation Bar */}
       <ConsoleHeader
         roomCode={state.roomCode}
         myRole={state.myRole}
@@ -386,14 +509,16 @@ export default function App() {
         onOpenScreenExplorer={() => setShowExplorer(true)}
       />
 
-      {/* Main Game Stage Container */}
-      <main className="flex-1 w-full max-w-6xl mx-auto p-2 sm:p-4 flex flex-col items-center">
+      {/* Main Container */}
+      <main className="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-start">
         
-        {/* Dual Phone View Controller (For Single Device testing of both players side-by-side) */}
-        <div className="w-full max-w-md flex items-center justify-between px-2 mb-2 text-xs font-mono">
-          <div className="flex items-center gap-1.5 text-[#9e8f78]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Yerel Eşzamanlı Co-op</span>
+        {/* Quick Testing Bar (Dual View & Role Indicator) */}
+        <div className="w-full max-w-md md:max-w-4xl mx-auto mb-3 flex items-center justify-between text-xs px-2 py-1 bg-[#141123]/60 rounded-xl border border-white/5 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-amber-400'}`}></span>
+            <span className="font-mono text-[11px] text-[#9e8f78]">
+              {isOnline ? 'Çevrimiçi Oda (Colyseus)' : 'Yerel Demo Modu'}
+            </span>
           </div>
 
           <button

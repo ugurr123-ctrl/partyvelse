@@ -5,14 +5,28 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onStartLobby: () => void;
+  isOnlineMode?: boolean;
+  onToggleOnlineMode?: () => void;
+  onCreateOnlineRoom?: (roomCode: string, playerName: string, role: Role, sector: string) => Promise<void>;
+  onJoinOnlineRoom?: (roomCode: string, playerName: string) => Promise<void>;
 }
 
-export const Screen01Entry: React.FC<Props> = ({ state, onUpdate, onStartLobby }) => {
+export const Screen01Entry: React.FC<Props> = ({ 
+  state, 
+  onUpdate, 
+  onStartLobby,
+  isOnlineMode = true,
+  onToggleOnlineMode,
+  onCreateOnlineRoom,
+  onJoinOnlineRoom,
+}) => {
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [playerName, setPlayerName] = useState(state.players[state.myRole].name || 'Kaptan Ece');
   const [pinDigits, setPinDigits] = useState<string[]>(['P', 'V', '7', 'K', '', '']);
   const [stationSector, setStationSector] = useState('Aurora-7 Çekirdek Güvertesi');
   const [selectedRole, setSelectedRole] = useState<Role>(state.myRole);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleDigitChange = (index: number, val: string) => {
     const char = val.toUpperCase().slice(-1);
@@ -21,7 +35,20 @@ export const Screen01Entry: React.FC<Props> = ({ state, onUpdate, onStartLobby }
     setPinDigits(next);
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
+    setErrorMsg(null);
+    if (isOnlineMode && onCreateOnlineRoom) {
+      setIsLoading(true);
+      try {
+        await onCreateOnlineRoom(state.roomCode, playerName.trim() || 'Kaptan Ece', selectedRole, stationSector);
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Sunucuya bağlanılamadı.');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     onUpdate((prev) => ({
       ...prev,
       myRole: selectedRole,
@@ -37,11 +64,24 @@ export const Screen01Entry: React.FC<Props> = ({ state, onUpdate, onStartLobby }
     onStartLobby();
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
+    setErrorMsg(null);
     const entered = pinDigits.join('').trim();
     const targetCode = entered.length >= 4 ? entered : state.roomCode;
-    const partnerRole: Role = selectedRole === 'kaptan' ? 'muhendis' : 'kaptan';
 
+    if (isOnlineMode && onJoinOnlineRoom) {
+      setIsLoading(true);
+      try {
+        await onJoinOnlineRoom(targetCode, playerName.trim() || 'Mühendis Mert');
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Odaya bağlanılamadı.');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    const partnerRole: Role = selectedRole === 'kaptan' ? 'muhendis' : 'kaptan';
     onUpdate((prev) => ({
       ...prev,
       roomCode: targetCode,
@@ -170,6 +210,14 @@ export const Screen01Entry: React.FC<Props> = ({ state, onUpdate, onStartLobby }
             <span>Odaya Katıl</span>
           </button>
         </div>
+
+        {/* Error or Status Banner */}
+        {errorMsg && (
+          <div className="p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-mono flex items-center gap-2 animate-fadeIn">
+            <span className="material-symbols-outlined text-[16px] text-rose-400">warning</span>
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         {/* TAB VIEW 1: Oda Kur Panel */}
         {mode === 'create' && (

@@ -4,9 +4,10 @@ import { WifiOff, RefreshCw, AlertOctagon, ShieldAlert } from 'lucide-react';
 interface Props {
   isOpen: boolean;
   onReconnect: () => void;
+  countdownSeconds?: number;
 }
 
-export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect }) => {
+export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, countdownSeconds = 45 }) => {
   const [reconnecting, setReconnecting] = React.useState(false);
 
   if (!isOpen) return null;
@@ -54,6 +55,10 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect })
           <div className="flex justify-between text-[#9e8f78]">
             <span>GÖREV SAYACI:</span>
             <span className="text-[#00f0ff]">DURAKLATILDI (PAUSED)</span>
+          </div>
+          <div className="flex justify-between text-[#9e8f78]">
+            <span>KOPMA SÜRE AŞIMI (45s):</span>
+            <span className="font-bold text-rose-400">{countdownSeconds}s KALDI</span>
           </div>
         </div>
 
