@@ -207,7 +207,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
         >
           <span className="text-xs">🔋</span>
           <span>Güç</span>
-          <span className="text-[8px] font-normal text-emerald-400">10 MW</span>
+          <span className="text-[8px] font-normal text-emerald-400">{adv.powerGrid.totalBudget} MW</span>
         </button>
 
         <button
@@ -638,11 +638,11 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   🔋 İstasyon Yardımcı Güç Matrisi
                 </span>
                 <span className="text-xs font-mono font-bold text-amber-300">
-                  TOPLAM: 10 MW
+                  TOPLAM: {adv.powerGrid.totalBudget} MW
                 </span>
               </div>
               <p className="text-[11px] text-slate-300 leading-tight">
-                Sınırlı 10 MW güç rezervini alt sistemler arasında paylaştırın. Her sistemin asgari besleme eşiği vardır:
+                Sınırlı {adv.powerGrid.totalBudget} MW güç rezervi nedeniyle tüm sistemler aynı anda çalıştırılamaz. Sistemler çözüldükçe güç diğer hatlara aktarılmalıdır:
               </p>
             </div>
 
@@ -757,7 +757,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
             </div>
 
             {/* Routes */}
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {/* Route Alfa */}
               <div 
                 onClick={() => onAction('advanced_rescue_select', { routeId: 'alfa' })}
@@ -773,13 +773,24 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                     10 KİŞİ
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-300 leading-tight mb-1">
-                  Ana tahliye rampası ve ağır filo. Tüm personeli kurtarır.
-                </p>
-                <div className="text-[10px] font-mono flex items-center gap-2">
-                  <span className={adv.subsystems.hava_kilidi.isSealed ? 'text-emerald-400' : 'text-red-400'}>
-                    {adv.subsystems.hava_kilidi.isSealed ? '✓ Hava Kilidi Mühürlü (Tam Başarı)' : '⚠️ Hava Kilidi Açık (Yırtılma Riski: Sadece 3 Kişi!)'}
-                  </span>
+                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 mb-1.5">
+                  <span>⏱️ Seyahat: 75s</span>
+                  <span>•</span>
+                  <span>🛡️ Gövde: -%5</span>
+                </div>
+                <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
+                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR (3/3):</span>
+                  <div className="grid grid-cols-3 gap-1">
+                    <span className={adv.subsystems.reaktor.isStabilized ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                      {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör' : '✗ Reaktör'}
+                    </span>
+                    <span className={adv.subsystems.sinyal.isLocked ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                      {adv.subsystems.sinyal.isLocked ? '✓ Sinyal' : '✗ Sinyal'}
+                    </span>
+                    <span className={adv.subsystems.hava_kilidi.isSealed ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                      {adv.subsystems.hava_kilidi.isSealed ? '✓ Hava Kilidi' : '✗ Hava Kilidi'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -798,11 +809,21 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                     8 KİŞİ
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-300 leading-tight mb-1">
-                  Hava kilidine ihtiyaç duymayan otonom kaçış mekiği. Dengeli ve güvenli tahliye.
-                </p>
-                <div className="text-[10px] font-mono text-emerald-400">
-                  ✓ Güvenli Tahliye Garantisi (8 Kişi)
+                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 mb-1.5">
+                  <span>⏱️ Seyahat: 50s</span>
+                  <span>•</span>
+                  <span>🛡️ Gövde: -%5</span>
+                </div>
+                <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
+                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR (2/2):</span>
+                  <div className="grid grid-cols-2 gap-1">
+                    <span className={adv.subsystems.reaktor.isStabilized ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                      {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör Dengeli' : '✗ Reaktör Gerekli'}
+                    </span>
+                    <span className={adv.subsystems.sinyal.isLocked ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                      {adv.subsystems.sinyal.isLocked ? '✓ Sinyal Kilitli' : '✗ Sinyal Gerekli'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -821,11 +842,18 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                     6 KİŞİ
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-300 leading-tight mb-1">
-                  Süratli fırlatma podu; asgari güçle derhal istasyondan ayrılır.
-                </p>
-                <div className="text-[10px] font-mono text-cyan-300">
-                  ✓ Hızlı Darboğaz Tahliyesi (6 Kişi)
+                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 mb-1.5">
+                  <span>⏱️ Seyahat: 30s</span>
+                  <span>•</span>
+                  <span>🛡️ Gövde: -%10</span>
+                </div>
+                <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
+                  <span className="text-slate-400 block font-bold">ASGARİ ÖNKOŞUL (EN AZ 1 SİSTEM):</span>
+                  <div className="flex items-center justify-between">
+                    <span className={(adv.subsystems.reaktor.isStabilized || adv.subsystems.sinyal.isLocked) ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                      {(adv.subsystems.reaktor.isStabilized || adv.subsystems.sinyal.isLocked) ? '✓ Sistem Hazırlığı Tamam' : '✗ Sıfır hazırlıkla fırlatılamaz (Reaktör veya Sinyal şart)'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

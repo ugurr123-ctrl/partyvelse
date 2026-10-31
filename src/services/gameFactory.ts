@@ -435,8 +435,8 @@ export function generateAdvancedScenario(): AdvancedScenarioData {
       },
       sinyal: {
         isLocked: false,
-        antennaPower: 3,
-        noiseLevel: 4,
+        antennaPower: 2,
+        noiseLevel: 85,
         targetFrequency: '143.6 MHz',
         currentFrequency: '140.0 MHz',
         symbols: ['Δ', 'Ω', 'Σ', 'λ'],
@@ -444,7 +444,7 @@ export function generateAdvancedScenario(): AdvancedScenarioData {
       },
       hava_kilidi: {
         isSealed: false,
-        compressorPower: 3,
+        compressorPower: 1,
         currentDialIndex: 0,
         currentVacuum: 50,
         targetDialIndex: 2,
@@ -454,10 +454,10 @@ export function generateAdvancedScenario(): AdvancedScenarioData {
       },
     },
     powerGrid: {
-      totalBudget: 10,
+      totalBudget: 7,
       coolingPumps: 4,
-      antennaBooster: 3,
-      airlockCompressor: 3,
+      antennaBooster: 2,
+      airlockCompressor: 1,
       shieldReserve: 0,
     },
     event: {
@@ -473,8 +473,8 @@ export function generateAdvancedScenario(): AdvancedScenarioData {
     evacuationUnlocked: false,
     evacuationLog: [
       'OPERASYON ÇÖKÜŞ EŞİĞİ BAŞLATILDI.',
-      'Yardımcı Güç Matrisi: 10 MW aktif rezerv dağıtıldı.',
-      'Sistem bağımlılıkları devrede: Anten, Soğutma ve Kompresör hatları izleniyor.',
+      'Yardımcı Güç Matrisi: 7 MW sınırlı rezerv (Aynı anda tüm sistemler beslenemez).',
+      'Öncelik seçimi zorunlu: Sistemler dengelendikçe güç diğer hatlara aktarılmalıdır.',
     ],
   };
 }

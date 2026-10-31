@@ -365,44 +365,162 @@ export function applyAdvancedAction(
 
     adv.evacuationLog.push(`[Tahliye Onayı] ${isCaptain ? 'Kaptan' : 'Mühendis'} ${nextRescue.selectedRouteId.toUpperCase()} rotasını ${isCaptain ? nextCap : nextEng ? 'onayladı' : 'geri çekti'}.`);
 
-    // When both approve, compute final multi-factor outcome!
+    // When both approve, validate prerequisites and compute outcome
     if (nextCap && nextEng) {
       const routeId = nextRescue.selectedRouteId;
-      let crewSaved = 0;
-      let outcome: 'tam_basari' | 'kismi_kurtarma' | 'basarisizlik' = 'kismi_kurtarma';
+
+      // 1. Strict Prerequisite Validations
+      if (routeId === 'alfa') {
+        const missing: string[] = [];
+        if (!adv.subsystems.reaktor.isStabilized) missing.push('Reaktör');
+        if (!adv.subsystems.sinyal.isLocked) missing.push('Sinyal');
+        if (!adv.subsystems.hava_kilidi.isSealed) missing.push('Hava Kilidi');
+
+        if (missing.length > 0) {
+          const err = `Rota Alfa (Tam Tahliye) için tüm sistemler (Reaktör, Sinyal ve Hava Kilidi) tamamlanmalıdır! Eksikler: ${missing.join(', ')}`;
+          nextRescue.captainApproved = false;
+          nextRescue.engineerApproved = false;
+          nextRescue.validationError = err;
+          adv.evacuationLog.push(`[Reddedildi] Rota Alfa önkoşulları eksik: ${missing.join(', ')}`);
+          return {
+            nextState: {
+              ...state,
+              feedbackState: 'error',
+              feedbackMessage: err,
+              rescue: nextRescue,
+              advancedScenario: adv,
+            },
+            error: err,
+          };
+        }
+      } else if (routeId === 'beta') {
+        const missing: string[] = [];
+        if (!adv.subsystems.reaktor.isStabilized) missing.push('Reaktör');
+        if (!adv.subsystems.sinyal.isLocked) missing.push('Sinyal');
+
+        if (missing.length > 0) {
+          const err = `Rota Beta (Lagrange Koridoru) için Reaktör dengelenmiş ve Sinyal kilitlenmiş olmalıdır! Eksikler: ${missing.join(', ')}`;
+          nextRescue.captainApproved = false;
+          nextRescue.engineerApproved = false;
+          nextRescue.validationError = err;
+          adv.evacuationLog.push(`[Reddedildi] Rota Beta önkoşulları eksik: ${missing.join(', ')}`);
+          return {
+            nextState: {
+              ...state,
+              feedbackState: 'error',
+              feedbackMessage: err,
+              rescue: nextRescue,
+              advancedScenario: adv,
+            },
+            error: err,
+          };
+        }
+      } else if (routeId === 'gama') {
+        const hasAtLeastOne = adv.subsystems.reaktor.isStabilized || adv.subsystems.sinyal.isLocked;
+        if (!hasAtLeastOne) {
+          const err = 'Rota Gama (Acil Kaçış Podu) için en az bir sistemin (Reaktör veya Sinyal) çalışır durumda olması gerekir. Sıfır hazırlıkla fırlatma yapılamaz!';
+          nextRescue.captainApproved = false;
+          nextRescue.engineerApproved = false;
+          nextRescue.validationError = err;
+          adv.evacuationLog.push('[Reddedildi] Rota Gama önkoşulu eksik: En az Reaktör veya Sinyal hazırlanmalıdır.');
+          return {
+            nextState: {
+              ...state,
+              feedbackState: 'error',
+              feedbackMessage: err,
+              rescue: nextRescue,
+              advancedScenario: adv,
+            },
+            error: err,
+          };
+        }
+      }
+
+      // 2. Travel Time & Hull Checks
+      const travelTime = routeId === 'alfa' ? 75 : routeId === 'beta' ? 50 : 30;
+      const travelHullStress = routeId === 'gama' ? 10 : 5;
+
       const tasksCompleted = 
         (adv.subsystems.reaktor.isStabilized ? 1 : 0) +
         (adv.subsystems.sinyal.isLocked ? 1 : 0) +
         (adv.subsystems.hava_kilidi.isSealed ? 1 : 0);
 
+      // Check Time Constraint
+      if (timeLeft < travelTime) {
+        adv.evacuationLog.push(`💥 [Zaman Aşımı] ${routeId.toUpperCase()} rotası için gereken süre (${travelTime}s) kalan süreden (${timeLeft}s) fazla! Süre tükendi.`);
+        const scoreData = calculateFinalScore(tasksCompleted, 0, Math.max(0, hull), 0);
+        return {
+          nextState: {
+            ...state,
+            status: 'phase_result',
+            rescuedCrewCount: 0,
+            completedTasksCount: tasksCompleted,
+            timeLeftSeconds: 0,
+            hullIntegrity: Math.max(0, hull),
+            finalScore: scoreData.total,
+            scoreBreakdown: scoreData.breakdown,
+            outcomeType: 'basarisizlik',
+            feedbackState: 'error',
+            feedbackMessage: `Tahliye yolculuğu için süre (${travelTime}s) yetmedi! Mekik ulaşamadan süre tükendi.`,
+            rescue: nextRescue,
+            advancedScenario: adv,
+          },
+        };
+      }
+
+      // Deduct travel time
+      timeLeft = timeLeft - travelTime;
+      adv.evacuationLog.push(`⏱️ [Yolculuk Süresi] ${travelTime}s seyahat süresi düşüldü. Kalan süre: ${timeLeft}s.`);
+
+      // Check Hull Constraint
+      if (hull <= travelHullStress) {
+        adv.evacuationLog.push(`💥 [Gövde Parçalandı] Tahliye manevrası sırasında gövde kritik yapısal hasar aldı (%0).`);
+        const scoreData = calculateFinalScore(tasksCompleted, timeLeft, 0, 0);
+        return {
+          nextState: {
+            ...state,
+            status: 'phase_result',
+            rescuedCrewCount: 0,
+            completedTasksCount: tasksCompleted,
+            timeLeftSeconds: timeLeft,
+            hullIntegrity: 0,
+            finalScore: scoreData.total,
+            scoreBreakdown: scoreData.breakdown,
+            outcomeType: 'basarisizlik',
+            feedbackState: 'error',
+            feedbackMessage: 'Tahliye manevrası sırasında gövde bütünlüğü sıfırlandı! İstasyon parçalandı.',
+            rescue: nextRescue,
+            advancedScenario: adv,
+          },
+        };
+      }
+
+      // Deduct hull stress
+      hull = hull - travelHullStress;
+      adv.evacuationLog.push(`🛡️ [Gövde Stresi] Tahliye manevrası gövdede -%${travelHullStress} yapısal hasar bıraktı (Kalan: %${hull}).`);
+
+      // 3. Successful Rescue Outcome
+      let crewSaved = 0;
+      let outcome: 'tam_basari' | 'kismi_kurtarma' | 'basarisizlik' = 'kismi_kurtarma';
+
       if (routeId === 'alfa') {
-        if (adv.subsystems.hava_kilidi.isSealed) {
-          crewSaved = 10;
-          outcome = 'tam_basari';
-          adv.evacuationLog.push('🚀 [Tahliye Başarılı] Mühürlü hava kilidinden 10 personelin tamamı tahliye filosuna aktarıldı!');
-        } else {
-          crewSaved = 3;
-          outcome = 'kismi_kurtarma';
-          adv.evacuationLog.push('⚠️ [Tahliye Zayiatı] Hava kilidi mühürlenmediği için basınç patlaması oldu; 7 personel kaybedildi, yalnızca 3 kişi kurtarılabildi.');
-        }
+        crewSaved = 10;
+        outcome = 'tam_basari';
+        adv.evacuationLog.push('🚀 [Tam Tahliye Başarılı] 10 personelin tamamı ağır tahliye filosuyla kurtarıldı!');
       } else if (routeId === 'beta') {
         crewSaved = 8;
-        outcome = (adv.subsystems.reaktor.isStabilized && adv.subsystems.sinyal.isLocked) ? 'tam_basari' : 'kismi_kurtarma';
-        adv.evacuationLog.push('🚀 [Tahliye Başarılı] Lagrange otonom mekiğiyle 8 mürettebat güvenle tahliye edildi.');
+        outcome = 'tam_basari';
+        adv.evacuationLog.push('🚀 [Tahliye Başarılı] Lagrange otonom mekiğiyle 8 mürettebat sıfır riskle kurtarıldı.');
       } else if (routeId === 'gama') {
         crewSaved = 6;
         outcome = 'kismi_kurtarma';
-        adv.evacuationLog.push('🚀 [Acil Tahliye] Kaçış podu fırlatıldı; 6 personel kurtarıldı.');
+        adv.evacuationLog.push('🚀 [Acil Tahliye] Acil kaçış poduyla 6 personel güvenli bölgeye ulaştırıldı.');
       }
 
-      // Calculate score
-      const taskScore = tasksCompleted * 250;
-      const timeBonus = Math.max(0, timeLeft * 2);
-      const hullBonus = Math.round(hull * 3);
-      const crewBonus = crewSaved * 60;
+      const scoreData = calculateFinalScore(tasksCompleted, timeLeft, hull, crewSaved);
       const signalBonus = adv.subsystems.sinyal.isLocked ? 200 : 0;
       const reactorBonus = adv.subsystems.reaktor.isStabilized ? 200 : 0;
-      const totalScore = taskScore + timeBonus + hullBonus + crewBonus + signalBonus + reactorBonus;
+      const totalScore = scoreData.total + signalBonus + reactorBonus;
 
       return {
         nextState: {
@@ -410,18 +528,18 @@ export function applyAdvancedAction(
           status: 'phase_result',
           rescuedCrewCount: crewSaved,
           completedTasksCount: tasksCompleted,
+          timeLeftSeconds: timeLeft,
+          hullIntegrity: hull,
           finalScore: totalScore,
           scoreBreakdown: {
-            tasksScore: taskScore + signalBonus + reactorBonus,
-            timeBonus,
-            hullBonus,
-            crewBonus,
+            ...scoreData.breakdown,
+            tasksScore: scoreData.breakdown.tasksScore + signalBonus + reactorBonus,
           },
           outcomeType: outcome,
-          feedbackState: outcome === 'tam_basari' ? 'success' : 'idle',
-          feedbackMessage: outcome === 'tam_basari' 
-            ? 'Tebrikler! Görev tam başarıyla sonuçlandı.' 
-            : 'Tahliye tamamlandı. Kısmi kurtarma sağlandı.',
+          feedbackState: 'success',
+          feedbackMessage: outcome === 'tam_basari'
+            ? `Tebrikler! ${crewSaved} personel başarıyla kurtarıldı (Tam Başarı).`
+            : `Tahliye tamamlandı! ${crewSaved} personel kurtarıldı (Kısmi Kurtarma).`,
           rescue: nextRescue,
           advancedScenario: adv,
         },
