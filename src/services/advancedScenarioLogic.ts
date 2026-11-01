@@ -94,7 +94,17 @@ export function applyAdvancedAction(
 
   // 3. Reactor Breaker
   if (actionType === 'advanced_reactor_breaker') {
+    if (actingRole !== 'kaptan') {
+      return { nextState: state, error: 'Yalnızca Kaptan reaktör güvenlik kesicisini devreye alabilir.' };
+    }
+
+    if (adv.subsystems.reaktor.isStabilized) {
+      return { nextState: state };
+    }
+
     const breaker = data.breaker;
+    adv.subsystems.reaktor.captainSelectedBreaker = breaker;
+
     if (adv.subsystems.reaktor.coolantPumpsPower < 4) {
       applyPenalty('Soğutma pompaları yetersiz (< 4 MW)! Aşırı ısınan kesici ark yaptı!');
       return {
@@ -112,11 +122,13 @@ export function applyAdvancedAction(
 
     if (breaker === adv.subsystems.reaktor.targetBreaker) {
       adv.subsystems.reaktor.breakerActivated = true;
+      adv.subsystems.reaktor.unlockedBreaker = breaker;
       adv.evacuationLog.push(`[Reaktör] Kesici ${breaker} başarıyla devreye alındı.`);
       feedbackState = 'success';
       feedbackMessage = `GÜVENLİK KİLİDİ AÇILDI (${breaker})! Devre akımı kesildi. Mühendisin soğutma valfi ve basınç tahliyesi bekleniyor.`;
     } else {
       adv.subsystems.reaktor.breakerActivated = false;
+      adv.subsystems.reaktor.unlockedBreaker = null;
       applyPenalty(`Hatalı kesici (${breaker}) seçildi! İzole edilen hatta anomali bulunmuyor.`);
     }
 
@@ -137,6 +149,21 @@ export function applyAdvancedAction(
   if (actionType === 'advanced_reactor_purge') {
     if (actingRole !== 'muhendis') {
       return { nextState: state, error: 'Yalnızca Mühendis reaktör hat tahliyesi yapabilir.' };
+    }
+
+    if (adv.subsystems.reaktor.isStabilized) {
+      return { nextState: state };
+    }
+
+    if (!data.line) {
+      return {
+        nextState: {
+          ...state,
+          feedbackState: 'error',
+          feedbackMessage: 'Müdahale için önce canlı sensörlerde arızalı devreyi tespit edip işaretleyin.',
+        },
+        error: 'Müdahale için önce canlı sensörlerde arızalı devreyi tespit edip işaretleyin.',
+      };
     }
 
     if (!adv.subsystems.reaktor.breakerActivated) {

@@ -1,7 +1,7 @@
-import { createInitialMissionState } from '../src/services/gameFactory';
+import { createInitialMissionState, isLineAnomaly } from '../src/services/gameFactory';
 import { applyAdvancedAction } from '../src/services/advancedScenarioLogic';
 import { LostSignalRoom } from '../server/LostSignalRoom';
-import { MissionState, Role } from '../src/types/game';
+import { MissionState, Role, EnvironmentType } from '../src/types/game';
 
 console.log('======================================================================');
 console.log('🚀 PARTYVERSE - GELİŞMİŞ TAKTİK SENARYOSU: KATI ZORUNLULUK & TEST SETİ');
@@ -61,11 +61,15 @@ assert(captainView.advancedScenario?.subsystems.sinyal.targetFrequency === '??? 
 assert(captainView.advancedScenario?.subsystems.hava_kilidi.targetDialIndex === -1, 'Kaptana hava kilidi doğru kadranı GİZLENDİ');
 assert(captainView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === 0, 'Kaptana canlı çekirdek ısı göstergesi GİZLENDİ (Mühendis okumalı)');
 
-assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === 86, 'Mühendise çekirdek ısısı (86°C) iletildi');
-assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure === 32, 'Mühendise soğutucu basıncı (32 kPa) iletildi');
+const expectedTemp = room.missionState.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp;
+const expectedPress = room.missionState.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure;
+assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === expectedTemp, `Mühendise çekirdek ısısı (${expectedTemp}°C) iletildi`);
+assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure === expectedPress, `Mühendise soğutucu basıncı (${expectedPress} kPa) iletildi`);
 assert(engineerView.advancedScenario?.subsystems.hava_kilidi.externalPressureKpa === 36, 'Mühendise dış sensör basıncı (36 kPa) iletildi');
 assert(engineerView.advancedScenario?.subsystems.sinyal.symbols[0] === '?', 'Mühendise kaptanın şifre tablosu sembolleri GİZLENDİ');
 assert(engineerView.advancedScenario?.subsystems.reaktor.targetValveAngle === 0, 'Mühendise doğru valf açısı GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.reaktor.lineBreakerMap === undefined, 'Mühendise kesici haritası GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.reaktor.faultyLine === undefined, 'Mühendise arızalı hat etiketi GİZLENDİ');
 
 // -----------------------------------------------------------------------------
 // [TEST 4] Sınırlı Başlangıç Enerjisi (7 MW) & Güç Aktarımı Zorunluluğu
@@ -177,17 +181,21 @@ let path1 = createInitialMissionState('KYP-PATH1', 'kayip_sinyal', 'Kaptan Ece')
 path1 = { ...path1, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 260, hullIntegrity: 100 };
 
 // 1. Reaktör Çözümü: Başlangıçta Soğutma 4 MW hazır (4 + 2 + 1 = 7 MW)
-path1 = applyAdvancedAction(path1, 'advanced_reactor_breaker', { breaker: 'K2' }, 'kaptan').nextState;
+const targetBreaker1 = path1.advancedScenario!.subsystems.reaktor.targetBreaker;
+const faultyLine1 = path1.advancedScenario!.subsystems.reaktor.faultyLine!;
+const targetAngle1 = path1.advancedScenario!.subsystems.reaktor.targetValveAngle!;
+
+path1 = applyAdvancedAction(path1, 'advanced_reactor_breaker', { breaker: targetBreaker1 }, 'kaptan').nextState;
 
 // Eksik parametre testleri: valveAngle ve throttleActive eksikse reddedilmelidir
-const missingValveRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten', throttleActive: true }, 'muhendis');
+const missingValveRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, throttleActive: true }, 'muhendis');
 assert(!!missingValveRes.error && missingValveRes.error.includes('Soğutma valfi açısı belirtilmedi'), 'Gelişmiş modda eksik valveAngle işlemi reddedildi');
 
-const missingThrottleRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135 }, 'muhendis');
+const missingThrottleRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1 }, 'muhendis');
 assert(!!missingThrottleRes.error && missingThrottleRes.error.includes('Basınç tahliye anahtarı konumu belirtilmedi'), 'Gelişmiş modda eksik throttleActive işlemi reddedildi');
 
-path1 = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135, throttleActive: true }, 'muhendis').nextState;
-assert(path1.advancedScenario?.subsystems.reaktor.isStabilized === true, '1. Adım: Reaktör stabilize edildi (Isı: 58°C)');
+path1 = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1, throttleActive: true }, 'muhendis').nextState;
+assert(path1.advancedScenario?.subsystems.reaktor.isStabilized === true, '1. Adım: Reaktör dinamik değerlerle stabilize edildi');
 
 // 2. Güç Aktarımı: Reaktör çözülünce soğutma 1 MW a indirilir, Antene 3 MW verilir (1 + 3 + 3 = 7 MW)
 path1 = applyAdvancedAction(path1, 'advanced_set_power', { coolingPumps: 1, antennaBooster: 3, airlockCompressor: 3, shieldReserve: 0 }, 'kaptan').nextState;
@@ -220,9 +228,14 @@ console.log('\n▶ [TEST 8] Çözüm Yolu 2: Rota Beta (8 Kişi - Hava Kilidi At
 let path2 = createInitialMissionState('KYP-PATH2', 'kayip_sinyal', 'Kaptan Ece');
 path2 = { ...path2, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 240, hullIntegrity: 100 };
 
-// 1. Reaktör Çözümü: Soğutma 4 MW ile çözülür
-path2 = applyAdvancedAction(path2, 'advanced_reactor_breaker', { breaker: 'K2' }, 'kaptan').nextState;
-path2 = applyAdvancedAction(path2, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135, throttleActive: true }, 'muhendis').nextState;
+// 1. Reaktör Çözümü: Dinamik değerlerle çözülür
+const targetBreaker2 = path2.advancedScenario!.subsystems.reaktor.targetBreaker;
+const faultyLine2 = path2.advancedScenario!.subsystems.reaktor.faultyLine!;
+const targetAngle2 = path2.advancedScenario!.subsystems.reaktor.targetValveAngle!;
+
+path2 = applyAdvancedAction(path2, 'advanced_reactor_breaker', { breaker: targetBreaker2 }, 'kaptan').nextState;
+path2 = applyAdvancedAction(path2, 'advanced_reactor_purge', { line: faultyLine2, valveAngle: targetAngle2, throttleActive: true }, 'muhendis').nextState;
+assert(path2.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Reaktör dinamik değerlerle çözüldü');
 
 // 2. Güç Aktarımı: Soğutma 1 MW, Anten 3 MW, Kalkan Rezervi 3 MW (1 + 3 + 0 + 3 = 7 MW)
 path2 = applyAdvancedAction(path2, 'advanced_set_power', { coolingPumps: 1, antennaBooster: 3, airlockCompressor: 0, shieldReserve: 3 }, 'kaptan').nextState;
@@ -251,9 +264,13 @@ console.log('\n▶ [TEST 9] Acil Durum Yolu: Rota Gama (6 Kişi - Tek Sistemle A
 let path3 = createInitialMissionState('KYP-PATH3', 'kayip_sinyal', 'Kaptan Ece');
 path3 = { ...path3, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 150, hullIntegrity: 80 };
 
-// Sadece Reaktör çözülür, Sinyal ve Hava kilidi yok
-path3 = applyAdvancedAction(path3, 'advanced_reactor_breaker', { breaker: 'K2' }, 'kaptan').nextState;
-path3 = applyAdvancedAction(path3, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135, throttleActive: true }, 'muhendis').nextState;
+// Sadece Reaktör dinamik değerlerle çözülür, Sinyal ve Hava kilidi yok
+const targetBreaker3 = path3.advancedScenario!.subsystems.reaktor.targetBreaker;
+const faultyLine3 = path3.advancedScenario!.subsystems.reaktor.faultyLine!;
+const targetAngle3 = path3.advancedScenario!.subsystems.reaktor.targetValveAngle!;
+
+path3 = applyAdvancedAction(path3, 'advanced_reactor_breaker', { breaker: targetBreaker3 }, 'kaptan').nextState;
+path3 = applyAdvancedAction(path3, 'advanced_reactor_purge', { line: faultyLine3, valveAngle: targetAngle3, throttleActive: true }, 'muhendis').nextState;
 
 // Rota Gama seçilip onaylanır (30s seyahat, -%10 gövde)
 path3 = applyAdvancedAction(path3, 'advanced_rescue_select', { routeId: 'gama' }, 'kaptan').nextState;
@@ -266,7 +283,128 @@ assert(path3.outcomeType === 'kismi_kurtarma', 'Sonuç: Kısmi Kurtarma');
 assert(path3.timeLeftSeconds === 150 - 30, 'Seyahat süresi (30s) kalandan düşüldü (150 -> 120s)');
 assert(path3.hullIntegrity === 80 - 10, 'Pod ivmelenme stresi (-%10) düşüldü (80 -> 70%)');
 
+// -----------------------------------------------------------------------------
+// [TEST 10] Monte-Carlo 100 Tur Dinamik Üretim & Tek Çözüm Doğrulaması
+// -----------------------------------------------------------------------------
+console.log('\n▶ [TEST 10] Monte-Carlo 100 Tur Dinamik Üretim & Tek Çözüm Doğrulaması...');
+const environments: EnvironmentType[] = ['kayip_sinyal', 'buzul_istasyonu', 'meteor_yagmuru', 'karantina_protokolu'];
+const lineCounts: Record<string, number> = { anten: 0, reaktor: 0, sogutucu: 0, yonlendirme: 0 };
+const breakerCounts: Record<string, number> = { K1: 0, K2: 0, K3: 0, K4: 0 };
+const angleCounts: Record<number, number> = { 45: 0, 90: 0, 135: 0, 180: 0 };
+const reachableAngles = [45, 90, 135, 180];
+let allExactlyOneAnomaly = true;
+
+for (let i = 0; i < 100; i++) {
+  const env = environments[i % environments.length];
+  const s = createInitialMissionState(`KYP-MC-${i}`, env, 'Kaptan Test');
+  const advReaktor = s.advancedScenario!.subsystems.reaktor;
+
+  // Başlangıç durumu kontrolleri
+  assert(advReaktor.breakerActivated === false, `Tur ${i}: Başlangıçta kesici devrede değil`);
+  assert(advReaktor.isStabilized === false, `Tur ${i}: Başlangıçta reaktör dengelenmiş değil`);
+  assert(advReaktor.unlockedBreaker === null, `Tur ${i}: Başlangıçta kilitli kesici yok (null)`);
+  assert(advReaktor.captainSelectedBreaker === null, `Tur ${i}: Başlangıçta kaptan kesici seçmemiş`);
+
+  // Ulaşılabilir valf açısı kontrolü
+  assert(reachableAngles.includes(advReaktor.targetValveAngle!), `Tur ${i}: Hedef valf açısı (${advReaktor.targetValveAngle}°) arayüzdeki 4 açıdan biri`);
+
+  // Kesici eşleşmesi kontrolü
+  const mappedBreaker = advReaktor.lineBreakerMap![advReaktor.faultyLine!];
+  assert(mappedBreaker === advReaktor.targetBreaker, `Tur ${i}: targetBreaker (${advReaktor.targetBreaker}) arızalı hattın (${advReaktor.faultyLine}) eşleşmesiyle tutarlı`);
+
+  // Anomali tekliği kontrolü
+  let anomalyCount = 0;
+  const lineKeys: Array<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme'> = ['anten', 'reaktor', 'sogutucu', 'yonlendirme'];
+  for (const k of lineKeys) {
+    if (isLineAnomaly(env, advReaktor.lines![k])) {
+      anomalyCount++;
+    }
+  }
+  if (anomalyCount !== 1) {
+    allExactlyOneAnomaly = false;
+  }
+
+  lineCounts[advReaktor.faultyLine!]++;
+  breakerCounts[advReaktor.targetBreaker]++;
+  angleCounts[advReaktor.targetValveAngle!]++;
+}
+
+assert(allExactlyOneAnomaly, '100 turun tamamında TAM OLARAK 1 adet arızalı hat kuralları sağladı');
+assert(lineCounts.anten > 10 && lineCounts.reaktor > 10 && lineCounts.sogutucu > 10 && lineCounts.yonlendirme > 10,
+  'Arızalı hatlar 4 devre arasında rastgele ve dengeli dağıldı');
+assert(breakerCounts.K1 > 10 && breakerCounts.K2 > 10 && breakerCounts.K3 > 10 && breakerCounts.K4 > 10,
+  'K1–K4 kesici eşleşmeleri dengeli ve dinamik olarak her tur değişti');
+assert(angleCounts[45] > 5 && angleCounts[90] > 5 && angleCounts[135] > 5 && angleCounts[180] > 5,
+  'Hedef valf açıları (45°, 90°, 135°, 180°) her tur dinamik olarak değişti (ezberlenemez)');
+
+// -----------------------------------------------------------------------------
+// [TEST 11] Rol Yetki Kısıtlamaları (Kaptan vs Mühendis)
+// -----------------------------------------------------------------------------
+console.log('\n▶ [TEST 11] Rol Yetki Kısıtlamaları (Kaptan vs Mühendis)...');
+let roleState = createInitialMissionState('KYP-ROLE', 'kayip_sinyal', 'Kaptan Ece');
+roleState = { ...roleState, gameMode: 'gelismis', status: 'phase_game' };
+
+// 11.1 Mühendis kesiciyi devreye almaya çalışırsa -> REDDEDİLMELİ
+const engineerBreakerRes = applyAdvancedAction(roleState, 'advanced_reactor_breaker', { breaker: 'K1' }, 'muhendis');
+assert(!!engineerBreakerRes.error && engineerBreakerRes.error.includes('Yalnızca Kaptan'), 'Mühendisin kesici çalıştırma denemesi yetki hatası ile reddedildi');
+assert(engineerBreakerRes.nextState.advancedScenario?.subsystems.reaktor.breakerActivated === false, 'Kesici aktifleşmedi');
+
+// 11.2 Kaptan tahliye yapmaya çalışırsa -> REDDEDİLMELİ
+const captainPurgeRes = applyAdvancedAction(roleState, 'advanced_reactor_purge', { line: 'anten', valveAngle: 90, throttleActive: true }, 'kaptan');
+assert(!!captainPurgeRes.error && captainPurgeRes.error.includes('Yalnızca Mühendis'), 'Kaptanın hat tahliyesi denemesi yetki hatası ile reddedildi');
+assert(captainPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Reaktör çözülmedi');
+
+// -----------------------------------------------------------------------------
+// [TEST 12] Hatalı Parametre & Yanlış Değer Koruması
+// -----------------------------------------------------------------------------
+console.log('\n▶ [TEST 12] Hatalı Parametre & Yanlış Değer Koruması...');
+let paramState = createInitialMissionState('KYP-PARAM', 'kayip_sinyal', 'Kaptan Ece');
+paramState = { ...paramState, gameMode: 'gelismis', status: 'phase_game' };
+const pReaktor = paramState.advancedScenario!.subsystems.reaktor;
+const pTargetBreaker = pReaktor.targetBreaker;
+const pFaultyLine = pReaktor.faultyLine!;
+const pTargetAngle = pReaktor.targetValveAngle!;
+const pWrongBreaker = (['K1', 'K2', 'K3', 'K4'] as const).find(b => b !== pTargetBreaker)!;
+const pWrongLine = (['anten', 'reaktor', 'sogutucu', 'yonlendirme'] as const).find(l => l !== pFaultyLine)!;
+const pWrongAngle = ([45, 90, 135, 180] as const).find(a => a !== pTargetAngle)!;
+
+// 12.1 Kaptan Yanlış Kesici Seçer
+const initialTime = paramState.timeLeftSeconds;
+const wrongBreakerRes = applyAdvancedAction(paramState, 'advanced_reactor_breaker', { breaker: pWrongBreaker }, 'kaptan');
+assert(wrongBreakerRes.nextState.timeLeftSeconds === initialTime - 10, 'Hatalı kesici seçimi ceza uyguladı (-10s)');
+assert(wrongBreakerRes.nextState.advancedScenario?.subsystems.reaktor.breakerActivated === false, 'Hatalı kesici ile kilit açılmadı');
+
+// 12.2 Kesici açılmadan mühendis tahliye dener
+const prematurePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
+assert(prematurePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kesici açılmadan tahliye reddedildi (Güvenlik kilidi)');
+
+// 12.3 Kaptan doğru kesiciyi açar
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_breaker', { breaker: pTargetBreaker }, 'kaptan').nextState;
+assert(paramState.advancedScenario?.subsystems.reaktor.breakerActivated === true, 'Kaptan doğru kesiciyi açtı');
+assert(paramState.advancedScenario?.subsystems.reaktor.unlockedBreaker === pTargetBreaker, 'unlockedBreaker güncellendi');
+
+// 12.4 Mühendis hat belirtmeden tahliye dener
+const noLinePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: null, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
+assert(!!noLinePurgeRes.error && noLinePurgeRes.error.includes('devreyi tespit edip'), 'Hat belirtilmeden tahliye reddedildi');
+
+// 12.5 Mühendis yanlış hat dener
+const wrongLinePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pWrongLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
+assert(wrongLinePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Yanlış hat tahliyesi reddedildi');
+
+// 12.6 Mühendis yanlış valf açısı dener
+const wrongAnglePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pWrongAngle, throttleActive: true }, 'muhendis');
+assert(wrongAnglePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Yanlış valf açısı ile tahliye reddedildi');
+
+// 12.7 Mühendis tahliye anahtarını kapalı tutarsa
+const closedThrottlePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: false }, 'muhendis');
+assert(closedThrottlePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Basınç tahliyesi kapalı iken tahliye reddedildi');
+
+// 12.8 Doğru parametrelerle başarı
+const successPurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
+assert(successPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Doğru iki rol koordinasyonu ile Reaktör STABİLİZE EDİLDİ');
+
 console.log('\n======================================================================');
 console.log(`📊 GELİŞMİŞ TAKTİK SENARYOSU DOĞRULAMA TEST SONUCU: ${passCount}/${passCount} BAŞARILI`);
 console.log('✅ TÜM KESTİRMELER REDDEDİLDİ, SEYAHAT SÜRELERİ DÜŞÜLDÜ VE ŞARTLAR SAĞLANDIĞINDA ÇÖZÜMLER ÇALIŞTI!');
+console.log('======================================================================');
 console.log('======================================================================');

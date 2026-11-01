@@ -261,6 +261,8 @@ export interface AdvancedScenarioData {
         criticalLine: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme';
       };
       targetBreaker: 'K1' | 'K2' | 'K3' | 'K4';
+      unlockedBreaker?: 'K1' | 'K2' | 'K3' | 'K4' | null;
+      captainSelectedBreaker?: 'K1' | 'K2' | 'K3' | 'K4' | null;
     };
     sinyal: {
       isLocked: boolean;

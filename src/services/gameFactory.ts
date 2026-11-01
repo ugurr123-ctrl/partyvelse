@@ -471,7 +471,20 @@ export function calculateFinalScore(
   };
 }
 
-export function generateAdvancedScenario(): AdvancedScenarioData {
+export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'): AdvancedScenarioData {
+  // Generate multi-criteria dynamic diagnostic puzzle consistent with environment rules
+  const diag = generateDiagnostic(env);
+
+  // Target valve angle dynamically picked from reachable UI button angles [45, 90, 135, 180]
+  const validAngles = [45, 90, 135, 180];
+  const targetValveAngle = validAngles[Math.floor(Math.random() * validAngles.length)];
+
+  const faultyLine = diag.faultyLine;
+  const lineBreakerMap = diag.lineBreakerMap;
+  const targetBreaker = diag.correctBreaker;
+  const lines = diag.lines;
+  const faultyTelemetry = lines[faultyLine];
+
   return {
     subsystems: {
       reaktor: {
@@ -479,28 +492,22 @@ export function generateAdvancedScenario(): AdvancedScenarioData {
         coolantPumpsPower: 4,
         isPurged: false,
         breakerActivated: false,
-        targetValveAngle: 135,
+        unlockedBreaker: null,
+        captainSelectedBreaker: null,
+        targetValveAngle,
         targetThrottleActive: true,
-        faultyLine: 'anten',
-        lineBreakerMap: {
-          anten: 'K2',
-          reaktor: 'K1',
-          sogutucu: 'K3',
-          yonlendirme: 'K4',
-        },
-        lines: {
-          reaktor: { temp: 83, press: 56, noise: 42, code: 'CIR-01', status: 'stabil' },
-          sogutucu: { temp: 55, press: 34, noise: 71, code: 'CIR-02', status: 'stabil' },
-          anten: { temp: 86, press: 32, noise: 76, code: 'CIR-03', status: 'kritik' },
-          yonlendirme: { temp: 62, press: 52, noise: 69, code: 'CIR-04', status: 'stabil' },
-        },
+        engineerValveAngle: null,
+        engineerThrottleActive: false,
+        faultyLine,
+        lineBreakerMap,
+        lines,
         liveTelemetry: {
-          coreTemp: 86,
-          coolantPressure: 32,
-          lineNoise: 76,
-          criticalLine: 'anten',
+          coreTemp: faultyTelemetry.temp,
+          coolantPressure: faultyTelemetry.press,
+          lineNoise: faultyTelemetry.noise,
+          criticalLine: faultyLine,
         },
-        targetBreaker: 'K2',
+        targetBreaker,
       },
       sinyal: {
         isLocked: false,
@@ -594,7 +601,7 @@ export function createInitialMissionState(
     radar: generateRadar(),
     energy: generateEnergy(),
     rescue: generateRescue(),
-    advancedScenario: generateAdvancedScenario(),
+    advancedScenario: generateAdvancedScenario(env),
 
     rescuedCrewCount: 0,
     completedTasksCount: 0,

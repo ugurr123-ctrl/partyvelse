@@ -23,7 +23,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
     adv?.activeSubsystemTab || 'reaktor'
   );
   const [selectedReactorLine, setSelectedReactorLine] = useState<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme' | null>(null);
-  const [reactorCoolingAngle, setReactorCoolingAngle] = useState<number>(45);
+  const [reactorCoolingAngle, setReactorCoolingAngle] = useState<number | null>(null);
   const [reactorThrottleToggled, setReactorThrottleToggled] = useState<boolean>(false);
 
   // If advanced scenario data is not initialized
@@ -274,10 +274,10 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { code: 'CIR-01', name: 'Ana Reaktör', breaker: 'K1' },
-                    { code: 'CIR-02', name: 'Soğutucu Çekirdek', breaker: 'K3' },
-                    { code: 'CIR-03', name: 'Anten Ünitesi', breaker: 'K2' },
-                    { code: 'CIR-04', name: 'İtki ve Yönlendirme', breaker: 'K4' },
+                    { key: 'reaktor' as const, code: 'CIR-01', name: 'Ana Reaktör', breaker: adv.subsystems.reaktor.lineBreakerMap?.reaktor || 'K1' },
+                    { key: 'sogutucu' as const, code: 'CIR-02', name: 'Soğutucu Çekirdek', breaker: adv.subsystems.reaktor.lineBreakerMap?.sogutucu || 'K3' },
+                    { key: 'anten' as const, code: 'CIR-03', name: 'Anten Ünitesi', breaker: adv.subsystems.reaktor.lineBreakerMap?.anten || 'K2' },
+                    { key: 'yonlendirme' as const, code: 'CIR-04', name: 'İtki ve Yönlendirme', breaker: adv.subsystems.reaktor.lineBreakerMap?.yonlendirme || 'K4' },
                   ].map((mod) => (
                     <div key={mod.code} className="p-2 rounded-xl bg-[#0f0e20] border border-white/5 flex items-center justify-between">
                       <div className="flex flex-col">
@@ -293,12 +293,18 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 
                 {/* Diagnostic Rule Plaque */}
                 <div className="bg-[#0f0e20] p-2.5 rounded-xl border border-white/5 space-y-1.5 text-[11px] font-mono">
-                  <p className="text-amber-200 font-bold">ARIZA TEŞHİS KURALI:</p>
+                  <p className="text-amber-200 font-bold">ARIZA TEŞHİS KURALI ({state.activeEnvironment.toUpperCase()}):</p>
                   <p className="text-slate-300">
-                    Bir devrede arıza kabul edilmesi için: <strong className="text-amber-300">Isı ≥ 80°C</strong> VE <strong className="text-cyan-300">Basınç ≤ 40 kPa</strong> VE <strong className="text-purple-300">Parazit ≥ 65 dB</strong> (üçü birlikte aranır).
+                    {state.activeEnvironment === 'buzul_istasyonu' ? (
+                      <>Bir devrede arıza kabul edilmesi için: <strong className="text-amber-300">Isı ≤ -10°C</strong> VE <strong className="text-cyan-300">Basınç ≥ 70 kPa</strong> VE <strong className="text-purple-300">Parazit ≥ 60 dB</strong> (üçü birlikte aranır).</>
+                    ) : state.activeEnvironment === 'meteor_yagmuru' ? (
+                      <>Bir devrede arıza kabul edilmesi için: <strong className="text-amber-300">Isı ≥ 80°C</strong>, <strong className="text-cyan-300">Basınç ≤ 40 kPa</strong>, <strong className="text-purple-300">Parazit ≥ 65 dB</strong> (En az 2 kritik eşik birlikte aranır).</>
+                    ) : (
+                      <>Bir devrede arıza kabul edilmesi için: <strong className="text-amber-300">Isı ≥ 80°C</strong> VE <strong className="text-cyan-300">Basınç ≤ 40 kPa</strong> VE <strong className="text-purple-300">Parazit ≥ 65 dB</strong> (üçü birlikte aranır).</>
+                    )}
                   </p>
                   <p className="text-slate-300 pt-1 border-t border-white/5">
-                    • <strong className="text-amber-300">TAHLİYE TALİMATI:</strong> Kesici açıldıktan sonra Soğutma Valfi <strong className="text-cyan-300">135°</strong> konumuna alınmalı ve <strong className="text-amber-300">Basınç Tahliyesi AKTİF</strong> edilmelidir.
+                    • <strong className="text-amber-300">TAHLİYE TALİMATI:</strong> Kesici açıldıktan sonra Soğutma Valfi <strong className="text-cyan-300">{adv.subsystems.reaktor.targetValveAngle ?? 135}°</strong> konumuna alınmalı ve <strong className="text-amber-300">Basınç Tahliyesi AKTİF</strong> edilmelidir.
                   </p>
                   <p className="text-slate-300">
                     • <strong className="text-amber-300">GÜÇ ŞARTI:</strong> Soğutma Pompaları en az 4 MW beslenmelidir (Mevcut: {adv.subsystems.reaktor.coolantPumpsPower} MW).
@@ -309,25 +315,30 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] font-mono text-slate-400">GÜVENLİK KESİCİSİ DEVREYE ALMA:</span>
                     <span className="text-[10px] font-mono text-amber-300 font-bold">
-                      {adv.subsystems.reaktor.breakerActivated ? 'KİLİT AÇIK (K2)' : 'KİLİTLİ'}
+                      {adv.subsystems.reaktor.breakerActivated 
+                        ? `KİLİT AÇIK (${adv.subsystems.reaktor.unlockedBreaker || 'AKTİF'})` 
+                        : 'KİLİTLİ'}
                     </span>
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
-                    {(['K1', 'K2', 'K3', 'K4'] as const).map((k) => (
-                      <button
-                        key={k}
-                        onClick={() => onAction('advanced_reactor_breaker', { breaker: k })}
-                        disabled={adv.subsystems.reaktor.isStabilized}
-                        className={`py-2 rounded-xl text-xs font-bold font-mono uppercase transition-all cursor-pointer border ${
-                          adv.subsystems.reaktor.breakerActivated && k === 'K2'
-                            ? 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_10px_#10b981]'
-                            : 'bg-[#221f45] border-white/10 text-slate-200 hover:border-amber-400'
-                        }`}
-                        type="button"
-                      >
-                        {k}
-                      </button>
-                    ))}
+                    {(['K1', 'K2', 'K3', 'K4'] as const).map((k) => {
+                      const isActivated = adv.subsystems.reaktor.breakerActivated && k === adv.subsystems.reaktor.unlockedBreaker;
+                      return (
+                        <button
+                          key={k}
+                          onClick={() => onAction('advanced_reactor_breaker', { breaker: k })}
+                          disabled={adv.subsystems.reaktor.isStabilized}
+                          className={`py-2 rounded-xl text-xs font-bold font-mono uppercase transition-all cursor-pointer border ${
+                            isActivated
+                              ? 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_10px_#10b981]'
+                              : 'bg-[#221f45] border-white/10 text-slate-200 hover:border-amber-400'
+                          }`}
+                          type="button"
+                        >
+                          {k}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -348,13 +359,20 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                 {/* 4 Circuits Live Telemetry Matrix - purely neutral numeric readouts (no spoiler red colors) */}
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { key: 'reaktor' as const, code: 'CIR-01', name: 'Ana Reaktör', temp: 83, press: 56, noise: 42 },
-                    { key: 'sogutucu' as const, code: 'CIR-02', name: 'Soğutucu Çekirdek', temp: 55, press: 34, noise: 71 },
-                    { key: 'anten' as const, code: 'CIR-03', name: 'Anten Ünitesi', temp: adv.subsystems.reaktor.isStabilized ? 54 : 86, press: adv.subsystems.reaktor.isStabilized ? 50 : 32, noise: adv.subsystems.reaktor.isStabilized ? 36 : 76 },
-                    { key: 'yonlendirme' as const, code: 'CIR-04', name: 'İtki ve Yönlendirme', temp: 62, press: 52, noise: 69 },
+                    { key: 'reaktor' as const, code: 'CIR-01', name: 'Ana Reaktör' },
+                    { key: 'sogutucu' as const, code: 'CIR-02', name: 'Soğutucu Çekirdek' },
+                    { key: 'anten' as const, code: 'CIR-03', name: 'Anten Ünitesi' },
+                    { key: 'yonlendirme' as const, code: 'CIR-04', name: 'İtki ve Yönlendirme' },
                   ].map((mod) => {
                     const isSelected = selectedReactorLine === mod.key;
-                    const isStabilized = adv.subsystems.reaktor.isStabilized && mod.key === 'anten';
+                    const lineData = adv.subsystems.reaktor.lines?.[mod.key] || {
+                      temp: 60,
+                      press: 50,
+                      noise: 40,
+                      code: mod.code,
+                      status: 'stabil',
+                    };
+                    const isStabilized = adv.subsystems.reaktor.isStabilized && lineData.status === 'stabil';
 
                     return (
                       <button
@@ -380,19 +398,19 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                           <div>
                             <span className="text-[8px] font-mono text-slate-400 block">ISI</span>
                             <span className={`text-[10px] font-mono font-bold ${isStabilized ? 'text-emerald-400' : 'text-amber-300'}`}>
-                              {mod.temp}°C
+                              {lineData.temp}°C
                             </span>
                           </div>
                           <div className="border-x border-white/5">
                             <span className="text-[8px] font-mono text-slate-400 block">BASINÇ</span>
                             <span className={`text-[10px] font-mono font-bold ${isStabilized ? 'text-emerald-400' : 'text-cyan-300'}`}>
-                              {mod.press}
+                              {lineData.press}
                             </span>
                           </div>
                           <div>
                             <span className="text-[8px] font-mono text-slate-400 block">PARAZİT</span>
                             <span className={`text-[10px] font-mono font-bold ${isStabilized ? 'text-emerald-400' : 'text-purple-300'}`}>
-                              {mod.noise}dB
+                              {lineData.noise}dB
                             </span>
                           </div>
                         </div>
@@ -412,7 +430,9 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <div className="flex flex-col justify-between">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-mono text-slate-400 uppercase font-bold">Soğutma Valfi</span>
-                      <span className="text-[10px] font-mono text-cyan-300 font-bold">{reactorCoolingAngle}°</span>
+                      <span className="text-[10px] font-mono text-cyan-300 font-bold">
+                        {reactorCoolingAngle !== null ? `${reactorCoolingAngle}°` : 'SEÇİLMEDİ'}
+                      </span>
                     </div>
                     <div className="grid grid-cols-4 gap-1 my-1">
                       {[45, 90, 135, 180].map((deg) => (
@@ -470,6 +490,8 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                       ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 cursor-default'
                       : !selectedReactorLine
                       ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
+                      : reactorCoolingAngle === null
+                      ? 'bg-amber-600/30 text-amber-300 border border-amber-500/40 cursor-pointer'
                       : 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 hover:opacity-95 shadow-[0_4px_12px_rgba(0,238,252,0.3)] active:scale-98 cursor-pointer'
                   }`}
                   type="button"
@@ -479,6 +501,8 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                       ? 'REAKTÖR STABİLİZE EDİLDİ' 
                       : !selectedReactorLine 
                       ? 'ÖNCE DEVRE / HAT SEÇİN' 
+                      : reactorCoolingAngle === null
+                      ? 'VALF AÇISINI AYARLAYIN'
                       : `${selectedReactorLine.toUpperCase()} DEVRESİNİ TAHLİYE ET`}
                   </span>
                 </button>
