@@ -403,8 +403,77 @@ assert(closedThrottlePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isS
 const successPurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
 assert(successPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Doğru iki rol koordinasyonu ile Reaktör STABİLİZE EDİLDİ');
 
+// -----------------------------------------------------------------------------
+// [TEST 13] Mühendis Kontrol Seçimlerinin Ortak Duruma Bağlanması & Kalıcılık
+// -----------------------------------------------------------------------------
+console.log('\n▶ [TEST 13] Mühendis Kontrol Seçimlerinin Ortak Duruma Bağlanması & Kalıcılık...');
+let bindState = createInitialMissionState('KYP-BIND', 'kayip_sinyal', 'Kaptan Ece');
+bindState = { ...bindState, gameMode: 'gelismis', status: 'phase_game' };
+
+// 13.1 Başlangıçta seçimler temiz olmalı
+const initReaktor = bindState.advancedScenario!.subsystems.reaktor;
+assert(initReaktor.engineerSuggestedLine === null, 'Yeni turda hat seçilmemiş başlar (null)');
+assert(initReaktor.engineerValveAngle === null, 'Yeni turda valf açısı seçilmemiş başlar (null)');
+assert(initReaktor.engineerThrottleActive === false, 'Yeni turda tahliye anahtarı kapalı başlar (false)');
+
+// 13.2 Rol yetkisi: Kaptan mühendis kontrollerini değiştiremez
+const captParamRes = applyAdvancedAction(bindState, 'advanced_reactor_set_params', { line: 'sogutucu' }, 'kaptan');
+assert(!!captParamRes.error && captParamRes.error.includes('Yalnızca Mühendis'), 'Kaptanın mühendis parametrelerini ayarlama denemesi reddedildi');
+
+// 13.3 Geçersiz parametreler reddedilir
+const invalidLineRes = applyAdvancedAction(bindState, 'advanced_reactor_set_params', { line: 'gecersiz_hat' as any }, 'muhendis');
+assert(!!invalidLineRes.error, 'Geçersiz devre adı reddedildi');
+
+const invalidAngleRes = applyAdvancedAction(bindState, 'advanced_reactor_set_params', { valveAngle: 60 as any }, 'muhendis');
+assert(!!invalidAngleRes.error, 'Geçersiz valf açısı reddedildi');
+
+// 13.4 Mühendis seçimleri sırayla yapar ve ortak oyun durumuna kaydedilir
+bindState = applyAdvancedAction(bindState, 'advanced_reactor_set_params', { line: initReaktor.faultyLine }, 'muhendis').nextState;
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerSuggestedLine === initReaktor.faultyLine, 'Mühendisin seçtiği hat ortak duruma kaydedildi');
+
+bindState = applyAdvancedAction(bindState, 'advanced_reactor_set_params', { valveAngle: initReaktor.targetValveAngle }, 'muhendis').nextState;
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerValveAngle === initReaktor.targetValveAngle, 'Mühendisin seçtiği valf açısı ortak duruma kaydedildi');
+
+bindState = applyAdvancedAction(bindState, 'advanced_reactor_set_params', { throttleActive: true }, 'muhendis').nextState;
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerThrottleActive === true, 'Mühendisin tahliye anahtarı konumu ortak duruma kaydedildi');
+
+// 13.5 Sekme değiştirilip geri gelindiğinde seçimler korunur
+bindState = applyAdvancedAction(bindState, 'advanced_tab_change', { tab: 'sinyal' }, 'muhendis').nextState;
+assert(bindState.advancedScenario?.activeSubsystemTab === 'sinyal', 'Sekme sinyal olarak değiştirildi');
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerSuggestedLine === initReaktor.faultyLine, 'Sekme değişince seçilen hat korundu');
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerValveAngle === initReaktor.targetValveAngle, 'Sekme değişince seçilen valf açısı korundu');
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerThrottleActive === true, 'Sekme değişince tahliye anahtarı korundu');
+
+bindState = applyAdvancedAction(bindState, 'advanced_tab_change', { tab: 'reaktor' }, 'muhendis').nextState;
+assert(bindState.advancedScenario?.activeSubsystemTab === 'reaktor', 'Tekrar reaktör sekmesine dönüldü');
+assert(bindState.advancedScenario?.subsystems.reaktor.engineerSuggestedLine === initReaktor.faultyLine, 'Reaktör sekmesinde hat seçimi korundu');
+
+// 13.6 Colyseus odası ve yeniden bağlanma (reconnection) testi
+const reconnectRoom = new LostSignalRoom();
+reconnectRoom.missionState = bindState;
+const reconnectedEngState = reconnectRoom.getFilteredStateForRole('muhendis');
+assert(reconnectedEngState.advancedScenario?.subsystems.reaktor.engineerSuggestedLine === initReaktor.faultyLine, 'Yeniden bağlanan mühendise kayıtlı hat yüklendi');
+assert(reconnectedEngState.advancedScenario?.subsystems.reaktor.engineerValveAngle === initReaktor.targetValveAngle, 'Yeniden bağlanan mühendise kayıtlı valf açısı yüklendi');
+assert(reconnectedEngState.advancedScenario?.subsystems.reaktor.engineerThrottleActive === true, 'Yeniden bağlanan mühendise kayıtlı tahliye durumu yüklendi');
+assert(reconnectRoom.missionState.advancedScenario?.subsystems.reaktor.faultyLine === initReaktor.faultyLine, 'Yeniden bağlantı mevcut bulmacayı değiştirmedi');
+
+// 13.7 Kaydedilmiş parametreler ile doğrudan tahliye (payload boş olsa dahi)
+// Kaptan doğru kesiciyi açar
+bindState = applyAdvancedAction(bindState, 'advanced_reactor_breaker', { breaker: initReaktor.targetBreaker }, 'kaptan').nextState;
+assert(bindState.advancedScenario?.subsystems.reaktor.breakerActivated === true, 'Kaptan kesici kilidini açtı');
+
+// Mühendis payload olmadan tahliye yapar -> sunucu kaydedilmiş ayarları kullanır
+const savedParamPurgeRes = applyAdvancedAction(bindState, 'advanced_reactor_purge', {}, 'muhendis');
+assert(savedParamPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Sunucuda kayıtlı kontrollerle Reaktör STABİLİZE EDİLDİ');
+
+// 13.8 Yeni tur başlatıldığında seçimler temizlenir
+const nextRoundState = createInitialMissionState('KYP-BIND', 'kayip_sinyal', 'Kaptan Ece');
+assert(nextRoundState.advancedScenario?.subsystems.reaktor.engineerSuggestedLine === null, 'Yeni turda hat seçimi temizlendi');
+assert(nextRoundState.advancedScenario?.subsystems.reaktor.engineerValveAngle === null, 'Yeni turda valf açısı temizlendi');
+assert(nextRoundState.advancedScenario?.subsystems.reaktor.engineerThrottleActive === false, 'Yeni turda tahliye anahtarı sıfırlandı');
+
 console.log('\n======================================================================');
 console.log(`📊 GELİŞMİŞ TAKTİK SENARYOSU DOĞRULAMA TEST SONUCU: ${passCount}/${passCount} BAŞARILI`);
 console.log('✅ TÜM KESTİRMELER REDDEDİLDİ, SEYAHAT SÜRELERİ DÜŞÜLDÜ VE ŞARTLAR SAĞLANDIĞINDA ÇÖZÜMLER ÇALIŞTI!');
 console.log('======================================================================');
-console.log('======================================================================');
+

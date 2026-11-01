@@ -496,6 +496,7 @@ export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'):
         captainSelectedBreaker: null,
         targetValveAngle,
         targetThrottleActive: true,
+        engineerSuggestedLine: null,
         engineerValveAngle: null,
         engineerThrottleActive: false,
         faultyLine,

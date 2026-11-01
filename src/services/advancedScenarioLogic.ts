@@ -145,6 +145,51 @@ export function applyAdvancedAction(
     };
   }
 
+  // 3b. Reactor Engineer Controls (line, valveAngle, throttleActive)
+  if (actionType === 'advanced_reactor_set_params') {
+    if (actingRole !== 'muhendis') {
+      return { nextState: state, error: 'Yalnızca Mühendis reaktör kontrollerini ayarlayabilir.' };
+    }
+
+    if (adv.subsystems.reaktor.isStabilized) {
+      return { nextState: state };
+    }
+
+    // Validate line
+    if (data.line !== undefined) {
+      const validLines = ['anten', 'reaktor', 'sogutucu', 'yonlendirme', null];
+      if (!validLines.includes(data.line)) {
+        return { nextState: state, error: 'Geçersiz devre seçimi.' };
+      }
+      adv.subsystems.reaktor.engineerSuggestedLine = data.line;
+    }
+
+    // Validate valveAngle
+    if (data.valveAngle !== undefined) {
+      const validAngles = [45, 90, 135, 180, null];
+      if (!validAngles.includes(data.valveAngle)) {
+        return { nextState: state, error: 'Geçersiz valf açısı.' };
+      }
+      adv.subsystems.reaktor.engineerValveAngle = data.valveAngle;
+    }
+
+    // Validate throttleActive
+    if (data.throttleActive !== undefined) {
+      if (typeof data.throttleActive !== 'boolean') {
+        return { nextState: state, error: 'Geçersiz tahliye anahtarı konumu.' };
+      }
+      adv.subsystems.reaktor.engineerThrottleActive = data.throttleActive;
+    }
+
+    return {
+      nextState: {
+        ...state,
+        advancedScenario: adv,
+        feedbackState: 'idle',
+      },
+    };
+  }
+
   // 4. Reactor Purge
   if (actionType === 'advanced_reactor_purge') {
     if (actingRole !== 'muhendis') {
@@ -155,7 +200,13 @@ export function applyAdvancedAction(
       return { nextState: state };
     }
 
-    if (!data.line) {
+    // Read parameter values from explicit payload if passed, or fall back to saved state in adv.subsystems.reaktor
+    const hasExplicitPayload = Boolean(data && typeof data === 'object' && Object.keys(data).length > 0);
+    const line = hasExplicitPayload ? data.line : adv.subsystems.reaktor.engineerSuggestedLine;
+    const valveAngle = hasExplicitPayload ? data.valveAngle : adv.subsystems.reaktor.engineerValveAngle;
+    const throttleActive = hasExplicitPayload ? data.throttleActive : adv.subsystems.reaktor.engineerThrottleActive;
+
+    if (!line) {
       return {
         nextState: {
           ...state,
@@ -197,7 +248,7 @@ export function applyAdvancedAction(
     }
 
     // Reject if valveAngle or throttleActive is missing (do not auto-fill with correct answer!)
-    if (data.valveAngle === undefined || data.valveAngle === null) {
+    if (valveAngle === undefined || valveAngle === null) {
       return {
         nextState: {
           ...state,
@@ -208,7 +259,7 @@ export function applyAdvancedAction(
       };
     }
 
-    if (data.throttleActive === undefined || data.throttleActive === null) {
+    if (throttleActive === undefined || throttleActive === null) {
       return {
         nextState: {
           ...state,
@@ -219,7 +270,6 @@ export function applyAdvancedAction(
       };
     }
 
-    const line = data.line;
     const targetLine = adv.subsystems.reaktor.faultyLine || adv.subsystems.reaktor.liveTelemetry.criticalLine;
     if (line !== targetLine) {
       applyPenalty('Hatalı hat tahliyesi! Seçilen devrede çoklu arıza koşulları oluşmamış. Sağlam devreye müdahale edildi.');
@@ -237,7 +287,7 @@ export function applyAdvancedAction(
     }
 
     const targetAngle = adv.subsystems.reaktor.targetValveAngle || 135;
-    if (data.valveAngle !== targetAngle) {
+    if (valveAngle !== targetAngle) {
       applyPenalty('Müdahale başarısız: Soğutma valfi doğru açıda değil. Termal şok riski nedeniyle tahliye emniyet valfi tarafından durduruldu.');
       return {
         nextState: {
@@ -252,7 +302,7 @@ export function applyAdvancedAction(
       };
     }
 
-    if (!data.throttleActive) {
+    if (!throttleActive) {
       applyPenalty('Müdahale başarısız: Basınç tahliyesi devre dışı. Hat basıncı boşaltılmadan devre açılamaz.');
       return {
         nextState: {
@@ -268,6 +318,9 @@ export function applyAdvancedAction(
     }
 
     // All passed!
+    adv.subsystems.reaktor.engineerSuggestedLine = line;
+    adv.subsystems.reaktor.engineerValveAngle = valveAngle;
+    adv.subsystems.reaktor.engineerThrottleActive = throttleActive;
     adv.subsystems.reaktor.isPurged = true;
     adv.subsystems.reaktor.isStabilized = true;
     adv.subsystems.reaktor.liveTelemetry.coreTemp = 58;

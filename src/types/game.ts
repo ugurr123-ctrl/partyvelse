@@ -249,6 +249,7 @@ export interface AdvancedScenarioData {
       breakerActivated: boolean;
       targetValveAngle?: number;
       targetThrottleActive?: boolean;
+      engineerSuggestedLine?: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme' | null;
       engineerValveAngle?: number | null;
       engineerThrottleActive?: boolean;
       faultyLine?: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme';

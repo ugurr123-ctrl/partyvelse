@@ -22,9 +22,16 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   const [activeTab, setActiveTab] = useState<AdvancedSubsystemId>(
     adv?.activeSubsystemTab || 'reaktor'
   );
-  const [selectedReactorLine, setSelectedReactorLine] = useState<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme' | null>(null);
-  const [reactorCoolingAngle, setReactorCoolingAngle] = useState<number | null>(null);
-  const [reactorThrottleToggled, setReactorThrottleToggled] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    if (adv?.activeSubsystemTab && adv.activeSubsystemTab !== activeTab) {
+      setActiveTab(adv.activeSubsystemTab);
+    }
+  }, [adv?.activeSubsystemTab]);
+
+  const selectedReactorLine = adv?.subsystems?.reaktor?.engineerSuggestedLine ?? null;
+  const reactorCoolingAngle = adv?.subsystems?.reaktor?.engineerValveAngle ?? null;
+  const reactorThrottleToggled = adv?.subsystems?.reaktor?.engineerThrottleActive ?? false;
 
   // If advanced scenario data is not initialized
   if (!adv) {
@@ -378,7 +385,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                       <button
                         key={mod.key}
                         type="button"
-                        onClick={() => setSelectedReactorLine(mod.key)}
+                        onClick={() => onAction('advanced_reactor_set_params', { line: mod.key })}
                         disabled={adv.subsystems.reaktor.isStabilized}
                         className={`p-2 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
                           isSelected
@@ -439,7 +446,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                         <button
                           key={deg}
                           type="button"
-                          onClick={() => setReactorCoolingAngle(deg)}
+                          onClick={() => onAction('advanced_reactor_set_params', { valveAngle: deg })}
                           disabled={adv.subsystems.reaktor.isStabilized}
                           className={`py-1 rounded text-[9px] font-mono font-bold transition-all cursor-pointer ${
                             reactorCoolingAngle === deg
@@ -463,7 +470,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                     </div>
                     <button
                       type="button"
-                      onClick={() => setReactorThrottleToggled(!reactorThrottleToggled)}
+                      onClick={() => onAction('advanced_reactor_set_params', { throttleActive: !reactorThrottleToggled })}
                       disabled={adv.subsystems.reaktor.isStabilized}
                       className={`w-full py-1.5 my-1 rounded-lg font-mono text-[10px] font-bold transition-all cursor-pointer border ${
                         reactorThrottleToggled
