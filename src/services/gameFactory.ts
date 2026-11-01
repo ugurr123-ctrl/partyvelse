@@ -471,6 +471,116 @@ export function calculateFinalScore(
   };
 }
 
+export function applySignalTransformation(
+  digits: number[],
+  rule: 'ters' | 'cift_degis' | 'saga_kaydir'
+): number[] {
+  if (digits.length !== 4) return [...digits];
+  switch (rule) {
+    case 'ters':
+      return [digits[3], digits[2], digits[1], digits[0]];
+    case 'cift_degis':
+      return [digits[1], digits[0], digits[3], digits[2]];
+    case 'saga_kaydir':
+      return [digits[3], digits[0], digits[1], digits[2]];
+    default:
+      return [...digits];
+  }
+}
+
+export function generateAdvancedSignal() {
+  const glyphPool = ['Δ', 'Ω', 'Σ', 'λ', 'Ψ', 'Φ'];
+  const shuffledGlyphs = [...glyphPool].sort(() => Math.random() - 0.5);
+
+  const availableDigits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+  const symbolMap: Record<string, number> = {};
+  glyphPool.forEach((glyph, index) => {
+    symbolMap[glyph] = availableDigits[index];
+  });
+
+  const incomingSymbols = shuffledGlyphs.slice(0, 4);
+  const rawDigits = incomingSymbols.map(g => symbolMap[g]);
+
+  const rules: Array<'ters' | 'cift_degis' | 'saga_kaydir'> = ['ters', 'cift_degis', 'saga_kaydir'];
+  const ruleType = rules[Math.floor(Math.random() * rules.length)];
+
+  let ruleDescription = '';
+  if (ruleType === 'ters') {
+    ruleDescription = 'Sembol sırasını tersten okuyun (4-3-2-1).';
+  } else if (ruleType === 'cift_degis') {
+    ruleDescription = 'Komşu çiftleri yer değiştirin (1-2 ve 3-4).';
+  } else {
+    ruleDescription = 'Tüm basamakları bir adım sağa kaydırın (4-1-2-3).';
+  }
+
+  const transformedDigits = applySignalTransformation(rawDigits, ruleType);
+  const computedCode = transformedDigits.join('');
+
+  // Plausible human error distractors
+  const candidateCodes: string[] = [computedCode];
+  const addCode = (digits: number[]) => {
+    const code = digits.join('');
+    if (!candidateCodes.includes(code)) {
+      candidateCodes.push(code);
+    }
+  };
+
+  // 1. Raw digits without transformation
+  addCode([rawDigits[0], rawDigits[1], rawDigits[2], rawDigits[3]]);
+  // 2. Reverse
+  addCode([rawDigits[3], rawDigits[2], rawDigits[1], rawDigits[0]]);
+  // 3. Adjacent pairs swap
+  addCode([rawDigits[1], rawDigits[0], rawDigits[3], rawDigits[2]]);
+  // 4. Right shift
+  addCode([rawDigits[3], rawDigits[0], rawDigits[1], rawDigits[2]]);
+  // 5. Left shift (wrong direction)
+  addCode([rawDigits[1], rawDigits[2], rawDigits[3], rawDigits[0]]);
+  // 6. Middle digits swapped
+  addCode([rawDigits[0], rawDigits[2], rawDigits[1], rawDigits[3]]);
+  // 7. First-last swapped
+  addCode([rawDigits[3], rawDigits[1], rawDigits[2], rawDigits[0]]);
+  // 8. Halves swapped
+  addCode([rawDigits[2], rawDigits[3], rawDigits[0], rawDigits[1]]);
+
+  const finalCodes = candidateCodes.slice(0, 6);
+
+  const freqPool = [
+    '141.20 MHz',
+    '142.45 MHz',
+    '143.60 MHz',
+    '144.15 MHz',
+    '145.30 MHz',
+    '146.85 MHz',
+  ];
+
+  const shuffledCodes = [...finalCodes].sort(() => Math.random() - 0.5);
+
+  const frequencies = freqPool.map((freq, idx) => ({
+    freq,
+    code: shuffledCodes[idx],
+    label: `Kanal-${String(idx + 1).padStart(2, '0')}`,
+  }));
+
+  const targetOption = frequencies.find(f => f.code === computedCode)!;
+  const targetFrequency = targetOption.freq;
+
+  return {
+    isLocked: false,
+    antennaPower: 2,
+    noiseLevel: 85,
+    targetFrequency,
+    currentFrequency: '140.00 MHz',
+    engineerSelectedFrequency: null as string | null,
+    incomingSymbols,
+    symbolMap,
+    ruleType,
+    ruleDescription,
+    computedCode,
+    frequencies,
+    symbols: incomingSymbols,
+  };
+}
+
 export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'): AdvancedScenarioData {
   // Generate multi-criteria dynamic diagnostic puzzle consistent with environment rules
   const diag = generateDiagnostic(env);
@@ -510,15 +620,7 @@ export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'):
         },
         targetBreaker,
       },
-      sinyal: {
-        isLocked: false,
-        antennaPower: 2,
-        noiseLevel: 85,
-        targetFrequency: '143.6 MHz',
-        currentFrequency: '140.0 MHz',
-        symbols: ['Δ', 'Ω', 'Σ', 'λ'],
-        symbolValueSum: 3.6,
-      },
+      sinyal: generateAdvancedSignal(),
       hava_kilidi: {
         isSealed: false,
         compressorPower: 1,

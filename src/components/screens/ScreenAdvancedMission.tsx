@@ -32,6 +32,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   const selectedReactorLine = adv?.subsystems?.reaktor?.engineerSuggestedLine ?? null;
   const reactorCoolingAngle = adv?.subsystems?.reaktor?.engineerValveAngle ?? null;
   const reactorThrottleToggled = adv?.subsystems?.reaktor?.engineerThrottleActive ?? false;
+  const selectedSignalFreq = adv?.subsystems?.sinyal?.engineerSelectedFrequency ?? null;
 
   // If advanced scenario data is not initialized
   if (!adv) {
@@ -545,88 +546,143 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
             </div>
 
             {isCaptain ? (
-              <div className="bg-[#171433] border border-amber-500/30 rounded-2xl p-3.5 space-y-2.5">
+              <div className="bg-[#171433] border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
                 <div className="flex items-center gap-2 border-b border-amber-500/20 pb-1.5">
                   <span className="text-amber-400 text-sm">📜</span>
                   <h4 className="text-xs font-bold font-sora text-amber-200 uppercase tracking-wide">
-                    Sinyal Şifre Çözüm Yönergesi
+                    Kaptan Sinyal Şifre Çözüm Kılavuzu
                   </h4>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed">
-                  İstasyon feneri baz bandı <strong className="text-cyan-300">140.0 MHz</strong> dir. 
-                  Kripto sembollerinin değerlerini toplayarak doğru frekansı Mühendise iletin:
+                  Mühendisin bildireceği 4 sembolü aşağıdaki tablodan bulun ve dönüştürme kuralını uygulayarak <strong className="text-amber-300">4 haneli kodu</strong> hesaplayıp Mühendise bildirin:
                 </p>
 
-                <div className="grid grid-cols-4 gap-1.5 text-center font-mono text-[11px]">
-                  <div className="bg-[#0f0e20] p-1.5 rounded-lg border border-white/5">
-                    <span className="text-amber-400 font-bold block">Δ</span>
-                    <span className="text-slate-300">+1.2</span>
-                  </div>
-                  <div className="bg-[#0f0e20] p-1.5 rounded-lg border border-white/5">
-                    <span className="text-amber-400 font-bold block">Ω</span>
-                    <span className="text-slate-300">+2.4</span>
-                  </div>
-                  <div className="bg-[#0f0e20] p-1.5 rounded-lg border border-white/5">
-                    <span className="text-amber-400 font-bold block">Σ</span>
-                    <span className="text-slate-300">-0.8</span>
-                  </div>
-                  <div className="bg-[#0f0e20] p-1.5 rounded-lg border border-white/5">
-                    <span className="text-amber-400 font-bold block">λ</span>
-                    <span className="text-slate-300">+0.8</span>
-                  </div>
+                {/* Symbol-to-digit table */}
+                <div className="grid grid-cols-6 gap-1.5 text-center font-mono text-[11px]">
+                  {Object.entries(adv.subsystems.sinyal.symbolMap || {}).map(([sym, val]) => (
+                    <div key={sym} className="bg-[#0f0e20] p-1.5 rounded-xl border border-white/5">
+                      <span className="text-amber-300 font-bold text-sm block">{sym}</span>
+                      <span className="text-cyan-300 font-extrabold text-xs">{val}</span>
+                    </div>
+                  ))}
                 </div>
 
-                <div className="bg-[#0f0e20] p-2.5 rounded-xl border border-white/5 text-[11px] font-mono text-slate-300">
-                  <p>• Formül: 140.0 + (1.2 + 2.4 - 0.8 + 0.8) MHz</p>
-                  <p>• Toplam Kayma: <span className="text-emerald-400 font-bold">+3.6 MHz</span></p>
-                  <p>• Hedef İletişim Bandı: <strong className="text-cyan-300">143.6 MHz</strong></p>
+                {/* Rule description */}
+                <div className="bg-[#0f0e20] p-3 rounded-xl border border-white/5 space-y-1.5 text-[11px] font-mono">
+                  <span className="text-amber-200 font-bold block uppercase">
+                    Dönüşüm Kuralı:
+                  </span>
+                  <p className="text-slate-300 leading-relaxed font-semibold">
+                    {adv.subsystems.sinyal.ruleDescription || 'Kural yükleniyor...'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 pt-1 border-t border-white/5">
+                    • Baştaki sıfırlar korunmalıdır (Örn. 0429).<br />
+                    • Mühendis sembolleri sırayla bildirdiğinde rakamlarını eşleştirin ve bu kuralı uygulayın.
+                  </p>
                 </div>
 
                 <p className="text-[10px] text-slate-400 italic">
-                  Not: Mühendisin frekansı kilitleyebilmesi için Güç Matrisinde Anten Güçlendiricinin en az 3 MW olması şarttır!
+                  Not: Gelen sembol sırası ve frekans seçenekleri yalnızca Mühendis ekranındadır. Mühendisin kilitlemesi için Anten Güçlendirici en az 3 MW olmalıdır.
                 </p>
               </div>
             ) : (
               <div className="bg-[#171433] border border-cyan-500/30 rounded-2xl p-3.5 space-y-3">
-                <div className="flex items-center gap-2 border-b border-cyan-500/20 pb-1.5">
-                  <span className="text-cyan-400 text-sm">⚙</span>
-                  <h4 className="text-xs font-bold font-sora text-cyan-200 uppercase tracking-wide">
-                    Spektrum Ayarlayıcı &amp; Frekans Kilitleme
-                  </h4>
-                </div>
-
-                {/* Oscilloscope simulation */}
-                <div className="h-16 bg-[#090814] rounded-xl border border-cyan-500/30 flex items-center justify-center p-2 relative overflow-hidden">
-                  <div className={`w-full h-1 bg-cyan-400 ${adv.subsystems.sinyal.noiseLevel > 50 ? 'animate-pulse blur-[1px]' : 'shadow-[0_0_8px_#00eefc]'}`}></div>
-                  <span className="absolute top-1 left-2 text-[9px] font-mono text-cyan-400">
-                    PARAZİT: %{adv.subsystems.sinyal.noiseLevel}
-                  </span>
-                  <span className="absolute bottom-1 right-2 text-[9px] font-mono text-slate-400">
-                    AKTF FREKANS: {adv.subsystems.sinyal.currentFrequency}
+                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-cyan-400 text-sm">⚙</span>
+                    <h4 className="text-xs font-bold font-sora text-cyan-200 uppercase tracking-wide">
+                      Mühendis Alıcı &amp; Spektrum Kilitleme
+                    </h4>
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-400">
+                    {selectedSignalFreq ? `${selectedSignalFreq} SEÇİLİ` : 'SEÇİM YOK'}
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-300">
-                  Kaptandan hesaplanan doğru frekansı öğrenin ve kilitleyin:
-                </p>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {['141.2 MHz', '142.4 MHz', '143.6 MHz', '144.8 MHz'].map((freq) => (
-                    <button
-                      key={freq}
-                      onClick={() => onAction('advanced_signal_tune', { freq })}
-                      disabled={adv.subsystems.sinyal.isLocked}
-                      className={`py-2 px-3 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer border ${
-                        adv.subsystems.sinyal.currentFrequency === freq
-                          ? 'bg-cyan-600 border-cyan-400 text-white shadow-[0_0_10px_#00eefc]'
-                          : 'bg-[#1b1933] border-white/10 text-slate-200 hover:border-cyan-400'
-                      }`}
-                      type="button"
-                    >
-                      {freq} {adv.subsystems.sinyal.isLocked && freq === '143.6 MHz' ? '✓' : ''}
-                    </button>
-                  ))}
+                {/* Incoming 4 symbols message card */}
+                <div className="bg-[#0f0e20] p-3 rounded-xl border border-cyan-500/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">
+                      Gelen Kripto Sinyali (4 Sembol)
+                    </span>
+                    <span className={`text-[9px] font-mono font-bold ${adv.subsystems.sinyal.antennaPower >= 3 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {adv.subsystems.sinyal.antennaPower >= 3 ? 'SİNYAL NET (%4 PARAZİT)' : `YÜKSEK PARAZİT (%${adv.subsystems.sinyal.noiseLevel})`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {(adv.subsystems.sinyal.incomingSymbols || adv.subsystems.sinyal.symbols || ['?', '?', '?', '?']).map((sym, idx) => (
+                      <div key={idx} className="bg-[#171433] p-2 rounded-xl border border-white/10 shadow">
+                        <span className="text-cyan-300 font-bold text-lg font-mono block">{sym}</span>
+                        <span className="text-[8px] font-mono text-slate-500">#{idx + 1}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-mono text-slate-400 text-center">
+                    Bu 4 sembolü sırayla Kaptana okuyun ve hesaplanan 4 haneli kodu bekleyin.
+                  </p>
                 </div>
+
+                {/* 6 Code-Frequency options */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">
+                    Spektrum Kanalları (Kod Eşleşmesi):
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(adv.subsystems.sinyal.frequencies || []).map((opt) => {
+                      const isSelected = selectedSignalFreq === opt.freq;
+                      return (
+                        <button
+                          key={opt.freq}
+                          type="button"
+                          onClick={() => onAction('advanced_signal_select', { freq: opt.freq })}
+                          disabled={adv.subsystems.sinyal.isLocked}
+                          className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_12px_rgba(0,238,252,0.3)] ring-1 ring-cyan-400'
+                              : adv.subsystems.sinyal.isLocked && opt.freq === adv.subsystems.sinyal.targetFrequency
+                              ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                              : 'bg-[#0f0e20] border-white/5 hover:bg-[#1a1736]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-mono text-slate-400">{opt.label}</span>
+                            <span className="text-[11px] font-mono font-extrabold text-cyan-300">{opt.freq}</span>
+                          </div>
+                          <div className="mt-1 flex items-center justify-between text-[11px] font-mono">
+                            <span className="text-slate-400 text-[9px]">KOD:</span>
+                            <span className="font-bold text-amber-200 tracking-wider text-xs">{opt.code}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Signal Lock Button */}
+                <button
+                  type="button"
+                  onClick={() => onAction('advanced_signal_lock', {})}
+                  disabled={adv.subsystems.sinyal.isLocked || !selectedSignalFreq || adv.subsystems.sinyal.antennaPower < 3}
+                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-2 ${
+                    adv.subsystems.sinyal.isLocked
+                      ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 cursor-default'
+                      : adv.subsystems.sinyal.antennaPower < 3
+                      ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
+                      : !selectedSignalFreq
+                      ? 'bg-amber-600/30 text-amber-300 border border-amber-500/40 cursor-pointer'
+                      : 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 hover:opacity-95 shadow-[0_4px_12px_rgba(0,238,252,0.3)] active:scale-98 cursor-pointer'
+                  }`}
+                >
+                  <span>
+                    {adv.subsystems.sinyal.isLocked
+                      ? 'SİNYAL KİLİTLENDİ (USS AURORA)'
+                      : adv.subsystems.sinyal.antennaPower < 3
+                      ? 'ANTEN GÜCÜ YETERSİZ (< 3 MW)'
+                      : !selectedSignalFreq
+                      ? 'ÖNCE FREKANS SEÇİN'
+                      : `${selectedSignalFreq} FREKANSINI KİLİTLE`}
+                  </span>
+                </button>
               </div>
             )}
           </div>

@@ -946,6 +946,10 @@ export class LostSignalRoom extends Room {
             sinyal: {
               ...this.missionState.advancedScenario.subsystems.sinyal,
               targetFrequency: '??? MHz',
+              computedCode: '????',
+              incomingSymbols: ['?', '?', '?', '?'],
+              frequencies: undefined as any,
+              symbols: ['?', '?', '?', '?'],
             },
             hava_kilidi: {
               ...this.missionState.advancedScenario.subsystems.hava_kilidi,
@@ -1017,8 +1021,10 @@ export class LostSignalRoom extends Room {
             sinyal: {
               ...this.missionState.advancedScenario.subsystems.sinyal,
               targetFrequency: '??? MHz',
-              symbols: ['?', '?', '?', '?'],
-              symbolValueSum: 0,
+              computedCode: '????',
+              symbolMap: undefined as any,
+              ruleType: undefined as any,
+              ruleDescription: undefined as any,
             },
             hava_kilidi: {
               ...this.missionState.advancedScenario.subsystems.hava_kilidi,

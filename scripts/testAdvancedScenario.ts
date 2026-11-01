@@ -1,4 +1,4 @@
-import { createInitialMissionState, isLineAnomaly } from '../src/services/gameFactory';
+import { createInitialMissionState, isLineAnomaly, applySignalTransformation, generateAdvancedSignal } from '../src/services/gameFactory';
 import { applyAdvancedAction } from '../src/services/advancedScenarioLogic';
 import { LostSignalRoom } from '../server/LostSignalRoom';
 import { MissionState, Role, EnvironmentType } from '../src/types/game';
@@ -58,6 +58,11 @@ const engineerView = room.getFilteredStateForRole('muhendis');
 
 assert(captainView.advancedScenario?.subsystems.reaktor.targetBreaker === undefined, 'Kaptana doğru reaktör kesici cevabı GİZLENDİ');
 assert(captainView.advancedScenario?.subsystems.sinyal.targetFrequency === '??? MHz', 'Kaptana doğru sinyal frekans cevabı GİZLENDİ');
+assert(captainView.advancedScenario?.subsystems.sinyal.computedCode === '????', 'Kaptana hesaplanmış doğru kod GİZLENDİ');
+assert(captainView.advancedScenario?.subsystems.sinyal.incomingSymbols?.[0] === '?', 'Kaptana gelen sembol mesajı GİZLENDİ');
+assert(captainView.advancedScenario?.subsystems.sinyal.frequencies === undefined, 'Kaptana frekans listesi ve kod seçenekleri GİZLENDİ');
+assert(captainView.advancedScenario?.subsystems.sinyal.symbolMap !== undefined, 'Kaptana sembol-rakam tablosu İLETİLDİ');
+assert(captainView.advancedScenario?.subsystems.sinyal.ruleType !== undefined, 'Kaptana dönüşüm kuralı İLETİLDİ');
 assert(captainView.advancedScenario?.subsystems.hava_kilidi.targetDialIndex === -1, 'Kaptana hava kilidi doğru kadranı GİZLENDİ');
 assert(captainView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === 0, 'Kaptana canlı çekirdek ısı göstergesi GİZLENDİ (Mühendis okumalı)');
 
@@ -66,7 +71,12 @@ const expectedPress = room.missionState.advancedScenario?.subsystems.reaktor.liv
 assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === expectedTemp, `Mühendise çekirdek ısısı (${expectedTemp}°C) iletildi`);
 assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure === expectedPress, `Mühendise soğutucu basıncı (${expectedPress} kPa) iletildi`);
 assert(engineerView.advancedScenario?.subsystems.hava_kilidi.externalPressureKpa === 36, 'Mühendise dış sensör basıncı (36 kPa) iletildi');
-assert(engineerView.advancedScenario?.subsystems.sinyal.symbols[0] === '?', 'Mühendise kaptanın şifre tablosu sembolleri GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.sinyal.symbolMap === undefined, 'Mühendise sembol-rakam tablosu GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.sinyal.ruleType === undefined, 'Mühendise dönüşüm kuralı GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.sinyal.targetFrequency === '??? MHz', 'Mühendise doğru frekans cevabı GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.sinyal.computedCode === '????', 'Mühendise doğru kod cevabı GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.sinyal.incomingSymbols?.[0] !== '?', 'Mühendise gelen sembol mesajı İLETİLDİ');
+assert(engineerView.advancedScenario?.subsystems.sinyal.frequencies?.length === 6, 'Mühendise 6 adet kod-frekans seçeneği İLETİLDİ');
 assert(engineerView.advancedScenario?.subsystems.reaktor.targetValveAngle === 0, 'Mühendise doğru valf açısı GİZLENDİ');
 assert(engineerView.advancedScenario?.subsystems.reaktor.lineBreakerMap === undefined, 'Mühendise kesici haritası GİZLENDİ');
 assert(engineerView.advancedScenario?.subsystems.reaktor.faultyLine === undefined, 'Mühendise arızalı hat etiketi GİZLENDİ');
@@ -91,7 +101,7 @@ const overBudgetRes = applyAdvancedAction(
 assert(!!overBudgetRes.error, 'Aynı anda 3 sistemi besleme girişimi (10 MW > 7 MW) başarıyla engellendi');
 
 // Anten başlangıçta 2 MW iken frekans kilitleme denemesi engellenmelidir
-const startTuneAttempt = applyAdvancedAction(state, 'advanced_signal_tune', { freq: '143.6 MHz' }, 'muhendis');
+const startTuneAttempt = applyAdvancedAction(state, 'advanced_signal_lock', {}, 'muhendis');
 assert(!!startTuneAttempt.error, 'Başlangıç gücünde (2 MW) sinyal kilitleme engellendi (Güç aktarımı şart)');
 
 // -----------------------------------------------------------------------------
@@ -216,9 +226,11 @@ assert(path1.advancedScenario?.subsystems.reaktor.isStabilized === true, '1. Ad�
 path1 = applyAdvancedAction(path1, 'advanced_set_power', { coolingPumps: 1, antennaBooster: 3, airlockCompressor: 3, shieldReserve: 0 }, 'kaptan').nextState;
 assert(path1.advancedScenario?.subsystems.sinyal.noiseLevel === 4, 'Güç aktarımı sonrası Anten 3 MW oldu, parazit %4 e düştü');
 
-// 3. Sinyal Çözümü: 143.6 MHz kilitlenir
-path1 = applyAdvancedAction(path1, 'advanced_signal_tune', { freq: '143.6 MHz' }, 'muhendis').nextState;
-assert(path1.advancedScenario?.subsystems.sinyal.isLocked === true, '2. Adım: Sinyal 143.6 MHz ile USS Aurora ya kilitlendi');
+// 3. Sinyal Çözümü: Dinamik hedef frekans seçilip kilitlenir
+const targetSignalFreq1 = path1.advancedScenario!.subsystems.sinyal.targetFrequency;
+path1 = applyAdvancedAction(path1, 'advanced_signal_select', { freq: targetSignalFreq1 }, 'muhendis').nextState;
+path1 = applyAdvancedAction(path1, 'advanced_signal_lock', {}, 'muhendis').nextState;
+assert(path1.advancedScenario?.subsystems.sinyal.isLocked === true, `2. Adım: Sinyal ${targetSignalFreq1} ile USS Aurora ya kilitlendi`);
 
 // 4. Hava Kilidi Çözümü: Kompresörde 3 MW var
 path1 = applyAdvancedAction(path1, 'advanced_airlock_params', { dialIndex: 2, vacuum: 75 }, 'muhendis').nextState;
@@ -256,8 +268,11 @@ assert(path2.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Reakt�
 // 2. Güç Aktarımı: Soğutma 1 MW, Anten 3 MW, Kalkan Rezervi 3 MW (1 + 3 + 0 + 3 = 7 MW)
 path2 = applyAdvancedAction(path2, 'advanced_set_power', { coolingPumps: 1, antennaBooster: 3, airlockCompressor: 0, shieldReserve: 3 }, 'kaptan').nextState;
 
-// 3. Sinyal Çözümü: 143.6 MHz kilitlenir
-path2 = applyAdvancedAction(path2, 'advanced_signal_tune', { freq: '143.6 MHz' }, 'muhendis').nextState;
+// 3. Sinyal Çözümü: Dinamik hedef frekans seçilip kilitlenir
+const targetSignalFreq2 = path2.advancedScenario!.subsystems.sinyal.targetFrequency;
+path2 = applyAdvancedAction(path2, 'advanced_signal_select', { freq: targetSignalFreq2 }, 'muhendis').nextState;
+path2 = applyAdvancedAction(path2, 'advanced_signal_lock', {}, 'muhendis').nextState;
+assert(path2.advancedScenario?.subsystems.sinyal.isLocked === true, `Sinyal ${targetSignalFreq2} ile kilitlendi`);
 
 // Hava kilidi kasten yapılmadı
 assert(path2.advancedScenario?.subsystems.hava_kilidi.isSealed === false, 'Hava kilidi atlandı (güç ve vakit tasarrufu)');
@@ -511,8 +526,150 @@ assert(nextRoundState.advancedScenario?.subsystems.reaktor.engineerSuggestedLine
 assert(nextRoundState.advancedScenario?.subsystems.reaktor.engineerValveAngle === null, 'Yeni turda valf açısı temizlendi');
 assert(nextRoundState.advancedScenario?.subsystems.reaktor.engineerThrottleActive === false, 'Yeni turda tahliye anahtarı sıfırlandı');
 
+// -----------------------------------------------------------------------------
+// [TEST 14] Gelişmiş Sinyal Çözümü Görevi (Kural Hesaplamaları, Seçenekler & Kilitleme)
+// -----------------------------------------------------------------------------
+console.log('\n▶ [TEST 14] Gelişmiş Sinyal Çözümü Görevi (Kural Hesaplamaları, Seçenekler & Kilitleme)...');
+
+// 14.1 Sabit El ile Hesaplanmış Dönüşüm Kuralları Doğrulaması (Ground Truth)
+// Ters: [0, 4, 2, 9] -> [9, 2, 4, 0] ("9240")
+const rev1 = applySignalTransformation([0, 4, 2, 9], 'ters');
+assert(rev1.join('') === '9240', 'Kural "ters" doğrulaması 1: [0,4,2,9] -> "9240"');
+const rev2 = applySignalTransformation([1, 5, 8, 3], 'ters');
+assert(rev2.join('') === '3851', 'Kural "ters" doğrulaması 2: [1,5,8,3] -> "3851"');
+const rev3 = applySignalTransformation([0, 0, 7, 1], 'ters');
+assert(rev3.join('') === '1700', 'Kural "ters" doğrulaması 3: [0,0,7,1] -> "1700"');
+
+// Çift değiş (1-2 ve 3-4): [0, 4, 2, 9] -> [4, 0, 9, 2] ("4092")
+const pair1 = applySignalTransformation([0, 4, 2, 9], 'cift_degis');
+assert(pair1.join('') === '4092', 'Kural "cift_degis" doğrulaması 1: [0,4,2,9] -> "4092"');
+const pair2 = applySignalTransformation([1, 5, 8, 3], 'cift_degis');
+assert(pair2.join('') === '5138', 'Kural "cift_degis" doğrulaması 2: [1,5,8,3] -> "5138"');
+const pair3 = applySignalTransformation([0, 0, 7, 1], 'cift_degis');
+assert(pair3.join('') === '0017', 'Kural "cift_degis" doğrulaması 3 (baştaki sıfır korunmalı): [0,0,7,1] -> "0017"');
+
+// Sağa kaydır (4-1-2-3): [0, 4, 2, 9] -> [9, 0, 4, 2] ("9042")
+const shift1 = applySignalTransformation([0, 4, 2, 9], 'saga_kaydir');
+assert(shift1.join('') === '9042', 'Kural "saga_kaydir" doğrulaması 1: [0,4,2,9] -> "9042"');
+const shift2 = applySignalTransformation([1, 5, 8, 3], 'saga_kaydir');
+assert(shift2.join('') === '3158', 'Kural "saga_kaydir" doğrulaması 2: [1,5,8,3] -> "3158"');
+const shift3 = applySignalTransformation([0, 0, 7, 1], 'saga_kaydir');
+assert(shift3.join('') === '1007', 'Kural "saga_kaydir" doğrulaması 3: [0,0,7,1] -> "1007"');
+
+// 14.2 Monte Carlo 100 Tur Dinamik Üretim, Tek Çözüm ve Çeldirici Doğrulaması
+let allMonteCarloPassed = true;
+for (let i = 0; i < 100; i++) {
+  const sig = generateAdvancedSignal();
+
+  // 4 sembol ve sembol haritası geçerliliği
+  if (sig.incomingSymbols.length !== 4) allMonteCarloPassed = false;
+  if (!['ters', 'cift_degis', 'saga_kaydir'].includes(sig.ruleType)) allMonteCarloPassed = false;
+
+  // Matematiksel kod doğruluğu ve baştaki sıfırın korunması (4 karakter)
+  const rawDigits = sig.incomingSymbols.map(sym => sig.symbolMap[sym]);
+  const expectedCode = applySignalTransformation(rawDigits, sig.ruleType).join('');
+  if (sig.computedCode !== expectedCode || sig.computedCode.length !== 4) {
+    allMonteCarloPassed = false;
+  }
+
+  // 6 adet frekans-kod seçeneği ve benzersizlik
+  if (sig.frequencies.length !== 6) allMonteCarloPassed = false;
+  const uniqueCodes = new Set(sig.frequencies.map(f => f.code));
+  const uniqueFreqs = new Set(sig.frequencies.map(f => f.freq));
+  if (uniqueCodes.size !== 6 || uniqueFreqs.size !== 6) {
+    allMonteCarloPassed = false;
+  }
+
+  // Tam olarak bir doğru seçenek ve targetFrequency eşleşmesi
+  const matchingOptions = sig.frequencies.filter(f => f.code === sig.computedCode);
+  if (matchingOptions.length !== 1 || matchingOptions[0].freq !== sig.targetFrequency) {
+    allMonteCarloPassed = false;
+  }
+
+  // Başlangıç durumu
+  if (sig.isLocked !== false || sig.engineerSelectedFrequency !== null) {
+    allMonteCarloPassed = false;
+  }
+}
+assert(allMonteCarloPassed, '100 tur dinamik sinyal üretiminde: 4 haneli kod, 6 benzersiz seçenek ve tam 1 doğru hedef doğrulandı');
+
+// 14.3 Rol Yetkilendirme Testleri (Kaptan frekans seçemez veya kilitleyemez)
+let sigTestState = createInitialMissionState('KYP-SIG', 'kayip_sinyal', 'Kaptan Ece');
+sigTestState = { ...sigTestState, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 200, hullIntegrity: 100 };
+const testSigData = sigTestState.advancedScenario!.subsystems.sinyal;
+
+const captSelectRes = applyAdvancedAction(sigTestState, 'advanced_signal_select', { freq: testSigData.targetFrequency }, 'kaptan');
+assert(!!captSelectRes.error && captSelectRes.error.includes('Yalnızca Mühendis'), 'Kaptanın frekans seçme denemesi reddedildi');
+
+const captLockRes = applyAdvancedAction(sigTestState, 'advanced_signal_lock', {}, 'kaptan');
+assert(!!captLockRes.error && captLockRes.error.includes('Yalnızca Mühendis'), 'Kaptanın sinyal kilitleme denemesi reddedildi');
+
+// 14.4 Yetersiz Enerji (< 3 MW) ile Kilitleme Engellenir
+sigTestState = applyAdvancedAction(sigTestState, 'advanced_signal_select', { freq: testSigData.targetFrequency }, 'muhendis').nextState;
+assert(sigTestState.advancedScenario?.subsystems.sinyal.engineerSelectedFrequency === testSigData.targetFrequency, 'Frekans seçimi kaydedildi');
+const lowPowerLockRes = applyAdvancedAction(sigTestState, 'advanced_signal_lock', {}, 'muhendis');
+assert(!!lowPowerLockRes.error && lowPowerLockRes.error.includes('3 MW'), 'Anten 2 MW iken kilitleme reddedildi (Enerji yetersiz)');
+
+// 14.5 Seçim Yapılmadan Kilitleme Engellenir
+// Antene 3 MW güç verelim (Soğutma 4, Anten 3, Kompresör 0)
+sigTestState = applyAdvancedAction(sigTestState, 'advanced_set_power', { coolingPumps: 4, antennaBooster: 3, airlockCompressor: 0, shieldReserve: 0 }, 'kaptan').nextState;
+assert(sigTestState.advancedScenario?.powerGrid.antennaBooster === 3, 'Antene 3 MW güç sağlandı');
+
+let unselectedState = createInitialMissionState('KYP-UNSEL', 'kayip_sinyal', 'Kaptan Ece');
+unselectedState = { ...unselectedState, gameMode: 'gelismis', status: 'phase_game' };
+unselectedState = applyAdvancedAction(unselectedState, 'advanced_set_power', { coolingPumps: 4, antennaBooster: 3, airlockCompressor: 0, shieldReserve: 0 }, 'kaptan').nextState;
+const unselectedLockRes = applyAdvancedAction(unselectedState, 'advanced_signal_lock', {}, 'muhendis');
+assert(!!unselectedLockRes.error && (unselectedLockRes.error.includes('seçin') || unselectedLockRes.error.includes('seçiniz')), 'Seçim yapılmadan kilitleme denemesi reddedildi');
+
+// 14.6 Yanlış Frekans Seçimi ve Cezalandırma (-10s, -%5 gövde; doğru cevabı ele vermeme)
+const wrongOption = testSigData.frequencies!.find(f => f.freq !== testSigData.targetFrequency)!;
+assert(wrongOption !== undefined, 'Çeldirici frekans seçeneği bulundu');
+
+sigTestState = applyAdvancedAction(sigTestState, 'advanced_signal_select', { freq: wrongOption.freq }, 'muhendis').nextState;
+const wrongLockRes = applyAdvancedAction(sigTestState, 'advanced_signal_lock', {}, 'muhendis');
+
+assert(!!wrongLockRes.error, 'Yanlış frekans kilitleme denemesi reddedildi');
+assert(!wrongLockRes.error!.includes(testSigData.targetFrequency), 'Hata mesajı doğru hedef frekansı ele VERMEDİ');
+assert(!wrongLockRes.error!.includes(testSigData.computedCode || 'NONE'), 'Hata mesajı doğru hedef kodu ele VERMEDİ');
+assert(wrongLockRes.nextState.advancedScenario?.subsystems.sinyal.isLocked === false, 'Yanlış seçimde sinyal kilitlenmedi');
+assert(wrongLockRes.nextState.timeLeftSeconds === 200 - 10, 'Yanlış kilit cezası: Süreden 10 saniye düşüldü (200 -> 190s)');
+assert(wrongLockRes.nextState.hullIntegrity === 100 - 5, 'Yanlış kilit cezası: Gövdeden %5 düşüldü (100 -> 95%)');
+
+// 14.7 Durumun Sekme Değişikliği ve Yeniden Bağlantıda Korunması
+sigTestState = wrongLockRes.nextState;
+sigTestState = applyAdvancedAction(sigTestState, 'advanced_signal_select', { freq: testSigData.targetFrequency }, 'muhendis').nextState;
+assert(sigTestState.advancedScenario?.subsystems.sinyal.engineerSelectedFrequency === testSigData.targetFrequency, 'Doğru frekans seçildi ve kaydedildi');
+
+sigTestState = applyAdvancedAction(sigTestState, 'advanced_tab_change', { tab: 'reaktor' }, 'muhendis').nextState;
+assert(sigTestState.advancedScenario?.activeSubsystemTab === 'reaktor', 'Reaktör sekmesine geçildi');
+assert(sigTestState.advancedScenario?.subsystems.sinyal.engineerSelectedFrequency === testSigData.targetFrequency, 'Sekme değişince seçilen frekans korundu');
+
+sigTestState = applyAdvancedAction(sigTestState, 'advanced_tab_change', { tab: 'sinyal' }, 'muhendis').nextState;
+assert(sigTestState.advancedScenario?.subsystems.sinyal.engineerSelectedFrequency === testSigData.targetFrequency, 'Sinyal sekmesine dönüldüğünde seçim korundu');
+
+const reconnectSigRoom = new LostSignalRoom();
+reconnectSigRoom.missionState = sigTestState;
+const reconnectedEngSig = reconnectSigRoom.getFilteredStateForRole('muhendis');
+assert(reconnectedEngSig.advancedScenario?.subsystems.sinyal.engineerSelectedFrequency === testSigData.targetFrequency, 'Yeniden bağlanan mühendise kayıtlı frekans yüklendi');
+
+// 14.8 Doğru Frekans Seçimi ile Başarılı Kilit ve İdempotans
+const correctLockRes = applyAdvancedAction(sigTestState, 'advanced_signal_lock', {}, 'muhendis');
+assert(correctLockRes.nextState.advancedScenario?.subsystems.sinyal.isLocked === true, 'Doğru frekans ile Sinyal KİLİTLENDİ');
+assert(correctLockRes.nextState.advancedScenario?.subsystems.sinyal.noiseLevel === 4, 'Sinyal kilitlenince parazit seviyesi %4 e düştü');
+
+// İdempotans: Zaten kilitli sinyale tekrar kilitleme yapılınca ceza veya mükerrer işlem olmaz
+const repeatLockRes = applyAdvancedAction(correctLockRes.nextState, 'advanced_signal_lock', {}, 'muhendis');
+assert(repeatLockRes.nextState.advancedScenario?.subsystems.sinyal.isLocked === true, 'Mükerrer kilitleme sorunsuz ve güvenli tamamlandı (İdempotent)');
+assert(repeatLockRes.nextState.timeLeftSeconds === correctLockRes.nextState.timeLeftSeconds, 'Mükerrer kilitlemede süre cezası uygulanmadı');
+
+// 14.9 Yeni Tur Başlatıldığında Sinyal Seçimleri Temizlenir
+const freshRoundState = createInitialMissionState('KYP-ROUND2', 'kayip_sinyal', 'Kaptan Ece');
+assert(freshRoundState.advancedScenario?.subsystems.sinyal.isLocked === false, 'Yeni turda sinyal kilidi kapalı başlar');
+assert(freshRoundState.advancedScenario?.subsystems.sinyal.engineerSelectedFrequency === null, 'Yeni turda frekans seçimi temizlendi');
+
 console.log('\n======================================================================');
 console.log(`📊 GELİŞMİŞ TAKTİK SENARYOSU DOĞRULAMA TEST SONUCU: ${passCount}/${passCount} BAŞARILI`);
 console.log('✅ TÜM KESTİRMELER REDDEDİLDİ, SEYAHAT SÜRELERİ DÜŞÜLDÜ VE ŞARTLAR SAĞLANDIĞINDA ÇÖZÜMLER ÇALIŞTI!');
 console.log('======================================================================');
+
 

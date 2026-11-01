@@ -353,12 +353,58 @@ export function applyAdvancedAction(
     };
   }
 
-  // 5. Signal Tune & Lock
-  if (actionType === 'advanced_signal_tune') {
+  // 5a. Advanced Signal Select (Engineer selects frequency from options)
+  if (actionType === 'advanced_signal_select') {
     if (actingRole !== 'muhendis') {
-      return { nextState: state, error: 'Yalnızca Mühendis sinyal frekansını ayarlayabilir.' };
+      return { nextState: state, error: 'Yalnızca Mühendis sinyal frekansını seçebilir.' };
     }
 
+    if (adv.subsystems.sinyal.isLocked) {
+      return { nextState: state };
+    }
+
+    const freq = data?.freq;
+    if (!freq || typeof freq !== 'string') {
+      return { nextState: state, error: 'Geçersiz frekans seçimi.' };
+    }
+
+    // Verify freq is one of the valid options if options exist
+    const validFreqs = adv.subsystems.sinyal.frequencies?.map(f => f.freq) || [];
+    if (validFreqs.length > 0 && !validFreqs.includes(freq)) {
+      return { nextState: state, error: 'Seçilen frekans mevcut spektrum kanalları arasında bulunamadı.' };
+    }
+
+    adv.subsystems.sinyal.engineerSelectedFrequency = freq;
+    adv.subsystems.sinyal.currentFrequency = freq;
+
+    return {
+      nextState: {
+        ...state,
+        advancedScenario: adv,
+        feedbackState: 'idle',
+        feedbackMessage: `${freq} spektrumda ayarlandı. Kilitleme onayı bekleniyor.`,
+      },
+    };
+  }
+
+  // 5b. Advanced Signal Lock (Engineer locks the authoritative selected frequency)
+  if (actionType === 'advanced_signal_lock' || actionType === 'advanced_signal_tune') {
+    if (actingRole !== 'muhendis') {
+      return { nextState: state, error: 'Yalnızca Mühendis sinyal frekansını kilitleyebilir.' };
+    }
+
+    // Idempotent: repeated success does NOT give double points
+    if (adv.subsystems.sinyal.isLocked) {
+      return { nextState: state };
+    }
+
+    // Backwards-compatibility for advanced_signal_tune with payload
+    if (actionType === 'advanced_signal_tune' && data?.freq && !adv.subsystems.sinyal.engineerSelectedFrequency) {
+      adv.subsystems.sinyal.engineerSelectedFrequency = data.freq;
+      adv.subsystems.sinyal.currentFrequency = data.freq;
+    }
+
+    // Check antenna power (min 3 MW)
     if (adv.subsystems.sinyal.antennaPower < 3) {
       return {
         nextState: state,
@@ -366,30 +412,51 @@ export function applyAdvancedAction(
       };
     }
 
-    const freq = data.freq;
-    adv.subsystems.sinyal.currentFrequency = freq;
-
-    if (freq === adv.subsystems.sinyal.targetFrequency) {
-      adv.subsystems.sinyal.isLocked = true;
-      adv.evacuationLog.push(`✅ [Sinyal] ${freq} frekansında USS Aurora kurtarma gemisine kilitlenildi!`);
-      feedbackState = 'success';
-      feedbackMessage = 'Sinyal frekansı kilitlendi! Telemetri veri akışı kuruldu.';
-    } else {
-      applyPenalty(`Hatalı frekans (${freq})! Taşıyıcı dalga yankısı parazit yarattı.`);
+    // Only validate the recorded selection
+    const selectedFreq = adv.subsystems.sinyal.engineerSelectedFrequency;
+    if (!selectedFreq) {
+      return {
+        nextState: {
+          ...state,
+          feedbackState: 'error',
+          feedbackMessage: 'Önce spektrumdan kilitlenecek bir taşıyıcı frekans seçin.',
+        },
+        error: 'Önce spektrumdan kilitlenecek bir taşıyıcı frekans seçin.',
+      };
     }
 
-    return {
-      nextState: {
-        ...state,
-        hullIntegrity: hull,
-        timeLeftSeconds: timeLeft,
-        completedTasksCount: (state.completedTasksCount || 0) + (adv.subsystems.sinyal.isLocked ? 1 : 0),
-        feedbackState,
-        feedbackMessage,
-        advancedScenario: adv,
-      },
-      penaltyApplied,
-    };
+    if (selectedFreq === adv.subsystems.sinyal.targetFrequency) {
+      adv.subsystems.sinyal.isLocked = true;
+      adv.subsystems.sinyal.noiseLevel = 4;
+      adv.evacuationLog.push(`✅ [Sinyal] ${selectedFreq} frekansında USS Aurora kurtarma gemisine kilitlenildi!`);
+      feedbackState = 'success';
+      feedbackMessage = 'Sinyal frekansı kilitlendi! Telemetri veri akışı kuruldu.';
+
+      return {
+        nextState: {
+          ...state,
+          completedTasksCount: (state.completedTasksCount || 0) + 1,
+          feedbackState,
+          feedbackMessage,
+          advancedScenario: adv,
+        },
+        penaltyApplied: false,
+      };
+    } else {
+      applyPenalty(`Hatalı frekans (${selectedFreq})! Taşıyıcı dalga yankısı parazit yarattı.`);
+      return {
+        nextState: {
+          ...state,
+          hullIntegrity: hull,
+          timeLeftSeconds: timeLeft,
+          feedbackState,
+          feedbackMessage,
+          advancedScenario: adv,
+        },
+        penaltyApplied: true,
+        error: feedbackMessage,
+      };
+    }
   }
 
   // 6. Airlock Params

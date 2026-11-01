@@ -269,10 +269,21 @@ export interface AdvancedScenarioData {
       isLocked: boolean;
       antennaPower: number; // MW
       noiseLevel: number; // %
-      targetFrequency: string; // e.g. "143.6 MHz"
-      currentFrequency: string;
-      symbols: string[];
-      symbolValueSum: number;
+      targetFrequency: string; // e.g. "143.60 MHz"
+      currentFrequency?: string;
+      engineerSelectedFrequency?: string | null;
+      incomingSymbols?: string[];
+      symbolMap?: Record<string, number>;
+      ruleType?: 'ters' | 'cift_degis' | 'saga_kaydir';
+      ruleDescription?: string;
+      computedCode?: string;
+      frequencies?: Array<{
+        freq: string;
+        code: string;
+        label?: string;
+      }>;
+      symbols?: string[];
+      symbolValueSum?: number;
     };
     hava_kilidi: {
       isSealed: boolean;
