@@ -395,9 +395,24 @@ export class LostSignalRoom extends Room {
             return;
           }
 
-          // Check valve angle & throttle if provided
-          const valveAngle = data.valveAngle !== undefined ? data.valveAngle : this.missionState.diagnostic.targetValveAngle;
-          if (data.valveAngle !== undefined && data.valveAngle !== this.missionState.diagnostic.targetValveAngle) {
+          // Reject if valveAngle or throttleActive is missing (do not auto-fill with correct answer!)
+          if (data.valveAngle === undefined || data.valveAngle === null) {
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            this.missionState.feedbackState = 'error';
+            this.missionState.feedbackMessage = 'Müdahale başarısız: Soğutma valfi açısı belirtilmedi. Lütfen valf açısını ayarlayın.';
+            this.broadcastFilteredState();
+            return;
+          }
+
+          if (data.throttleActive === undefined || data.throttleActive === null) {
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            this.missionState.feedbackState = 'error';
+            this.missionState.feedbackMessage = 'Müdahale başarısız: Basınç tahliye anahtarı konumu belirtilmedi. Lütfen tahliye anahtarını ayarlayın.';
+            this.broadcastFilteredState();
+            return;
+          }
+
+          if (data.valveAngle !== this.missionState.diagnostic.targetValveAngle) {
             this.missionState.diagnostic.engineerSuggestedLine = data.line;
             this.missionState.diagnostic.engineerValveAngle = data.valveAngle;
             this.missionState.feedbackState = 'error';
@@ -406,8 +421,7 @@ export class LostSignalRoom extends Room {
             return;
           }
 
-          const throttleActive = data.throttleActive !== undefined ? data.throttleActive : true;
-          if (data.throttleActive !== undefined && !throttleActive) {
+          if (!data.throttleActive) {
             this.missionState.diagnostic.engineerSuggestedLine = data.line;
             this.missionState.diagnostic.engineerThrottleActive = false;
             this.missionState.feedbackState = 'error';
@@ -415,6 +429,9 @@ export class LostSignalRoom extends Room {
             this.broadcastFilteredState();
             return;
           }
+
+          const valveAngle = data.valveAngle;
+          const throttleActive = data.throttleActive;
 
           // All passed
           this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine] = {
@@ -919,6 +936,12 @@ export class LostSignalRoom extends Room {
                 lineNoise: 0,
                 criticalLine: 'anten',
               },
+              lines: {
+                reaktor: { temp: 0, press: 0, noise: 0, code: 'CIR-01', status: this.missionState.advancedScenario.subsystems.reaktor.lines?.reaktor.status || 'stabil' },
+                sogutucu: { temp: 0, press: 0, noise: 0, code: 'CIR-02', status: this.missionState.advancedScenario.subsystems.reaktor.lines?.sogutucu.status || 'stabil' },
+                anten: { temp: 0, press: 0, noise: 0, code: 'CIR-03', status: this.missionState.advancedScenario.subsystems.reaktor.lines?.anten.status || 'stabil' },
+                yonlendirme: { temp: 0, press: 0, noise: 0, code: 'CIR-04', status: this.missionState.advancedScenario.subsystems.reaktor.lines?.yonlendirme.status || 'stabil' },
+              },
             },
             sinyal: {
               ...this.missionState.advancedScenario.subsystems.sinyal,
@@ -987,6 +1010,9 @@ export class LostSignalRoom extends Room {
             reaktor: {
               ...this.missionState.advancedScenario.subsystems.reaktor,
               targetBreaker: undefined as any,
+              targetValveAngle: 0,
+              lineBreakerMap: undefined as any,
+              faultyLine: undefined as any,
             },
             sinyal: {
               ...this.missionState.advancedScenario.subsystems.sinyal,

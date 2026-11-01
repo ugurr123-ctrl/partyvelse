@@ -203,24 +203,24 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
                   )}
                 </div>
 
-                {/* Sensor Metrics Readout */}
+                {/* Sensor Metrics Readout - purely neutral numeric telemetries, no spoiler red colors */}
                 <div className="grid grid-cols-3 gap-1 my-2 bg-[#120f24] p-1.5 rounded-lg border border-white/5">
                   <div className="flex flex-col items-center">
                     <span className="text-[8px] font-mono text-[#d5c4ac]">ISI</span>
-                    <span className={`text-[10px] font-mono font-bold ${data.temp >= 80 || data.temp <= -10 ? 'text-rose-400' : 'text-[#ffdba0]'}`}>
+                    <span className={`text-[10px] font-mono font-bold ${isSolved ? 'text-emerald-400' : 'text-[#ffdba0]'}`}>
                       {data.temp}°C
                     </span>
                   </div>
                   <div className="flex flex-col items-center border-x border-white/5">
                     <span className="text-[8px] font-mono text-[#d5c4ac]">BASINÇ</span>
-                    <span className={`text-[10px] font-mono font-bold ${data.press <= 40 || data.press >= 70 ? 'text-rose-400' : 'text-[#00eefc]'}`}>
-                      {data.press}
+                    <span className={`text-[10px] font-mono font-bold ${isSolved ? 'text-emerald-400' : 'text-[#00eefc]'}`}>
+                      {data.press} kPa
                     </span>
                   </div>
                   <div className="flex flex-col items-center">
                     <span className="text-[8px] font-mono text-[#d5c4ac]">PARAZİT</span>
-                    <span className={`text-[10px] font-mono font-bold ${data.noise >= 60 ? 'text-rose-400' : 'text-[#dab5ff]'}`}>
-                      {data.noise}dB
+                    <span className={`text-[10px] font-mono font-bold ${isSolved ? 'text-emerald-400' : 'text-[#dab5ff]'}`}>
+                      {data.noise} dB
                     </span>
                   </div>
                 </div>

@@ -114,10 +114,10 @@ export function applyAdvancedAction(
       adv.subsystems.reaktor.breakerActivated = true;
       adv.evacuationLog.push(`[Reaktör] Kesici ${breaker} başarıyla devreye alındı.`);
       feedbackState = 'success';
-      feedbackMessage = `Kesici ${breaker} devrede. Şimdi sorunlu hattı tahliye edin.`;
+      feedbackMessage = `GÜVENLİK KİLİDİ AÇILDI (${breaker})! Devre akımı kesildi. Mühendisin soğutma valfi ve basınç tahliyesi bekleniyor.`;
     } else {
       adv.subsystems.reaktor.breakerActivated = false;
-      applyPenalty(`Hatalı kesici (${breaker}) seçildi! Yüksek rezonans aşırı yüklemesi.`);
+      applyPenalty(`Hatalı kesici (${breaker}) seçildi! İzole edilen hatta anomali bulunmuyor.`);
     }
 
     return {
@@ -140,7 +140,7 @@ export function applyAdvancedAction(
     }
 
     if (!adv.subsystems.reaktor.breakerActivated) {
-      applyPenalty('Kesici devresi açık olmadan tahliye yapılamaz!');
+      applyPenalty('Güvenlik kilidi devrede! Kaptan ana şebekeden kesiciyi açmadan tahliye vanası çalıştırılamaz.');
       return {
         nextState: {
           ...state,
@@ -169,17 +169,95 @@ export function applyAdvancedAction(
       };
     }
 
-    const line = data.line;
-    if (line === adv.subsystems.reaktor.liveTelemetry.criticalLine) {
-      adv.subsystems.reaktor.isPurged = true;
-      adv.subsystems.reaktor.isStabilized = true;
-      adv.subsystems.reaktor.liveTelemetry.coreTemp = 58;
-      adv.evacuationLog.push('✅ [Reaktör] Kritik hat tahliye edildi. Çekirdek ısısı 58°C ye stabilize oldu.');
-      feedbackState = 'success';
-      feedbackMessage = 'Reaktör çekirdeği dengelendi! İtki gücü hazır.';
-    } else {
-      applyPenalty(`Hatalı hat (${line}) tahliye edildi! Soğutucu sıvısı ziyan oldu.`);
+    // Reject if valveAngle or throttleActive is missing (do not auto-fill with correct answer!)
+    if (data.valveAngle === undefined || data.valveAngle === null) {
+      return {
+        nextState: {
+          ...state,
+          feedbackState: 'error',
+          feedbackMessage: 'Müdahale başarısız: Soğutma valfi açısı belirtilmedi. Lütfen valf açısını ayarlayın.',
+        },
+        error: 'Müdahale başarısız: Soğutma valfi açısı belirtilmedi. Lütfen valf açısını ayarlayın.',
+      };
     }
+
+    if (data.throttleActive === undefined || data.throttleActive === null) {
+      return {
+        nextState: {
+          ...state,
+          feedbackState: 'error',
+          feedbackMessage: 'Müdahale başarısız: Basınç tahliye anahtarı konumu belirtilmedi. Lütfen tahliye anahtarını ayarlayın.',
+        },
+        error: 'Müdahale başarısız: Basınç tahliye anahtarı konumu belirtilmedi. Lütfen tahliye anahtarını ayarlayın.',
+      };
+    }
+
+    const line = data.line;
+    const targetLine = adv.subsystems.reaktor.faultyLine || adv.subsystems.reaktor.liveTelemetry.criticalLine;
+    if (line !== targetLine) {
+      applyPenalty('Hatalı hat tahliyesi! Seçilen devrede çoklu arıza koşulları oluşmamış. Sağlam devreye müdahale edildi.');
+      return {
+        nextState: {
+          ...state,
+          hullIntegrity: hull,
+          timeLeftSeconds: timeLeft,
+          feedbackState,
+          feedbackMessage,
+          advancedScenario: adv,
+        },
+        penaltyApplied: true,
+      };
+    }
+
+    const targetAngle = adv.subsystems.reaktor.targetValveAngle || 135;
+    if (data.valveAngle !== targetAngle) {
+      applyPenalty('Müdahale başarısız: Soğutma valfi doğru açıda değil. Termal şok riski nedeniyle tahliye emniyet valfi tarafından durduruldu.');
+      return {
+        nextState: {
+          ...state,
+          hullIntegrity: hull,
+          timeLeftSeconds: timeLeft,
+          feedbackState,
+          feedbackMessage,
+          advancedScenario: adv,
+        },
+        penaltyApplied: true,
+      };
+    }
+
+    if (!data.throttleActive) {
+      applyPenalty('Müdahale başarısız: Basınç tahliyesi devre dışı. Hat basıncı boşaltılmadan devre açılamaz.');
+      return {
+        nextState: {
+          ...state,
+          hullIntegrity: hull,
+          timeLeftSeconds: timeLeft,
+          feedbackState,
+          feedbackMessage,
+          advancedScenario: adv,
+        },
+        penaltyApplied: true,
+      };
+    }
+
+    // All passed!
+    adv.subsystems.reaktor.isPurged = true;
+    adv.subsystems.reaktor.isStabilized = true;
+    adv.subsystems.reaktor.liveTelemetry.coreTemp = 58;
+    adv.subsystems.reaktor.liveTelemetry.coolantPressure = 50;
+    adv.subsystems.reaktor.liveTelemetry.lineNoise = 36;
+    if (adv.subsystems.reaktor.lines && adv.subsystems.reaktor.lines[targetLine]) {
+      adv.subsystems.reaktor.lines[targetLine] = {
+        ...adv.subsystems.reaktor.lines[targetLine],
+        temp: 54,
+        press: 50,
+        noise: 36,
+        status: 'stabil',
+      };
+    }
+    adv.evacuationLog.push(`✅ [Reaktör] Kritik devre (${line}) başarıyla tahliye edildi ve soğutuldu. Çekirdek ısısı 58°C ye stabilize oldu.`);
+    feedbackState = 'success';
+    feedbackMessage = 'MÜDAHALE TAMAMLANDI! Reaktör çekirdeği dengelendi. İtki gücü hazır.';
 
     return {
       nextState: {
@@ -191,7 +269,7 @@ export function applyAdvancedAction(
         feedbackMessage,
         advancedScenario: adv,
       },
-      penaltyApplied,
+      penaltyApplied: false,
     };
   }
 

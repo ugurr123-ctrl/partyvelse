@@ -61,10 +61,11 @@ assert(captainView.advancedScenario?.subsystems.sinyal.targetFrequency === '??? 
 assert(captainView.advancedScenario?.subsystems.hava_kilidi.targetDialIndex === -1, 'Kaptana hava kilidi doğru kadranı GİZLENDİ');
 assert(captainView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === 0, 'Kaptana canlı çekirdek ısı göstergesi GİZLENDİ (Mühendis okumalı)');
 
-assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === 84, 'Mühendise çekirdek ısısı (84°C) iletildi');
-assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure === 38, 'Mühendise soğutucu basıncı (38 kPa) iletildi');
+assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === 86, 'Mühendise çekirdek ısısı (86°C) iletildi');
+assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure === 32, 'Mühendise soğutucu basıncı (32 kPa) iletildi');
 assert(engineerView.advancedScenario?.subsystems.hava_kilidi.externalPressureKpa === 36, 'Mühendise dış sensör basıncı (36 kPa) iletildi');
 assert(engineerView.advancedScenario?.subsystems.sinyal.symbols[0] === '?', 'Mühendise kaptanın şifre tablosu sembolleri GİZLENDİ');
+assert(engineerView.advancedScenario?.subsystems.reaktor.targetValveAngle === 0, 'Mühendise doğru valf açısı GİZLENDİ');
 
 // -----------------------------------------------------------------------------
 // [TEST 4] Sınırlı Başlangıç Enerjisi (7 MW) & Güç Aktarımı Zorunluluğu
@@ -177,7 +178,15 @@ path1 = { ...path1, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds:
 
 // 1. Reaktör Çözümü: Başlangıçta Soğutma 4 MW hazır (4 + 2 + 1 = 7 MW)
 path1 = applyAdvancedAction(path1, 'advanced_reactor_breaker', { breaker: 'K2' }, 'kaptan').nextState;
-path1 = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten' }, 'muhendis').nextState;
+
+// Eksik parametre testleri: valveAngle ve throttleActive eksikse reddedilmelidir
+const missingValveRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten', throttleActive: true }, 'muhendis');
+assert(!!missingValveRes.error && missingValveRes.error.includes('Soğutma valfi açısı belirtilmedi'), 'Gelişmiş modda eksik valveAngle işlemi reddedildi');
+
+const missingThrottleRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135 }, 'muhendis');
+assert(!!missingThrottleRes.error && missingThrottleRes.error.includes('Basınç tahliye anahtarı konumu belirtilmedi'), 'Gelişmiş modda eksik throttleActive işlemi reddedildi');
+
+path1 = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135, throttleActive: true }, 'muhendis').nextState;
 assert(path1.advancedScenario?.subsystems.reaktor.isStabilized === true, '1. Adım: Reaktör stabilize edildi (Isı: 58°C)');
 
 // 2. Güç Aktarımı: Reaktör çözülünce soğutma 1 MW a indirilir, Antene 3 MW verilir (1 + 3 + 3 = 7 MW)
@@ -213,7 +222,7 @@ path2 = { ...path2, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds:
 
 // 1. Reaktör Çözümü: Soğutma 4 MW ile çözülür
 path2 = applyAdvancedAction(path2, 'advanced_reactor_breaker', { breaker: 'K2' }, 'kaptan').nextState;
-path2 = applyAdvancedAction(path2, 'advanced_reactor_purge', { line: 'anten' }, 'muhendis').nextState;
+path2 = applyAdvancedAction(path2, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135, throttleActive: true }, 'muhendis').nextState;
 
 // 2. Güç Aktarımı: Soğutma 1 MW, Anten 3 MW, Kalkan Rezervi 3 MW (1 + 3 + 0 + 3 = 7 MW)
 path2 = applyAdvancedAction(path2, 'advanced_set_power', { coolingPumps: 1, antennaBooster: 3, airlockCompressor: 0, shieldReserve: 3 }, 'kaptan').nextState;
@@ -244,7 +253,7 @@ path3 = { ...path3, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds:
 
 // Sadece Reaktör çözülür, Sinyal ve Hava kilidi yok
 path3 = applyAdvancedAction(path3, 'advanced_reactor_breaker', { breaker: 'K2' }, 'kaptan').nextState;
-path3 = applyAdvancedAction(path3, 'advanced_reactor_purge', { line: 'anten' }, 'muhendis').nextState;
+path3 = applyAdvancedAction(path3, 'advanced_reactor_purge', { line: 'anten', valveAngle: 135, throttleActive: true }, 'muhendis').nextState;
 
 // Rota Gama seçilip onaylanır (30s seyahat, -%10 gövde)
 path3 = applyAdvancedAction(path3, 'advanced_rescue_select', { routeId: 'gama' }, 'kaptan').nextState;

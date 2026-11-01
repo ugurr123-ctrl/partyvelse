@@ -22,6 +22,9 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   const [activeTab, setActiveTab] = useState<AdvancedSubsystemId>(
     adv?.activeSubsystemTab || 'reaktor'
   );
+  const [selectedReactorLine, setSelectedReactorLine] = useState<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme' | null>(null);
+  const [reactorCoolingAngle, setReactorCoolingAngle] = useState<number>(45);
+  const [reactorThrottleToggled, setReactorThrottleToggled] = useState<boolean>(false);
 
   // If advanced scenario data is not initialized
   if (!adv) {
@@ -261,33 +264,54 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 
             {/* Asymmetric View: Captain (Manual & Rules) vs Engineer (Live Telemetry & Controls) */}
             {isCaptain ? (
-              <div className="bg-[#171433] border border-amber-500/30 rounded-2xl p-3.5 space-y-2.5">
+              <div className="bg-[#171433] border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
                 <div className="flex items-center gap-2 border-b border-amber-500/20 pb-1.5">
                   <span className="text-amber-400 text-sm">📜</span>
                   <h4 className="text-xs font-bold font-sora text-amber-200 uppercase tracking-wide">
-                    Teknik Yönerge: Reaktör Dengeleme Protokolü
+                    Kaptan Devre Şeması &amp; Arıza Protokolü
                   </h4>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Mühendisin telemetri ekranındaki canlı ölçümleri isteyin ve kurala göre doğru kesiciyi bildirin:
-                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { code: 'CIR-01', name: 'Ana Reaktör', breaker: 'K1' },
+                    { code: 'CIR-02', name: 'Soğutucu Çekirdek', breaker: 'K3' },
+                    { code: 'CIR-03', name: 'Anten Ünitesi', breaker: 'K2' },
+                    { code: 'CIR-04', name: 'İtki ve Yönlendirme', breaker: 'K4' },
+                  ].map((mod) => (
+                    <div key={mod.code} className="p-2 rounded-xl bg-[#0f0e20] border border-white/5 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-mono text-cyan-400 font-bold">{mod.code}</span>
+                        <span className="text-[9px] text-slate-300 truncate max-w-[90px]">{mod.name}</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded bg-[#2b273b] text-amber-300 border border-amber-500/30">
+                        {mod.breaker}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Diagnostic Rule Plaque */}
                 <div className="bg-[#0f0e20] p-2.5 rounded-xl border border-white/5 space-y-1.5 text-[11px] font-mono">
+                  <p className="text-amber-200 font-bold">ARIZA TEŞHİS KURALI:</p>
                   <p className="text-slate-300">
-                    • <strong className="text-amber-300">KURAL 1:</strong> Çekirdek Isısı &gt; 75°C ve Soğutucu Basıncı &lt; 45 kPa ise → <span className="text-cyan-300 font-bold">Kesici K2</span> devrededir.
+                    Bir devrede arıza kabul edilmesi için: <strong className="text-amber-300">Isı ≥ 80°C</strong> VE <strong className="text-cyan-300">Basınç ≤ 40 kPa</strong> VE <strong className="text-purple-300">Parazit ≥ 65 dB</strong> (üçü birlikte aranır).
+                  </p>
+                  <p className="text-slate-300 pt-1 border-t border-white/5">
+                    • <strong className="text-amber-300">TAHLİYE TALİMATI:</strong> Kesici açıldıktan sonra Soğutma Valfi <strong className="text-cyan-300">135°</strong> konumuna alınmalı ve <strong className="text-amber-300">Basınç Tahliyesi AKTİF</strong> edilmelidir.
                   </p>
                   <p className="text-slate-300">
-                    • <strong className="text-amber-300">KURAL 2:</strong> Çekirdek Isısı &lt; 70°C ve Gürültü &gt; 70 dB ise → <span className="text-cyan-300 font-bold">Kesici K3</span> devrededir.
-                  </p>
-                  <p className="text-slate-300">
-                    • <strong className="text-amber-300">TAHLİYE KURALI:</strong> Mühendisin ölçtüğü en yüksek gürültüye sahip hat derhal tahliye edilmelidir.
-                  </p>
-                  <p className="text-slate-300">
-                    • <strong className="text-amber-300">GÜÇ ŞARTI:</strong> Soğutma Pompaları en az 4 MW beslenmelidir.
+                    • <strong className="text-amber-300">GÜÇ ŞARTI:</strong> Soğutma Pompaları en az 4 MW beslenmelidir (Mevcut: {adv.subsystems.reaktor.coolantPumpsPower} MW).
                   </p>
                 </div>
 
                 <div className="pt-1">
-                  <span className="text-[10px] font-mono text-slate-400 block mb-1">KESİCİ DEVREYE ALMA EMRİ:</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-mono text-slate-400">GÜVENLİK KESİCİSİ DEVREYE ALMA:</span>
+                    <span className="text-[10px] font-mono text-amber-300 font-bold">
+                      {adv.subsystems.reaktor.breakerActivated ? 'KİLİT AÇIK (K2)' : 'KİLİTLİ'}
+                    </span>
+                  </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {(['K1', 'K2', 'K3', 'K4'] as const).map((k) => (
                       <button
@@ -309,70 +333,155 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
               </div>
             ) : (
               <div className="bg-[#171433] border border-cyan-500/30 rounded-2xl p-3.5 space-y-3">
-                <div className="flex items-center gap-2 border-b border-cyan-500/20 pb-1.5">
-                  <span className="text-cyan-400 text-sm">⚙</span>
-                  <h4 className="text-xs font-bold font-sora text-cyan-200 uppercase tracking-wide">
-                    Mühendis Canlı Telemetri &amp; Tahliye Kontrolü
-                  </h4>
+                <div className="flex items-center justify-between border-b border-cyan-500/20 pb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-cyan-400 text-sm">⚙</span>
+                    <h4 className="text-xs font-bold font-sora text-cyan-200 uppercase tracking-wide">
+                      Mühendis Telemetri &amp; Tahliye Kontrolü
+                    </h4>
+                  </div>
+                  <span className="text-[9px] font-mono text-slate-400">
+                    {selectedReactorLine ? `${selectedReactorLine.toUpperCase()} SEÇİLİ` : 'SEÇİM YOK'}
+                  </span>
                 </div>
 
-                {/* Sensor Readouts */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-[#0f0e20] p-2 rounded-xl border border-white/5">
-                    <span className="text-[9px] font-mono text-slate-400 block">ÇEKİRDEK ISISI</span>
-                    <span className={`text-sm font-mono font-bold ${
-                      adv.subsystems.reaktor.liveTelemetry.coreTemp > 75 ? 'text-red-400' : 'text-emerald-400'
-                    }`}>
-                      {adv.subsystems.reaktor.liveTelemetry.coreTemp || 84}°C
-                    </span>
+                {/* 4 Circuits Live Telemetry Matrix - purely neutral numeric readouts (no spoiler red colors) */}
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: 'reaktor' as const, code: 'CIR-01', name: 'Ana Reaktör', temp: 83, press: 56, noise: 42 },
+                    { key: 'sogutucu' as const, code: 'CIR-02', name: 'Soğutucu Çekirdek', temp: 55, press: 34, noise: 71 },
+                    { key: 'anten' as const, code: 'CIR-03', name: 'Anten Ünitesi', temp: adv.subsystems.reaktor.isStabilized ? 54 : 86, press: adv.subsystems.reaktor.isStabilized ? 50 : 32, noise: adv.subsystems.reaktor.isStabilized ? 36 : 76 },
+                    { key: 'yonlendirme' as const, code: 'CIR-04', name: 'İtki ve Yönlendirme', temp: 62, press: 52, noise: 69 },
+                  ].map((mod) => {
+                    const isSelected = selectedReactorLine === mod.key;
+                    const isStabilized = adv.subsystems.reaktor.isStabilized && mod.key === 'anten';
+
+                    return (
+                      <button
+                        key={mod.key}
+                        type="button"
+                        onClick={() => setSelectedReactorLine(mod.key)}
+                        disabled={adv.subsystems.reaktor.isStabilized}
+                        className={`p-2 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#00eefc]/15 border-[#00eefc] shadow-[0_0_12px_rgba(0,238,252,0.3)] ring-1 ring-[#00eefc]'
+                            : isStabilized
+                            ? 'bg-emerald-950/20 border-emerald-500/40'
+                            : 'bg-[#0f0e20] border-white/5 hover:bg-[#1a1736]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] font-bold text-cyan-400">{mod.code}</span>
+                          <span className="text-[9px] text-slate-300 truncate max-w-[80px]">{mod.name}</span>
+                        </div>
+
+                        {/* Telemetry numbers - neutral theme styling without red highlight */}
+                        <div className="grid grid-cols-3 gap-1 my-1.5 bg-[#171433] p-1 rounded-lg border border-white/5 text-center">
+                          <div>
+                            <span className="text-[8px] font-mono text-slate-400 block">ISI</span>
+                            <span className={`text-[10px] font-mono font-bold ${isStabilized ? 'text-emerald-400' : 'text-amber-300'}`}>
+                              {mod.temp}°C
+                            </span>
+                          </div>
+                          <div className="border-x border-white/5">
+                            <span className="text-[8px] font-mono text-slate-400 block">BASINÇ</span>
+                            <span className={`text-[10px] font-mono font-bold ${isStabilized ? 'text-emerald-400' : 'text-cyan-300'}`}>
+                              {mod.press}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[8px] font-mono text-slate-400 block">PARAZİT</span>
+                            <span className={`text-[10px] font-mono font-bold ${isStabilized ? 'text-emerald-400' : 'text-purple-300'}`}>
+                              {mod.noise}dB
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-[9px] font-mono text-right">
+                          <span className={isStabilized ? 'text-emerald-400 font-bold' : isSelected ? 'text-cyan-300 font-bold' : 'text-slate-400'}>
+                            {isStabilized ? 'STABİL' : isSelected ? 'SEÇİLDİ' : 'İNCELE'}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Mechanical Controls: Valve Angle & Pressure Throttle */}
+                <div className="bg-[#0f0e20] p-2.5 rounded-xl border border-white/5 grid grid-cols-2 gap-2">
+                  <div className="flex flex-col justify-between">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono text-slate-400 uppercase font-bold">Soğutma Valfi</span>
+                      <span className="text-[10px] font-mono text-cyan-300 font-bold">{reactorCoolingAngle}°</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1 my-1">
+                      {[45, 90, 135, 180].map((deg) => (
+                        <button
+                          key={deg}
+                          type="button"
+                          onClick={() => setReactorCoolingAngle(deg)}
+                          disabled={adv.subsystems.reaktor.isStabilized}
+                          className={`py-1 rounded text-[9px] font-mono font-bold transition-all cursor-pointer ${
+                            reactorCoolingAngle === deg
+                              ? 'bg-cyan-400 text-black shadow-[0_0_8px_rgba(0,238,252,0.4)]'
+                              : 'bg-[#221f45] text-slate-300 hover:bg-[#2b2756]'
+                          }`}
+                        >
+                          {deg}°
+                        </button>
+                      ))}
+                    </div>
+                    <span className="text-[8px] font-mono text-slate-400">Kaptan talimatına göre ayarla</span>
                   </div>
-                  <div className="bg-[#0f0e20] p-2 rounded-xl border border-white/5">
-                    <span className="text-[9px] font-mono text-slate-400 block">SOĞUTUCU BASINCI</span>
-                    <span className="text-sm font-mono font-bold text-amber-400">
-                      {adv.subsystems.reaktor.liveTelemetry.coolantPressure || 38} kPa
-                    </span>
-                  </div>
-                  <div className="bg-[#0f0e20] p-2 rounded-xl border border-white/5">
-                    <span className="text-[9px] font-mono text-slate-400 block">EN YÜKSEK GÜRÜLTÜ</span>
-                    <span className="text-sm font-mono font-bold text-cyan-400">
-                      Anten (76 dB)
-                    </span>
+
+                  <div className="flex flex-col justify-between">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono text-slate-400 uppercase font-bold">Tahliye Anahtarı</span>
+                      <span className={`text-[9px] font-mono font-bold ${reactorThrottleToggled ? 'text-emerald-400' : 'text-slate-400'}`}>
+                        {reactorThrottleToggled ? 'AKTİF' : 'KAPALI'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReactorThrottleToggled(!reactorThrottleToggled)}
+                      disabled={adv.subsystems.reaktor.isStabilized}
+                      className={`w-full py-1.5 my-1 rounded-lg font-mono text-[10px] font-bold transition-all cursor-pointer border ${
+                        reactorThrottleToggled
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.25)]'
+                          : 'bg-[#221f45] text-slate-300 border-white/5 hover:bg-[#2b2756]'
+                      }`}
+                    >
+                      {reactorThrottleToggled ? 'TAHLİYE AKTİF' : 'TAHLİYE AÇ'}
+                    </button>
+                    <span className="text-[8px] font-mono text-slate-400">Tahliye vanasını devreye sokar</span>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-slate-300">
-                  Bu değerleri Kaptana sesli okuyun. Kaptan kesiciyi seçtikten sonra doğru hattı tahliye edin:
-                </p>
-
-                <div className="space-y-1.5">
-                  <button
-                    onClick={() => onAction('advanced_reactor_purge', { line: 'anten' })}
-                    disabled={adv.subsystems.reaktor.isStabilized}
-                    className="w-full py-2 px-3 bg-[#1e293b] hover:bg-cyan-600 border border-cyan-400/30 rounded-xl text-xs font-mono font-bold text-left flex items-center justify-between cursor-pointer transition-all active:scale-98"
-                    type="button"
-                  >
-                    <span>ANTEN HATTI (76 dB)</span>
-                    <span className="text-[10px] text-cyan-300">TAHLİYE ET →</span>
-                  </button>
-                  <button
-                    onClick={() => onAction('advanced_reactor_purge', { line: 'reaktor' })}
-                    disabled={adv.subsystems.reaktor.isStabilized}
-                    className="w-full py-2 px-3 bg-[#1e293b] hover:bg-red-600 border border-white/10 rounded-xl text-xs font-mono font-bold text-left flex items-center justify-between cursor-pointer transition-all active:scale-98"
-                    type="button"
-                  >
-                    <span>REAKTÖR HATTI (42 dB)</span>
-                    <span className="text-[10px] text-slate-400">TAHLİYE ET →</span>
-                  </button>
-                  <button
-                    onClick={() => onAction('advanced_reactor_purge', { line: 'sogutucu' })}
-                    disabled={adv.subsystems.reaktor.isStabilized}
-                    className="w-full py-2 px-3 bg-[#1e293b] hover:bg-red-600 border border-white/10 rounded-xl text-xs font-mono font-bold text-left flex items-center justify-between cursor-pointer transition-all active:scale-98"
-                    type="button"
-                  >
-                    <span>SOĞUTUCU HATTI (31 dB)</span>
-                    <span className="text-[10px] text-slate-400">TAHLİYE ET →</span>
-                  </button>
-                </div>
+                {/* Purge Action Button */}
+                <button
+                  onClick={() => onAction('advanced_reactor_purge', {
+                    line: selectedReactorLine,
+                    valveAngle: reactorCoolingAngle,
+                    throttleActive: reactorThrottleToggled,
+                  })}
+                  disabled={adv.subsystems.reaktor.isStabilized || !selectedReactorLine}
+                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-2 ${
+                    adv.subsystems.reaktor.isStabilized
+                      ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 cursor-default'
+                      : !selectedReactorLine
+                      ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60'
+                      : 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-950 hover:opacity-95 shadow-[0_4px_12px_rgba(0,238,252,0.3)] active:scale-98 cursor-pointer'
+                  }`}
+                  type="button"
+                >
+                  <span>
+                    {adv.subsystems.reaktor.isStabilized 
+                      ? 'REAKTÖR STABİLİZE EDİLDİ' 
+                      : !selectedReactorLine 
+                      ? 'ÖNCE DEVRE / HAT SEÇİN' 
+                      : `${selectedReactorLine.toUpperCase()} DEVRESİNİ TAHLİYE ET`}
+                  </span>
+                </button>
               </div>
             )}
           </div>

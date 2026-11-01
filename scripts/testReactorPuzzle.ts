@@ -171,13 +171,31 @@ mission = applyLocalGameAction(mission, 'diagnostic_engineer_purge', {
 assertTrue(mission.diagnostic.isSolved === false, 'Hatalı soğutma valfi açısı ile tahliye reddedildi');
 assertTrue(mission.feedbackMessage.includes('Soğutma valfi doğru açıda değil'), 'Valf hatası açıklandı');
 
-// 4.6 Mühendis Doğru Hat, Doğru Valf Ama Basınç Tahliyesini Açmaz
+// 4.6 Mühendis Doğru Hat Ama valveAngle Eksik Gönderirse (undefined/null)
+const stateMissingValve = applyLocalGameAction(mission, 'diagnostic_engineer_purge', {
+  line: faultyLine,
+  throttleActive: true,
+}, 'muhendis');
+assertTrue(stateMissingValve.diagnostic.isSolved === false, 'valveAngle eksik olduğunda işlem reddedildi (otomatik doldurulmadı)');
+assertTrue(stateMissingValve.feedbackState === 'error', 'valveAngle eksikliği hata durumuna geçti');
+assertTrue(stateMissingValve.feedbackMessage.includes('Soğutma valfi açısı belirtilmedi'), 'Eksik valf açısı uyarısı verildi');
+
+// 4.7 Mühendis Doğru Hat Ama throttleActive Eksik Gönderirse (undefined/null)
+const stateMissingThrottle = applyLocalGameAction(mission, 'diagnostic_engineer_purge', {
+  line: faultyLine,
+  valveAngle: targetValveAngle,
+}, 'muhendis');
+assertTrue(stateMissingThrottle.diagnostic.isSolved === false, 'throttleActive eksik olduğunda işlem reddedildi (otomatik doldurulmadı)');
+assertTrue(stateMissingThrottle.feedbackState === 'error', 'throttleActive eksikliği hata durumuna geçti');
+assertTrue(stateMissingThrottle.feedbackMessage.includes('Basınç tahliye anahtarı konumu belirtilmedi'), 'Eksik tahliye anahtarı uyarısı verildi');
+
+// 4.8 Mühendis Doğru Hat, Doğru Valf Ama Basınç Tahliyesini Açmaz (false)
 mission = applyLocalGameAction(mission, 'diagnostic_engineer_purge', {
   line: faultyLine,
   valveAngle: targetValveAngle,
   throttleActive: false,
 }, 'muhendis');
-assertTrue(mission.diagnostic.isSolved === false, 'Basınç tahliyesi aktif olmadan işlem reddedildi');
+assertTrue(mission.diagnostic.isSolved === false, 'Basınç tahliyesi devre dışı olmadan işlem reddedildi');
 assertTrue(mission.feedbackMessage.includes('Basınç tahliyesi devre dışı'), 'Tahliye anahtarı hatası açıklandı');
 
 // --------------------------------------------------------------------

@@ -247,11 +247,18 @@ export interface AdvancedScenarioData {
       coolantPumpsPower: number; // MW
       isPurged: boolean;
       breakerActivated: boolean;
+      targetValveAngle?: number;
+      targetThrottleActive?: boolean;
+      engineerValveAngle?: number | null;
+      engineerThrottleActive?: boolean;
+      faultyLine?: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme';
+      lineBreakerMap?: Record<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme', 'K1' | 'K2' | 'K3' | 'K4'>;
+      lines?: DiagnosticData['lines'];
       liveTelemetry: {
         coreTemp: number; // e.g. 88°C
         coolantPressure: number; // e.g. 39 kPa
         lineNoise: number; // e.g. 78 dB
-        criticalLine: 'anten' | 'reaktor' | 'sogutucu';
+        criticalLine: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme';
       };
       targetBreaker: 'K1' | 'K2' | 'K3' | 'K4';
     };

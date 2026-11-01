@@ -168,9 +168,32 @@ export function applyLocalGameAction(
           );
         }
 
-        // Check valve angle and throttle if provided
-        const valveAngle = data.valveAngle !== undefined ? data.valveAngle : state.diagnostic.targetValveAngle;
-        if (data.valveAngle !== undefined && data.valveAngle !== state.diagnostic.targetValveAngle) {
+        // Reject if valveAngle or throttleActive is missing (do not auto-fill with correct answer!)
+        if (data.valveAngle === undefined || data.valveAngle === null) {
+          return {
+            ...state,
+            diagnostic: {
+              ...state.diagnostic,
+              engineerSuggestedLine: data.line,
+            },
+            feedbackState: 'error',
+            feedbackMessage: 'Müdahale başarısız: Soğutma valfi açısı belirtilmedi. Lütfen valf açısını ayarlayın.',
+          };
+        }
+
+        if (data.throttleActive === undefined || data.throttleActive === null) {
+          return {
+            ...state,
+            diagnostic: {
+              ...state.diagnostic,
+              engineerSuggestedLine: data.line,
+            },
+            feedbackState: 'error',
+            feedbackMessage: 'Müdahale başarısız: Basınç tahliye anahtarı konumu belirtilmedi. Lütfen tahliye anahtarını ayarlayın.',
+          };
+        }
+
+        if (data.valveAngle !== state.diagnostic.targetValveAngle) {
           return {
             ...state,
             diagnostic: {
@@ -183,8 +206,7 @@ export function applyLocalGameAction(
           };
         }
 
-        const throttleActive = data.throttleActive !== undefined ? data.throttleActive : true;
-        if (data.throttleActive !== undefined && !throttleActive) {
+        if (!data.throttleActive) {
           return {
             ...state,
             diagnostic: {
@@ -196,6 +218,9 @@ export function applyLocalGameAction(
             feedbackMessage: 'Müdahale başarısız: Basınç tahliyesi devre dışı. Hat basıncı boşaltılmadan devre açılamaz.',
           };
         }
+
+        const valveAngle = data.valveAngle;
+        const throttleActive = data.throttleActive;
 
         // All checks succeeded!
         const updatedLines = {

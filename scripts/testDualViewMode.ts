@@ -74,11 +74,19 @@ function runDualViewTests() {
   // Mühendis sağ ekranda hatalı hat tahliyesi denerse ceza almalı
   const wrongLine = faultyLine === 'reaktor' ? 'anten' : 'reaktor';
   const timeBefore = state.timeLeftSeconds;
-  state = applyLocalGameAction(state, 'diagnostic_engineer_purge', { line: wrongLine }, 'muhendis');
+  state = applyLocalGameAction(state, 'diagnostic_engineer_purge', { 
+    line: wrongLine, 
+    valveAngle: state.diagnostic.targetValveAngle, 
+    throttleActive: true 
+  }, 'muhendis');
   assertTrue(state.timeLeftSeconds === timeBefore - 15, 'Mühendisin hatalı hat seçimi ceza uyguladı (-15s)');
 
   // Mühendis doğru arızalı hattı tahliye eder
-  state = applyLocalGameAction(state, 'diagnostic_engineer_purge', { line: faultyLine }, 'muhendis');
+  state = applyLocalGameAction(state, 'diagnostic_engineer_purge', { 
+    line: faultyLine, 
+    valveAngle: state.diagnostic.targetValveAngle, 
+    throttleActive: true 
+  }, 'muhendis');
   assertTrue(state.diagnostic.isSolved === true, 'Mühendis doğru hattı tahliye edince Reaktör DENGELENDİ!');
 
   // Aşama İlerletme: Phase 0 -> Phase 1
