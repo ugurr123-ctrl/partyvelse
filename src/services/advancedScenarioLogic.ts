@@ -200,11 +200,11 @@ export function applyAdvancedAction(
       return { nextState: state };
     }
 
-    // Read parameter values from explicit payload if passed, or fall back to saved state in adv.subsystems.reaktor
-    const hasExplicitPayload = Boolean(data && typeof data === 'object' && Object.keys(data).length > 0);
-    const line = hasExplicitPayload ? data.line : adv.subsystems.reaktor.engineerSuggestedLine;
-    const valveAngle = hasExplicitPayload ? data.valveAngle : adv.subsystems.reaktor.engineerValveAngle;
-    const throttleActive = hasExplicitPayload ? data.throttleActive : adv.subsystems.reaktor.engineerThrottleActive;
+    // Read parameter values strictly from saved state on server/authoritative state.
+    // The line, valveAngle, and throttleActive fields in the purge request CANNOT override saved selections.
+    const line = adv.subsystems.reaktor.engineerSuggestedLine;
+    const valveAngle = adv.subsystems.reaktor.engineerValveAngle;
+    const throttleActive = adv.subsystems.reaktor.engineerThrottleActive;
 
     if (!line) {
       return {

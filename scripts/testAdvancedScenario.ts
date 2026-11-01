@@ -187,15 +187,30 @@ const targetAngle1 = path1.advancedScenario!.subsystems.reaktor.targetValveAngle
 
 path1 = applyAdvancedAction(path1, 'advanced_reactor_breaker', { breaker: targetBreaker1 }, 'kaptan').nextState;
 
-// Eksik parametre testleri: valveAngle ve throttleActive eksikse reddedilmelidir
-const missingValveRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, throttleActive: true }, 'muhendis');
-assert(!!missingValveRes.error && missingValveRes.error.includes('Soğutma valfi açısı belirtilmedi'), 'Gelişmiş modda eksik valveAngle işlemi reddedildi');
+// Test: Kayıtlı hat seçilmemişken tahliye mesajına doğru cevaplar eklense dahi görev ÇÖZÜLEMEZ
+const missingLinePurge = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1, throttleActive: true }, 'muhendis');
+assert(!!missingLinePurge.error && missingLinePurge.error.includes('devreyi tespit edip işaretleyin'), 'Kayıtlı hat yokken mesaj payloadındaki doğru cevaplarla tahliye engellendi');
 
-const missingThrottleRes = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1 }, 'muhendis');
-assert(!!missingThrottleRes.error && missingThrottleRes.error.includes('Basınç tahliye anahtarı konumu belirtilmedi'), 'Gelişmiş modda eksik throttleActive işlemi reddedildi');
+// Mühendis devreyi kaydeder
+path1 = applyAdvancedAction(path1, 'advanced_reactor_set_params', { line: faultyLine1 }, 'muhendis').nextState;
 
-path1 = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1, throttleActive: true }, 'muhendis').nextState;
-assert(path1.advancedScenario?.subsystems.reaktor.isStabilized === true, '1. Adım: Reaktör dinamik değerlerle stabilize edildi');
+// Test: Kayıtlı valf açısı seçilmemişken tahliye mesajına doğru açı eklense dahi görev ÇÖZÜLEMEZ
+const missingValvePurge = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1, throttleActive: true }, 'muhendis');
+assert(!!missingValvePurge.error && missingValvePurge.error.includes('Soğutma valfi açısı belirtilmedi'), 'Kayıtlı valf açısı yokken mesaj payloadındaki açıyla tahliye engellendi');
+
+// Mühendis valf açısını kaydeder
+path1 = applyAdvancedAction(path1, 'advanced_reactor_set_params', { valveAngle: targetAngle1 }, 'muhendis').nextState;
+
+// Test: Kayıtlı tahliye anahtarı kapalıyken tahliye mesajına throttleActive: true eklense dahi görev ÇÖZÜLEMEZ
+const missingThrottlePurge = applyAdvancedAction(path1, 'advanced_reactor_purge', { line: faultyLine1, valveAngle: targetAngle1, throttleActive: true }, 'muhendis');
+assert(missingThrottlePurge.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı tahliye kapalıyken mesaj payloadı tahliyeyi açamadı');
+
+// Mühendis tahliye anahtarını kaydeder
+path1 = applyAdvancedAction(path1, 'advanced_reactor_set_params', { throttleActive: true }, 'muhendis').nextState;
+
+// Arayüz gibi yalnızca boş işlem isteği gönderilir
+path1 = applyAdvancedAction(path1, 'advanced_reactor_purge', {}, 'muhendis').nextState;
+assert(path1.advancedScenario?.subsystems.reaktor.isStabilized === true, '1. Adım: Kayıtlı kontrollerle reaktör dinamik değerlerle stabilize edildi');
 
 // 2. Güç Aktarımı: Reaktör çözülünce soğutma 1 MW a indirilir, Antene 3 MW verilir (1 + 3 + 3 = 7 MW)
 path1 = applyAdvancedAction(path1, 'advanced_set_power', { coolingPumps: 1, antennaBooster: 3, airlockCompressor: 3, shieldReserve: 0 }, 'kaptan').nextState;
@@ -234,7 +249,8 @@ const faultyLine2 = path2.advancedScenario!.subsystems.reaktor.faultyLine!;
 const targetAngle2 = path2.advancedScenario!.subsystems.reaktor.targetValveAngle!;
 
 path2 = applyAdvancedAction(path2, 'advanced_reactor_breaker', { breaker: targetBreaker2 }, 'kaptan').nextState;
-path2 = applyAdvancedAction(path2, 'advanced_reactor_purge', { line: faultyLine2, valveAngle: targetAngle2, throttleActive: true }, 'muhendis').nextState;
+path2 = applyAdvancedAction(path2, 'advanced_reactor_set_params', { line: faultyLine2, valveAngle: targetAngle2, throttleActive: true }, 'muhendis').nextState;
+path2 = applyAdvancedAction(path2, 'advanced_reactor_purge', {}, 'muhendis').nextState;
 assert(path2.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Reaktör dinamik değerlerle çözüldü');
 
 // 2. Güç Aktarımı: Soğutma 1 MW, Anten 3 MW, Kalkan Rezervi 3 MW (1 + 3 + 0 + 3 = 7 MW)
@@ -270,7 +286,8 @@ const faultyLine3 = path3.advancedScenario!.subsystems.reaktor.faultyLine!;
 const targetAngle3 = path3.advancedScenario!.subsystems.reaktor.targetValveAngle!;
 
 path3 = applyAdvancedAction(path3, 'advanced_reactor_breaker', { breaker: targetBreaker3 }, 'kaptan').nextState;
-path3 = applyAdvancedAction(path3, 'advanced_reactor_purge', { line: faultyLine3, valveAngle: targetAngle3, throttleActive: true }, 'muhendis').nextState;
+path3 = applyAdvancedAction(path3, 'advanced_reactor_set_params', { line: faultyLine3, valveAngle: targetAngle3, throttleActive: true }, 'muhendis').nextState;
+path3 = applyAdvancedAction(path3, 'advanced_reactor_purge', {}, 'muhendis').nextState;
 
 // Rota Gama seçilip onaylanır (30s seyahat, -%10 gövde)
 path3 = applyAdvancedAction(path3, 'advanced_rescue_select', { routeId: 'gama' }, 'kaptan').nextState;
@@ -350,7 +367,7 @@ assert(!!engineerBreakerRes.error && engineerBreakerRes.error.includes('Yalnızc
 assert(engineerBreakerRes.nextState.advancedScenario?.subsystems.reaktor.breakerActivated === false, 'Kesici aktifleşmedi');
 
 // 11.2 Kaptan tahliye yapmaya çalışırsa -> REDDEDİLMELİ
-const captainPurgeRes = applyAdvancedAction(roleState, 'advanced_reactor_purge', { line: 'anten', valveAngle: 90, throttleActive: true }, 'kaptan');
+const captainPurgeRes = applyAdvancedAction(roleState, 'advanced_reactor_purge', {}, 'kaptan');
 assert(!!captainPurgeRes.error && captainPurgeRes.error.includes('Yalnızca Mühendis'), 'Kaptanın hat tahliyesi denemesi yetki hatası ile reddedildi');
 assert(captainPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Reaktör çözülmedi');
 
@@ -375,7 +392,8 @@ assert(wrongBreakerRes.nextState.timeLeftSeconds === initialTime - 10, 'Hatalı 
 assert(wrongBreakerRes.nextState.advancedScenario?.subsystems.reaktor.breakerActivated === false, 'Hatalı kesici ile kilit açılmadı');
 
 // 12.2 Kesici açılmadan mühendis tahliye dener
-const prematurePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_set_params', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis').nextState;
+const prematurePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', {}, 'muhendis');
 assert(prematurePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kesici açılmadan tahliye reddedildi (Güvenlik kilidi)');
 
 // 12.3 Kaptan doğru kesiciyi açar
@@ -383,25 +401,46 @@ paramState = applyAdvancedAction(paramState, 'advanced_reactor_breaker', { break
 assert(paramState.advancedScenario?.subsystems.reaktor.breakerActivated === true, 'Kaptan doğru kesiciyi açtı');
 assert(paramState.advancedScenario?.subsystems.reaktor.unlockedBreaker === pTargetBreaker, 'unlockedBreaker güncellendi');
 
-// 12.4 Mühendis hat belirtmeden tahliye dener
-const noLinePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: null, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
+// 12.4 Mühendis hat seçmeden tahliye dener (hat null)
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_set_params', { line: null }, 'muhendis').nextState;
+const noLinePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', {}, 'muhendis');
 assert(!!noLinePurgeRes.error && noLinePurgeRes.error.includes('devreyi tespit edip'), 'Hat belirtilmeden tahliye reddedildi');
 
-// 12.5 Mühendis yanlış hat dener
-const wrongLinePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pWrongLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
-assert(wrongLinePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Yanlış hat tahliyesi reddedildi');
+// 12.4b Mesaj payloadında doğru hat gönderilse dahi kayıtlı hat eksikse reddedilir
+const bypassLineRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine }, 'muhendis');
+assert(!!bypassLineRes.error && bypassLineRes.error.includes('devreyi tespit edip'), 'Mesajdaki hat alanı sunucudaki eksik seçimi geçersiz kılamadı');
 
-// 12.6 Mühendis yanlış valf açısı dener
-const wrongAnglePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pWrongAngle, throttleActive: true }, 'muhendis');
-assert(wrongAnglePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Yanlış valf açısı ile tahliye reddedildi');
+// 12.5 Mühendis yanlış hat kaydeder
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_set_params', { line: pWrongLine }, 'muhendis').nextState;
+const wrongLinePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', {}, 'muhendis');
+assert(wrongLinePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı yanlış hat tahliyesi reddedildi');
 
-// 12.7 Mühendis tahliye anahtarını kapalı tutarsa
-const closedThrottlePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: false }, 'muhendis');
-assert(closedThrottlePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Basınç tahliyesi kapalı iken tahliye reddedildi');
+// 12.5b Mesaj payloadında doğru hat gönderilse dahi kayıtlı yanlış hat geçersiz kılınamaz
+const bypassWrongLineRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine }, 'muhendis');
+assert(bypassWrongLineRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı yanlış hat varken mesajdaki doğru hat dikkate alınmadı');
 
-// 12.8 Doğru parametrelerle başarı
-const successPurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { line: pFaultyLine, valveAngle: pTargetAngle, throttleActive: true }, 'muhendis');
-assert(successPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Doğru iki rol koordinasyonu ile Reaktör STABİLİZE EDİLDİ');
+// 12.6 Mühendis doğru hattı ama yanlış valf açısını kaydeder
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_set_params', { line: pFaultyLine, valveAngle: pWrongAngle }, 'muhendis').nextState;
+const wrongAnglePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', {}, 'muhendis');
+assert(wrongAnglePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı yanlış valf açısı ile tahliye reddedildi');
+
+// 12.6b Mesaj payloadında doğru valf açısı gönderilse dahi çözülemez
+const bypassWrongAngleRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { valveAngle: pTargetAngle }, 'muhendis');
+assert(bypassWrongAngleRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı yanlış valf açısı varken mesajdaki doğru açı dikkate alınmadı');
+
+// 12.7 Mühendis doğru açıyı kaydeder fakat tahliye anahtarı kapalıdır
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_set_params', { valveAngle: pTargetAngle, throttleActive: false }, 'muhendis').nextState;
+const closedThrottlePurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', {}, 'muhendis');
+assert(closedThrottlePurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı tahliye kapalı iken tahliye reddedildi');
+
+// 12.7b Mesaj payloadında throttleActive: true gönderilse dahi çözülemez
+const bypassThrottleRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', { throttleActive: true }, 'muhendis');
+assert(bypassThrottleRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === false, 'Kayıtlı tahliye kapalıyken mesajdaki throttleActive: true dikkate alınmadı');
+
+// 12.8 Mühendis tahliye anahtarını kaydeder ve tahliye başarılı olur
+paramState = applyAdvancedAction(paramState, 'advanced_reactor_set_params', { throttleActive: true }, 'muhendis').nextState;
+const successPurgeRes = applyAdvancedAction(paramState, 'advanced_reactor_purge', {}, 'muhendis');
+assert(successPurgeRes.nextState.advancedScenario?.subsystems.reaktor.isStabilized === true, 'Doğru kayıtlı ayarlar ile Reaktör STABİLİZE EDİLDİ');
 
 // -----------------------------------------------------------------------------
 // [TEST 13] Mühendis Kontrol Seçimlerinin Ortak Duruma Bağlanması & Kalıcılık

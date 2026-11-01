@@ -486,11 +486,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 
                 {/* Purge Action Button */}
                 <button
-                  onClick={() => onAction('advanced_reactor_purge', {
-                    line: selectedReactorLine,
-                    valveAngle: reactorCoolingAngle,
-                    throttleActive: reactorThrottleToggled,
-                  })}
+                  onClick={() => onAction('advanced_reactor_purge', {})}
                   disabled={adv.subsystems.reaktor.isStabilized || !selectedReactorLine}
                   className={`w-full py-2.5 px-3 rounded-xl text-xs font-mono font-bold uppercase transition-all flex items-center justify-center gap-2 ${
                     adv.subsystems.reaktor.isStabilized
