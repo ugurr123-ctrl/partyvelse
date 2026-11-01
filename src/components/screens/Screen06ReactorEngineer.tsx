@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../types/game';
-import { isLineAnomaly } from '../../services/gameFactory';
 
 interface Props {
   state: MissionState;
@@ -10,83 +9,131 @@ interface Props {
 }
 
 export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
-  const { diagnostic, activeEnvironment } = state;
-  const [activeCartridge, setActiveCartridge] = useState<'CIR-01' | 'CIR-02' | 'CIR-03' | 'CIR-04'>('CIR-03');
-  const [coolingValveAngle, setCoolingValveAngle] = useState(45);
-  const [pressureThrottleToggled, setPressureThrottleToggled] = useState(false);
+  const { diagnostic } = state;
+
+  // No line selected by default! Starts null unless already selected
+  const [selectedLine, setSelectedLine] = useState<'reaktor' | 'sogutucu' | 'anten' | 'yonlendirme' | null>(
+    (diagnostic.engineerSuggestedLine as any) || null
+  );
+
+  const [coolingValveAngle, setCoolingValveAngle] = useState<number>(diagnostic.engineerValveAngle || 45);
+  const [pressureThrottleToggled, setPressureThrottleToggled] = useState<boolean>(
+    diagnostic.engineerThrottleActive || false
+  );
+
   const [feedback, setFeedback] = useState<{ type: 'idle' | 'success' | 'error'; msg: string }>({
     type: diagnostic.isSolved ? 'success' : 'idle',
     msg: diagnostic.isSolved ? 'Reaktör basınca tahliye edildi! Devreler stabil.' : '',
   });
 
-  const cartridgeToLineMap: Record<'CIR-01' | 'CIR-02' | 'CIR-03' | 'CIR-04', 'reaktor' | 'sogutucu' | 'anten' | 'yonlendirme'> = {
-    'CIR-01': 'reaktor',
-    'CIR-02': 'sogutucu',
-    'CIR-03': 'anten',
-    'CIR-04': 'yonlendirme',
-  };
+  const circuitModules = [
+    { key: 'reaktor', code: 'CIR-01', name: 'Ana Reaktör', icon: 'cyclone' },
+    { key: 'sogutucu', code: 'CIR-02', name: 'Soğutucu Çekirdek', icon: 'mode_fan' },
+    { key: 'anten', code: 'CIR-03', name: 'Anten Ünitesi', icon: 'satellite_alt' },
+    { key: 'yonlendirme', code: 'CIR-04', name: 'İtki ve Yönlendirme', icon: 'navigation' },
+  ] as const;
 
-  const lineNames: Record<string, string> = {
-    reaktor: 'Ana Reaktör',
-    sogutucu: 'Soğutucu Çekirdek',
-    anten: 'Yüksek Kazançlı Anten',
-    yonlendirme: 'İtki ve Yönlendirme',
-  };
-
-  const selectedLineKey = cartridgeToLineMap[activeCartridge];
-  const selectedTelemetry = diagnostic.lines[selectedLineKey];
-
-  const handleRotateCooling = () => {
-    setCoolingValveAngle((prev) => (prev === 45 ? 135 : prev === 135 ? -45 : 45));
-  };
-
-  const handleToggleThrottle = () => {
-    setPressureThrottleToggled((prev) => !prev);
-  };
-
-  const handlePurgePressure = () => {
+  const handleSelectLine = (key: 'reaktor' | 'sogutucu' | 'anten' | 'yonlendirme') => {
     if (diagnostic.isSolved) return;
+    setSelectedLine(key);
 
     if (onAction) {
-      onAction('diagnostic_engineer_purge', { line: selectedLineKey });
-      return;
-    }
-
-    // Check if the currently selected cartridge corresponds to the actual faulty line
-    const isAnomalous = isLineAnomaly(activeEnvironment, selectedTelemetry);
-    const isTargetFaulty = selectedLineKey === diagnostic.faultyLine;
-
-    if (isTargetFaulty && isAnomalous) {
-      const willSolve = diagnostic.captainSelectedBreaker === diagnostic.correctBreaker;
-
-      setFeedback({
-        type: 'success',
-        msg: willSolve 
-          ? `MÜDAHALE TAMAMLANDI! ${lineNames[selectedLineKey]} hattı soğutuldu ve tahliye edildi. Reaktör dengelendi!`
-          : `MÜDAHALE İLETİLDİ! ${lineNames[selectedLineKey]} izole edildi. Kaptanın ${diagnostic.correctBreaker} kesicisini açması bekleniyor.`,
-      });
-
+      onAction('diagnostic_engineer_select_line', { line: key });
+    } else {
       onUpdate((prev) => ({
         ...prev,
         diagnostic: {
           ...prev.diagnostic,
-          engineerSuggestedLine: selectedLineKey,
-          engineerActionTaken: true,
-          isSolved: willSolve,
+          engineerSuggestedLine: key,
         },
       }));
-    } else {
+    }
+  };
+
+  const handlePurgePressure = () => {
+    if (diagnostic.isSolved || !selectedLine) return;
+
+    if (onAction) {
+      onAction('diagnostic_engineer_purge', {
+        line: selectedLine,
+        valveAngle: coolingValveAngle,
+        throttleActive: pressureThrottleToggled,
+      });
+      return;
+    }
+
+    // Local fallback check
+    const isBreakerUnlocked = diagnostic.captainSelectedBreaker === diagnostic.correctBreaker;
+    if (!isBreakerUnlocked) {
       setFeedback({
         type: 'error',
-        msg: `HATALI HAT (${lineNames[selectedLineKey]})! Bu hatta anomali bulunmuyor. Yanlış tahliye: Bütünlük -%10, Süre -15 sn!`,
+        msg: 'Güvenlik kilidi devrede! Kaptan ana şebekeden bu hattın güvenlik kesicisini açmadan tahliye vanası çalıştırılamaz.',
+      });
+      return;
+    }
+
+    if (selectedLine !== diagnostic.faultyLine) {
+      setFeedback({
+        type: 'error',
+        msg: 'Hatalı hat tahliyesi! Seçilen devrede çoklu arıza koşulları oluşmamış. Sağlam devreye müdahale edildi. Bütünlük -%10, Süre -15 sn!',
       });
       onUpdate((prev) => ({
         ...prev,
         hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
         timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 15),
       }));
+      return;
     }
+
+    if (coolingValveAngle !== diagnostic.targetValveAngle) {
+      setFeedback({
+        type: 'error',
+        msg: 'Müdahale başarısız: Soğutma valfi doğru açıda değil. Termal şok riski nedeniyle tahliye güvenlik sistemi tarafından durduruldu.',
+      });
+      return;
+    }
+
+    if (!pressureThrottleToggled) {
+      setFeedback({
+        type: 'error',
+        msg: 'Müdahale başarısız: Basınç tahliyesi devre dışı. Hat basıncı boşaltılmadan devre açılamaz.',
+      });
+      return;
+    }
+
+    // All successful
+    const updatedLines = {
+      ...diagnostic.lines,
+      [diagnostic.faultyLine]: {
+        ...diagnostic.lines[diagnostic.faultyLine],
+        temp: 54,
+        press: 50,
+        noise: 36,
+        status: 'stabil' as const,
+      },
+    };
+
+    setFeedback({
+      type: 'success',
+      msg: 'MÜDAHALE TAMAMLANDI! Arızalı devre başarıyla tahliye edildi ve soğutuldu. Reaktör dengelendi!',
+    });
+
+    onUpdate((prev) => ({
+      ...prev,
+      diagnostic: {
+        ...prev.diagnostic,
+        lines: updatedLines,
+        engineerActionTaken: true,
+        engineerSuggestedLine: selectedLine,
+        engineerValveAngle: coolingValveAngle,
+        engineerThrottleActive: pressureThrottleToggled,
+        isSolved: true,
+      },
+    }));
   };
+
+  const selectedMod = circuitModules.find((m) => m.key === selectedLine);
+  const selectedTelemetry = selectedLine ? diagnostic.lines[selectedLine] : null;
 
   return (
     <div className="w-full max-w-[420px] mx-auto flex flex-col text-on-surface select-none pb-8 animate-fadeIn font-sans">
@@ -98,170 +145,183 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             <span className="material-symbols-outlined text-[15px]">build</span>
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider">MÜHENDİS KONSOLU</span>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#2b273b] border border-rose-500/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ffb4ab] animate-ping"></span>
-            <span className="font-mono text-[9px] text-rose-300 font-bold uppercase">CANLI TELEMETRİ</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-[#2b273b] border border-[#00eefc]/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00eefc] animate-ping"></span>
+            <span className="font-mono text-[9px] text-[#00eefc] font-bold uppercase">4 HAT CANLI SENSÖR</span>
           </div>
         </div>
 
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="font-sora text-2xl font-bold text-white tracking-tight">Reaktörü</span>
-          <span className="font-sora text-2xl font-extrabold text-[#00eefc] tracking-tight drop-shadow-[0_0_12px_rgba(0,238,252,0.4)]">dengele</span>
+          <span className="font-sora text-2xl font-bold text-white tracking-tight">Ölçümleri</span>
+          <span className="font-sora text-2xl font-extrabold text-[#00eefc] tracking-tight drop-shadow-[0_0_12px_rgba(0,238,252,0.4)]">
+            Karşılaştır
+          </span>
         </div>
+        <p className="text-xs text-[#d5c4ac] font-mono">
+          Sensörleri inceleyin, Kaptana aktarın ve arızalı hattı seçerek tahliye uygulayın.
+        </p>
       </div>
 
-      {/* Reactor Centerpiece & Circuit Array Stage */}
-      <div className="relative mt-2">
-        <div className="relative w-full rounded-2xl bg-[#0f0c1e] overflow-hidden shadow-2xl p-2 border border-white/10">
-          <div 
-            className="w-full h-72 rounded-xl bg-cover bg-center relative overflow-hidden flex items-center justify-center shadow-inner" 
-            style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQp7LKUYjGCeLCIyJBpt6ky7NN_yjlBF0LWkNy8c9HwNVHsUF4hKFGWKFjkaq3gTMS_G6gve35xaOn3HcZexf7iKy8dfbuX9ZiFQUjd8sWUqDFnEZvv3vXt4m4i7pEgX3sa5X7bBE0_0d0ss-pf6RwWTsVBlpurVqKGlINrYlem0nf8Ppqx3iFbouAojK0oQNh98_3VCl2leYdgrnOm6lcYasBaqTjJxp52rSyOl0')" }}
-          >
-            {/* 2.5D Core Turbine Center Hub */}
-            <div className="relative z-20 w-20 h-20 rounded-full bg-[#2b273b] flex items-center justify-center shadow-[0_0_24px_rgba(255,183,3,0.45)] border border-[#ffb703]/50">
-              <div className="w-14 h-14 rounded-full bg-[#0f0c1e] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[30px] text-[#ffb703] animate-spin" style={{ animationDuration: '9s' }}>cyclone</span>
-              </div>
-            </div>
-
-            {/* CIR-01 Top */}
-            <button 
-              onClick={() => setActiveCartridge('CIR-01')}
-              className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center cursor-pointer"
-            >
-              <div className={`px-2 py-1 rounded bg-[#2b273b] shadow-md flex items-center gap-1 border ${activeCartridge === 'CIR-01' ? 'border-[#00eefc] ring-1 ring-[#00eefc]' : 'border-white/5'}`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00eefc]"></span>
-                <span className="font-mono text-[10px] text-[#00eefc] font-bold">CIR-01 (Reaktör)</span>
-              </div>
-            </button>
-
-            {/* CIR-02 Top Left */}
-            <button 
-              onClick={() => setActiveCartridge('CIR-02')}
-              className="absolute top-14 left-4 z-20 flex flex-col items-center cursor-pointer"
-            >
-              <div className={`px-2 py-1 rounded bg-[#2b273b] shadow-md flex items-center gap-1 border ${activeCartridge === 'CIR-02' ? 'border-[#00eefc] ring-1 ring-[#00eefc]' : 'border-white/5'}`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00eefc]"></span>
-                <span className="font-mono text-[10px] text-[#00eefc] font-bold">CIR-02 (Soğutucu)</span>
-              </div>
-            </button>
-
-            {/* CIR-03 Top Right */}
-            <button 
-              onClick={() => setActiveCartridge('CIR-03')}
-              className="absolute top-14 right-4 z-20 flex flex-col items-end cursor-pointer"
-            >
-              <div className={`px-2 py-1 rounded bg-[#2b273b] shadow-md flex items-center gap-1 border ${activeCartridge === 'CIR-03' ? 'border-[#00eefc] ring-1 ring-[#00eefc]' : 'border-white/5'}`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00eefc]"></span>
-                <span className="font-mono text-[10px] text-[#00eefc] font-bold">CIR-03 (Anten)</span>
-              </div>
-            </button>
-
-            {/* CIR-04 Bottom Left */}
-            <button 
-              onClick={() => setActiveCartridge('CIR-04')}
-              className="absolute bottom-6 left-6 z-20 flex flex-col items-center cursor-pointer"
-            >
-              <div className={`px-2 py-1 rounded bg-[#2b273b] shadow-md flex items-center gap-1 border ${activeCartridge === 'CIR-04' ? 'border-[#00eefc] ring-1 ring-[#00eefc]' : 'border-white/5'}`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00eefc]"></span>
-                <span className="font-mono text-[10px] text-[#00eefc] font-bold">CIR-04 (Yönlendirme)</span>
-              </div>
-            </button>
-          </div>
-
-          {/* Real Live Telemetry of Selected Line */}
-          <div className="w-full mt-2 bg-[#1c192c] p-2.5 rounded-xl border border-white/5 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-white font-bold">{activeCartridge} // {lineNames[selectedLineKey]}</span>
-              <span className="text-[#00eefc]">CANLI SENSÖR</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-xl bg-[#201d30] p-2 flex flex-col items-center justify-center border border-white/5">
-                <span className="text-[9px] text-[#d5c4ac] mb-0.5">SICAKLIK</span>
-                <span className={`text-sm font-bold ${selectedTelemetry.temp >= 80 || selectedTelemetry.temp <= -10 ? 'text-rose-400 font-extrabold animate-pulse' : 'text-[#ffdba0]'}`}>
-                  {selectedTelemetry.temp}°C
-                </span>
-              </div>
-              <div className="rounded-xl bg-[#201d30] p-2 flex flex-col items-center justify-center border border-white/5">
-                <span className="text-[9px] text-[#d5c4ac] mb-0.5">BASINÇ</span>
-                <span className={`text-sm font-bold ${selectedTelemetry.press <= 40 || selectedTelemetry.press >= 70 ? 'text-rose-400 font-extrabold animate-pulse' : 'text-[#00eefc]'}`}>
-                  {selectedTelemetry.press} kPa
-                </span>
-              </div>
-              <div className="rounded-xl bg-[#201d30] p-2 flex flex-col items-center justify-center border border-white/5">
-                <span className="text-[9px] text-[#d5c4ac] mb-0.5">PARAZİT</span>
-                <span className={`text-sm font-bold ${selectedTelemetry.noise >= 65 ? 'text-rose-400 font-extrabold animate-pulse' : 'text-[#dab5ff]'}`}>
-                  {selectedTelemetry.noise} dB
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* 4 Circuits Live Telemetry Comparative Matrix */}
+      <div className="mt-3 w-full rounded-2xl bg-[#0f0c1e] p-3 shadow-2xl border border-white/10 flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] text-white font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-[#00eefc]">table_chart</span>
+            DEVRE TELEMETRİ MATRİSİ
+          </span>
+          <span className="text-[9px] font-mono text-[#d5c4ac]">
+            {selectedLine ? `${selectedMod?.code} SEÇİLİ` : 'SEÇİM YOK'}
+          </span>
         </div>
-      </div>
 
-      {/* Mechanical Dual Controls */}
-      <div className="grid grid-cols-2 gap-3 mt-2">
-        {/* Rotary Knob Valve: Soğutma Valfi */}
-        <div className="rounded-2xl bg-[#201d30] p-3 flex flex-col justify-between shadow-lg border border-white/5">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-cyan-500/10 flex items-center justify-center text-[#00eefc]">
-              <span className="material-symbols-outlined text-[16px]">mode_fan</span>
-            </div>
-            <span className="font-mono text-[10px] text-white uppercase font-bold">Soğutma Valfi</span>
-          </div>
+        <div className="grid grid-cols-2 gap-2">
+          {circuitModules.map((mod) => {
+            const data = diagnostic.lines[mod.key];
+            const isSelected = selectedLine === mod.key;
+            const isSolved = diagnostic.isSolved && data?.status === 'stabil';
 
-          <div className="relative flex items-center justify-center my-2">
-            <button 
-              onClick={handleRotateCooling}
-              className="w-16 h-16 rounded-full bg-[#2b273b] shadow-[0_4px_0_#0f0c1e] active:translate-y-1 flex items-center justify-center transition-transform cursor-pointer border border-white/10"
-              type="button"
-            >
-              <div 
-                className="w-3 h-8 rounded-full bg-[#3a374b] flex flex-col items-center justify-start pt-1 shadow transition-transform duration-300"
-                style={{ transform: `rotate(${coolingValveAngle}deg)` }}
+            return (
+              <button
+                key={mod.key}
+                type="button"
+                onClick={() => handleSelectLine(mod.key)}
+                className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#00eefc]/15 border-[#00eefc] shadow-[0_0_14px_rgba(0,238,252,0.3)] ring-1 ring-[#00eefc]'
+                    : isSolved
+                    ? 'bg-emerald-950/20 border-emerald-500/40'
+                    : 'bg-[#1c192c] border-white/5 hover:bg-[#25223a]'
+                }`}
               >
-                <div className="w-1.5 h-2 rounded bg-[#00eefc]"></div>
-              </div>
-            </button>
-          </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <span className="font-mono text-[10px] font-bold text-[#00eefc]">{mod.code}</span>
+                    <span className="text-[10px] text-zinc-300 font-medium truncate max-w-[85px]">{mod.name}</span>
+                  </div>
+                  {isSelected && (
+                    <span className="w-2 h-2 rounded-full bg-[#00eefc] animate-pulse"></span>
+                  )}
+                </div>
 
-          <div className="flex items-center justify-between px-1 font-mono text-[9px] text-[#d5c4ac]">
-            <span>KONUM</span>
-            <span className="text-[#00eefc] font-bold">{coolingValveAngle}° AÇIK</span>
+                {/* Sensor Metrics Readout */}
+                <div className="grid grid-cols-3 gap-1 my-2 bg-[#120f24] p-1.5 rounded-lg border border-white/5">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[8px] font-mono text-[#d5c4ac]">ISI</span>
+                    <span className={`text-[10px] font-mono font-bold ${data.temp >= 80 || data.temp <= -10 ? 'text-rose-400' : 'text-[#ffdba0]'}`}>
+                      {data.temp}°C
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center border-x border-white/5">
+                    <span className="text-[8px] font-mono text-[#d5c4ac]">BASINÇ</span>
+                    <span className={`text-[10px] font-mono font-bold ${data.press <= 40 || data.press >= 70 ? 'text-rose-400' : 'text-[#00eefc]'}`}>
+                      {data.press}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-[8px] font-mono text-[#d5c4ac]">PARAZİT</span>
+                    <span className={`text-[10px] font-mono font-bold ${data.noise >= 60 ? 'text-rose-400' : 'text-[#dab5ff]'}`}>
+                      {data.noise}dB
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[9px] font-mono">
+                  <span className="text-[#d5c4ac]">DURUM:</span>
+                  <span className={isSolved ? 'text-emerald-400 font-bold' : isSelected ? 'text-[#00eefc] font-bold' : 'text-zinc-400'}>
+                    {isSolved ? 'DENGELENDİ' : isSelected ? 'SEÇİLDİ' : 'İNCELE'}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Physical Intervention Console (Active when a line is selected) */}
+      <div className={`mt-3 rounded-2xl bg-[#1c192c] p-3.5 flex flex-col gap-3 shadow-xl border transition-all ${
+        selectedLine ? 'border-[#00eefc]/30' : 'border-white/5 opacity-75'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-[#00eefc]">tune</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-white font-bold">
+              TAHLİYE KONTROLLERİ {selectedMod ? `// ${selectedMod.code}` : ''}
+            </span>
           </div>
+          <span className="font-mono text-[9px] text-[#d5c4ac] uppercase">
+            {diagnostic.unlockedBreaker ? (
+              <span className="text-emerald-400 font-bold">KESİCİ DEVRE DIŞI</span>
+            ) : (
+              <span className="text-[#ffb703]">KAPTAN KİLİDİ BEKLENİYOR</span>
+            )}
+          </span>
         </div>
 
-        {/* Vertical Throttle: Basınç Tahliye */}
-        <div className="rounded-2xl bg-[#201d30] p-3 flex flex-col justify-between shadow-lg border border-white/5">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#ffb703]/20 flex items-center justify-center text-[#ffb703]">
-              <span className="material-symbols-outlined text-[16px]">air</span>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Soğutma Valfi Açısı (Rotary Selectors) */}
+          <div className="rounded-xl bg-[#201d30] p-2.5 flex flex-col justify-between border border-white/5 shadow-inner">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[9px] text-[#d5c4ac] uppercase font-bold">Soğutma Valfi</span>
+              <span className="font-mono text-[10px] text-[#00eefc] font-bold">{coolingValveAngle}°</span>
             </div>
-            <span className="font-mono text-[10px] text-white uppercase font-bold">Basınç Tahliye</span>
+
+            {/* Valve Angle Dial Buttons */}
+            <div className="grid grid-cols-4 gap-1 my-2">
+              {[45, 90, 135, 180].map((angle) => (
+                <button
+                  key={angle}
+                  type="button"
+                  onClick={() => setCoolingValveAngle(angle)}
+                  className={`py-1.5 rounded text-[10px] font-mono font-bold transition-all cursor-pointer ${
+                    coolingValveAngle === angle
+                      ? 'bg-[#00eefc] text-[#002022] shadow-[0_0_8px_rgba(0,238,252,0.4)]'
+                      : 'bg-[#2b273b] text-[#d5c4ac] hover:bg-[#353147]'
+                  }`}
+                >
+                  {angle}°
+                </button>
+              ))}
+            </div>
+
+            <div className="text-[9px] font-mono text-[#d5c4ac] text-center">
+              Kaptanın talimatına göre ayarlayın
+            </div>
           </div>
 
-          <div 
-            onClick={handleToggleThrottle}
-            className="relative w-full h-20 my-1 rounded-xl bg-[#0f0c1e] flex justify-center items-center shadow-inner overflow-hidden p-1 cursor-pointer"
-          >
-            <div className="w-12 h-10 rounded-lg bg-[#363246] shadow-[0_4px_0_#0f0c1e] flex flex-col items-center justify-center p-1 transition-all">
-              <span className="material-symbols-outlined text-[#ffb703] text-[16px]">
-                {pressureThrottleToggled ? 'check' : 'keyboard_double_arrow_up'}
+          {/* Basınç Tahliyesi Anahtarı */}
+          <div className="rounded-xl bg-[#201d30] p-2.5 flex flex-col justify-between border border-white/5 shadow-inner">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[9px] text-[#d5c4ac] uppercase font-bold">Basınç Tahliyesi</span>
+              <span className={`font-mono text-[9px] font-bold ${pressureThrottleToggled ? 'text-emerald-400' : 'text-zinc-400'}`}>
+                {pressureThrottleToggled ? 'AKTİF' : 'KAPALI'}
               </span>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between px-1 font-mono text-[9px] text-[#d5c4ac]">
-            <span>DURUM</span>
-            <span className="text-[#ffb703] font-bold">{pressureThrottleToggled ? 'TAHLİYE AKTİF' : 'BEKLEMEDE'}</span>
+            <button
+              type="button"
+              onClick={() => setPressureThrottleToggled(!pressureThrottleToggled)}
+              className={`w-full py-2 my-2 rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
+                pressureThrottleToggled
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                  : 'bg-[#2b273b] text-[#d5c4ac] border-white/5 hover:bg-[#353147]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {pressureThrottleToggled ? 'check_circle' : 'toggle_off'}
+              </span>
+              <span>{pressureThrottleToggled ? 'TAHLİYE AKTİF' : 'TAHLİYE AÇ'}</span>
+            </button>
+
+            <div className="text-[9px] font-mono text-[#d5c4ac] text-center">
+              Tahliye vanasını devreye sokar
+            </div>
           </div>
         </div>
       </div>
 
       {/* Feedback Message */}
       {(state.feedbackMessage || feedback.msg) && (
-        <div className={`mt-2 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
+        <div className={`mt-3 p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
           (state.feedbackState === 'success' || (!state.feedbackState && feedback.type === 'success'))
             ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
             : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
@@ -271,16 +331,35 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
       )}
 
       {/* Action Trigger */}
-      <div className="mt-2 flex flex-col gap-2">
+      <div className="mt-3 flex flex-col gap-1.5">
         {!diagnostic.isSolved ? (
-          <button
-            onClick={handlePurgePressure}
-            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#00dbe9] via-[#00eefc] to-[#7df4ff] text-[#002022] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#00686f,0_0_24px_rgba(0,238,252,0.35)] active:translate-y-1 transition-all cursor-pointer"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-[20px]">air</span>
-            <span>{activeCartridge} İçin Tahliyeyi İlet</span>
-          </button>
+          <>
+            <button
+              onClick={handlePurgePressure}
+              disabled={!selectedLine}
+              className={`w-full h-14 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                !selectedLine
+                  ? 'bg-zinc-800 text-zinc-500 border border-white/5 cursor-not-allowed opacity-60 shadow-none'
+                  : 'bg-gradient-to-r from-[#00dbe9] via-[#00eefc] to-[#7df4ff] text-[#002022] shadow-[0_6px_0_#00686f,0_0_24px_rgba(0,238,252,0.35)] active:translate-y-1 cursor-pointer'
+              }`}
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[20px]">air</span>
+              <span>
+                {!selectedLine 
+                  ? 'ÖNCE DEVRE / HAT SEÇİN' 
+                  : `${selectedMod?.code || ''} İçin Tahliyeyi Uygula`}
+              </span>
+            </button>
+            <div className="flex items-center justify-center gap-1.5 text-zinc-400">
+              <span className="material-symbols-outlined text-[14px]">info</span>
+              <span className="text-[11px] font-mono">
+                {!selectedLine 
+                  ? 'Sensörleri karşılaştırıp arızalı devreyi işaretleyin' 
+                  : 'Kaptan kesiciyi açmadan tahliye uygulanamaz'}
+              </span>
+            </div>
+          </>
         ) : (
           <button
             onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}

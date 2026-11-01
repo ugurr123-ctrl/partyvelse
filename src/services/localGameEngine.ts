@@ -69,21 +69,37 @@ export function applyLocalGameAction(
       if (actionType === 'diagnostic_captain_breaker') {
         if (actingRole !== 'kaptan') return state;
         if (state.diagnostic.isSolved) return state;
+        if (!data.breaker) return state;
 
         const isCorrect = data.breaker === state.diagnostic.correctBreaker;
         if (isCorrect) {
-          const willSolve = state.diagnostic.engineerActionTaken;
+          const willSolve = state.diagnostic.engineerActionTaken && 
+            state.diagnostic.engineerSuggestedLine === state.diagnostic.faultyLine;
+
+          const updatedLines = willSolve ? {
+            ...state.diagnostic.lines,
+            [state.diagnostic.faultyLine]: {
+              ...state.diagnostic.lines[state.diagnostic.faultyLine],
+              temp: 54,
+              press: 50,
+              noise: 36,
+              status: 'stabil' as const,
+            },
+          } : state.diagnostic.lines;
+
           return {
             ...state,
             diagnostic: {
               ...state.diagnostic,
+              lines: updatedLines,
               captainSelectedBreaker: data.breaker,
+              unlockedBreaker: data.breaker,
               isSolved: willSolve,
             },
             feedbackState: willSolve ? 'success' : 'idle',
             feedbackMessage: willSolve
-              ? 'Doğru kesici tetiklendi! Reaktör kararlı.'
-              : 'Güvenlik kilidi açıldı. Mühendisin fiziksel tahliyesi bekleniyor.',
+              ? `GÜVENLİK KİLİDİ AÇILDI! ${data.breaker} kesicisi arızalı devreyi başarıyla izole etti. Reaktör kararlı.`
+              : `GÜVENLİK KİLİDİ AÇILDI (${data.breaker})! Devre akımı kesildi. Mühendisin soğutma valfi ve basınç tahliyesi müdahalesi bekleniyor.`,
           };
         } else {
           return applyPenalty(
@@ -94,34 +110,119 @@ export function applyLocalGameAction(
                 captainSelectedBreaker: data.breaker,
               },
             },
-            'Hatalı kesici seçimi! Reaktör aşırı yüklendi.'
+            `Hatalı kesici seçimi (${data.breaker})! İzole edilen hatta aktif bir anomali bulunmuyor; sağlam sistemin enerjisi kesildi. Bütünlük -%10, Süre -15 sn!`
           );
         }
+      }
+
+      if (actionType === 'diagnostic_engineer_select_line') {
+        if (actingRole !== 'muhendis') return state;
+        if (state.diagnostic.isSolved) return state;
+
+        return {
+          ...state,
+          diagnostic: {
+            ...state.diagnostic,
+            engineerSuggestedLine: data.line,
+          },
+          feedbackState: 'idle',
+          feedbackMessage: `Mühendis ${data.line ? data.line.toUpperCase() : ''} devresini inceleme için işaretledi.`,
+        };
       }
 
       if (actionType === 'diagnostic_engineer_purge') {
         if (actingRole !== 'muhendis') return state;
         if (state.diagnostic.isSolved) return state;
+        if (!data.line) {
+          return {
+            ...state,
+            feedbackState: 'error',
+            feedbackMessage: 'Müdahale için önce canlı sensörlerde arızalı devreyi tespit edip işaretleyin.',
+          };
+        }
 
-        const isCorrectLine = data.line === state.diagnostic.faultyLine;
-        if (isCorrectLine) {
-          const willSolve = state.diagnostic.captainSelectedBreaker === state.diagnostic.correctBreaker;
+        const isBreakerUnlocked = state.diagnostic.captainSelectedBreaker === state.diagnostic.correctBreaker;
+        if (!isBreakerUnlocked) {
           return {
             ...state,
             diagnostic: {
               ...state.diagnostic,
-              engineerActionTaken: true,
               engineerSuggestedLine: data.line,
-              isSolved: willSolve,
             },
-            feedbackState: willSolve ? 'success' : 'idle',
-            feedbackMessage: willSolve
-              ? 'Müdahale tamamlandı! Reaktör dengelendi.'
-              : 'Tahliye iletildi. Kaptanın güvenlik kilidini açması bekleniyor.',
+            feedbackState: 'error',
+            feedbackMessage: 'Güvenlik kilidi devrede! Kaptan ana şebekeden bu hattın güvenlik kesicisini açmadan tahliye vanası çalıştırılamaz.',
           };
-        } else {
-          return applyPenalty(state, 'Hatalı hat tahliyesi! Bu hatta anomali bulunmuyor.');
         }
+
+        const isCorrectLine = data.line === state.diagnostic.faultyLine;
+        if (!isCorrectLine) {
+          return applyPenalty(
+            {
+              ...state,
+              diagnostic: {
+                ...state.diagnostic,
+                engineerSuggestedLine: data.line,
+              },
+            },
+            'Hatalı hat tahliyesi! Seçilen devrede çoklu arıza koşulları oluşmamış. Sağlam hatta müdahale edildi. Bütünlük -%10, Süre -15 sn!'
+          );
+        }
+
+        // Check valve angle and throttle if provided
+        const valveAngle = data.valveAngle !== undefined ? data.valveAngle : state.diagnostic.targetValveAngle;
+        if (data.valveAngle !== undefined && data.valveAngle !== state.diagnostic.targetValveAngle) {
+          return {
+            ...state,
+            diagnostic: {
+              ...state.diagnostic,
+              engineerSuggestedLine: data.line,
+              engineerValveAngle: data.valveAngle,
+            },
+            feedbackState: 'error',
+            feedbackMessage: 'Müdahale başarısız: Soğutma valfi doğru açıda değil. Termal şok riski nedeniyle tahliye emniyet valfi tarafından durduruldu.',
+          };
+        }
+
+        const throttleActive = data.throttleActive !== undefined ? data.throttleActive : true;
+        if (data.throttleActive !== undefined && !throttleActive) {
+          return {
+            ...state,
+            diagnostic: {
+              ...state.diagnostic,
+              engineerSuggestedLine: data.line,
+              engineerThrottleActive: false,
+            },
+            feedbackState: 'error',
+            feedbackMessage: 'Müdahale başarısız: Basınç tahliyesi devre dışı. Hat basıncı boşaltılmadan devre açılamaz.',
+          };
+        }
+
+        // All checks succeeded!
+        const updatedLines = {
+          ...state.diagnostic.lines,
+          [state.diagnostic.faultyLine]: {
+            ...state.diagnostic.lines[state.diagnostic.faultyLine],
+            temp: 54,
+            press: 50,
+            noise: 36,
+            status: 'stabil' as const,
+          },
+        };
+
+        return {
+          ...state,
+          diagnostic: {
+            ...state.diagnostic,
+            lines: updatedLines,
+            engineerActionTaken: true,
+            engineerSuggestedLine: data.line,
+            engineerValveAngle: valveAngle,
+            engineerThrottleActive: throttleActive,
+            isSolved: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage: `MÜDAHALE TAMAMLANDI! ${data.line.toUpperCase()} devresi başarıyla soğutuldu ve tahliye edildi. Reaktör dengelendi!`,
+        };
       }
     }
 

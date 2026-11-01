@@ -45,7 +45,7 @@ export const ENVIRONMENTS: Record<EnvironmentType, EnvironmentInfo> = {
     desc: 'Aşırı soğuma ve dondurucu sıvı nitrojen basınç terslenmesi.',
     accentColor: '#38bdf8',
     tempOffset: -40,
-    conditionNote: 'Tersine eşik: Isı ≤-10°C VEYA Basınç ≥70kPa kontrol edilir.',
+    conditionNote: 'Tersine kutup eşikleri: Isı ≤-10°C VE Basınç ≥70kPa VE Parazit ≥60dB birlikte aranır.',
   },
   meteor_yagmuru: {
     id: 'meteor_yagmuru',
@@ -54,16 +54,16 @@ export const ENVIRONMENTS: Record<EnvironmentType, EnvironmentInfo> = {
     desc: 'Gövde delinmeleri, ani basınç düşüşleri ve elektrik sıçramaları.',
     accentColor: '#f59e0b',
     tempOffset: 15,
-    conditionNote: 'Herhangi 2 kritik koşulun sağlanması kesici müdahalesi için yeterlidir.',
+    conditionNote: 'Kinetik delinme protokolü: En az 2 kritik koşulun (Isı ≥80°C, Basınç ≤40kPa, Parazit ≥65dB) sağlanması gerekir.',
   },
   karantina_protokolu: {
     id: 'karantina_protokolu',
     name: 'Karantina Protokolü',
     badge: 'BİYOLOJİK KİLİT',
-    desc: 'Hava sirkülasyonu kilitli; tek bir koşulun aşılması acil tahliyeyi tetikler.',
+    desc: 'Hava sirkülasyonu kilitli; aşırı ısınma ve sızıntı kontrolü.',
     accentColor: '#a855f7',
     tempOffset: 5,
-    conditionNote: 'Tam izolasyon için tek bir koşulun (Isı, Basınç veya Parazit) aşılması yeterlidir.',
+    conditionNote: 'Biyolojik kilit protokolü: Isı ≥80°C VE Basınç ≤40kPa VE Parazit ≥65dB birlikte aranır.',
   },
 };
 
@@ -89,18 +89,23 @@ export type FeedbackState = 'idle' | 'incomplete' | 'waiting_partner' | 'error' 
 // State data for Arıza Teşhisi (Diagnostic)
 export interface DiagnosticData {
   lines: {
-    reaktor: { temp: number; press: number; noise: number; code: string };
-    sogutucu: { temp: number; press: number; noise: number; code: string };
-    anten: { temp: number; press: number; noise: number; code: string };
-    yonlendirme: { temp: number; press: number; noise: number; code: string };
+    reaktor: { temp: number; press: number; noise: number; code: string; status?: 'stabil' | 'kritik' };
+    sogutucu: { temp: number; press: number; noise: number; code: string; status?: 'stabil' | 'kritik' };
+    anten: { temp: number; press: number; noise: number; code: string; status?: 'stabil' | 'kritik' };
+    yonlendirme: { temp: number; press: number; noise: number; code: string; status?: 'stabil' | 'kritik' };
   };
   faultyLine: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme';
   lineBreakerMap: Record<'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme', 'K1' | 'K2' | 'K3' | 'K4'>;
-  engineerSuggestedLine: string | null;
+  engineerSuggestedLine: 'anten' | 'reaktor' | 'sogutucu' | 'yonlendirme' | null;
   captainSelectedBreaker: 'K1' | 'K2' | 'K3' | 'K4' | null;
   correctBreaker: 'K1' | 'K2' | 'K3' | 'K4';
+  targetValveAngle: number; // e.g. 135
+  targetThrottleActive: boolean; // true
+  engineerValveAngle: number | null;
+  engineerThrottleActive: boolean;
   engineerActionTaken: boolean;
   isSolved: boolean;
+  unlockedBreaker?: 'K1' | 'K2' | 'K3' | 'K4' | null;
 }
 
 // State data for Sinyal Çözümü

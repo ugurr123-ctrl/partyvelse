@@ -322,20 +322,45 @@ export class LostSignalRoom extends Room {
             return;
           }
           if (this.missionState.diagnostic.isSolved) return;
+          if (!data.breaker) return;
 
+          const isCorrect = data.breaker === this.missionState.diagnostic.correctBreaker;
           this.missionState.diagnostic.captainSelectedBreaker = data.breaker;
-          if (data.breaker === this.missionState.diagnostic.correctBreaker) {
-            if (this.missionState.diagnostic.engineerActionTaken) {
+
+          if (isCorrect) {
+            this.missionState.diagnostic.unlockedBreaker = data.breaker;
+            const willSolve = this.missionState.diagnostic.engineerActionTaken &&
+              this.missionState.diagnostic.engineerSuggestedLine === this.missionState.diagnostic.faultyLine;
+
+            if (willSolve) {
               this.missionState.diagnostic.isSolved = true;
+              this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine] = {
+                ...this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine],
+                temp: 54,
+                press: 50,
+                noise: 36,
+                status: 'stabil',
+              };
               this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Doğru kesici tetiklendi! Reaktör kararlı.';
+              this.missionState.feedbackMessage = `GÜVENLİK KİLİDİ AÇILDI! ${data.breaker} kesicisi arızalı devreyi izole etti. Reaktör kararlı.`;
             } else {
               this.missionState.feedbackState = 'idle';
-              this.missionState.feedbackMessage = 'Kesici seçildi. Mühendisin tahliyesi bekleniyor.';
+              this.missionState.feedbackMessage = `GÜVENLİK KİLİDİ AÇILDI (${data.breaker})! Devre akımı kesildi. Mühendisin soğutma valfi ve basınç tahliyesi müdahalesi bekleniyor.`;
             }
           } else {
-            this.applyPenalty('Hatalı kesici seçimi! Reaktör aşırı yüklendi.');
+            this.applyPenalty(`Hatalı kesici seçimi (${data.breaker})! İzole edilen hatta anomali bulunmuyor; sağlam sistemin enerjisi kesildi.`);
           }
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'diagnostic_engineer_select_line') {
+          if (player.role !== 'muhendis') return;
+          if (this.missionState.diagnostic.isSolved) return;
+
+          this.missionState.diagnostic.engineerSuggestedLine = data.line;
+          this.missionState.feedbackState = 'idle';
+          this.missionState.feedbackMessage = `Mühendis ${data.line ? data.line.toUpperCase() : ''} devresini inceleme için işaretledi.`;
           this.broadcastFilteredState();
           return;
         }
@@ -347,20 +372,65 @@ export class LostSignalRoom extends Room {
           }
           if (this.missionState.diagnostic.isSolved) return;
 
-          if (data.line === this.missionState.diagnostic.faultyLine) {
-            this.missionState.diagnostic.engineerActionTaken = true;
-            this.missionState.diagnostic.engineerSuggestedLine = data.line;
-            if (this.missionState.diagnostic.captainSelectedBreaker === this.missionState.diagnostic.correctBreaker) {
-              this.missionState.diagnostic.isSolved = true;
-              this.missionState.feedbackState = 'success';
-              this.missionState.feedbackMessage = 'Arızalı hat tahliye edildi ve doğru kesici açıldı! Reaktör kararlı.';
-            } else {
-              this.missionState.feedbackState = 'idle';
-              this.missionState.feedbackMessage = 'Arızalı hat tahliye edildi. Kaptanın kesiciyi açması bekleniyor.';
-            }
-          } else {
-            this.applyPenalty('Hatalı hat tahliyesi! Sağlam hatta müdahale edildi.');
+          if (!data.line) {
+            this.missionState.feedbackState = 'error';
+            this.missionState.feedbackMessage = 'Müdahale için önce canlı sensörlerde arızalı devreyi tespit edip işaretleyin.';
+            this.broadcastFilteredState();
+            return;
           }
+
+          const isBreakerUnlocked = this.missionState.diagnostic.captainSelectedBreaker === this.missionState.diagnostic.correctBreaker;
+          if (!isBreakerUnlocked) {
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            this.missionState.feedbackState = 'error';
+            this.missionState.feedbackMessage = 'Güvenlik kilidi devrede! Kaptan ana şebekeden bu hattın güvenlik kesicisini açmadan tahliye vanası çalıştırılamaz.';
+            this.broadcastFilteredState();
+            return;
+          }
+
+          if (data.line !== this.missionState.diagnostic.faultyLine) {
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            this.applyPenalty('Hatalı hat tahliyesi! Seçilen devrede çoklu arıza koşulları oluşmamış. Sağlam hatta müdahale edildi.');
+            this.broadcastFilteredState();
+            return;
+          }
+
+          // Check valve angle & throttle if provided
+          const valveAngle = data.valveAngle !== undefined ? data.valveAngle : this.missionState.diagnostic.targetValveAngle;
+          if (data.valveAngle !== undefined && data.valveAngle !== this.missionState.diagnostic.targetValveAngle) {
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            this.missionState.diagnostic.engineerValveAngle = data.valveAngle;
+            this.missionState.feedbackState = 'error';
+            this.missionState.feedbackMessage = 'Müdahale başarısız: Soğutma valfi doğru açıda değil. Termal şok riski nedeniyle tahliye emniyet valfi tarafından durduruldu.';
+            this.broadcastFilteredState();
+            return;
+          }
+
+          const throttleActive = data.throttleActive !== undefined ? data.throttleActive : true;
+          if (data.throttleActive !== undefined && !throttleActive) {
+            this.missionState.diagnostic.engineerSuggestedLine = data.line;
+            this.missionState.diagnostic.engineerThrottleActive = false;
+            this.missionState.feedbackState = 'error';
+            this.missionState.feedbackMessage = 'Müdahale başarısız: Basınç tahliyesi devre dışı. Hat basıncı boşaltılmadan devre açılamaz.';
+            this.broadcastFilteredState();
+            return;
+          }
+
+          // All passed
+          this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine] = {
+            ...this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine],
+            temp: 54,
+            press: 50,
+            noise: 36,
+            status: 'stabil',
+          };
+          this.missionState.diagnostic.engineerActionTaken = true;
+          this.missionState.diagnostic.engineerSuggestedLine = data.line;
+          this.missionState.diagnostic.engineerValveAngle = valveAngle;
+          this.missionState.diagnostic.engineerThrottleActive = throttleActive;
+          this.missionState.diagnostic.isSolved = true;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage = `MÜDAHALE TAMAMLANDI! ${data.line.toUpperCase()} devresi başarıyla soğutuldu ve tahliye edildi. Reaktör dengelendi!`;
           this.broadcastFilteredState();
           return;
         }
@@ -814,6 +884,12 @@ export class LostSignalRoom extends Room {
         ...base,
         diagnostic: {
           ...this.missionState.diagnostic,
+          lines: {
+            reaktor: { temp: 0, press: 0, noise: 0, code: 'CIR-01', status: this.missionState.diagnostic.lines.reaktor.status },
+            sogutucu: { temp: 0, press: 0, noise: 0, code: 'CIR-02', status: this.missionState.diagnostic.lines.sogutucu.status },
+            anten: { temp: 0, press: 0, noise: 0, code: 'CIR-03', status: this.missionState.diagnostic.lines.anten.status },
+            yonlendirme: { temp: 0, press: 0, noise: 0, code: 'CIR-04', status: this.missionState.diagnostic.lines.yonlendirme.status },
+          },
         },
         signal: {
           ...this.missionState.signal,
@@ -867,6 +943,13 @@ export class LostSignalRoom extends Room {
           ...this.missionState.diagnostic,
           faultyLine: 'reaktor', // generic fallback label
           correctBreaker: null as any,
+          targetValveAngle: 0,
+          lineBreakerMap: {
+            anten: '??' as any,
+            reaktor: '??' as any,
+            sogutucu: '??' as any,
+            yonlendirme: '??' as any,
+          },
         },
         signal: {
           ...this.missionState.signal,

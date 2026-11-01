@@ -102,7 +102,7 @@ export function isLineAnomaly(
     case 'kayip_sinyal':
       return temp >= 80 && press <= 40 && noise >= 65;
     case 'buzul_istasyonu':
-      return temp <= -10 || press >= 70;
+      return temp <= -10 && press >= 70 && noise >= 60;
     case 'meteor_yagmuru': {
       let count = 0;
       if (temp >= 80) count++;
@@ -111,7 +111,7 @@ export function isLineAnomaly(
       return count >= 2;
     }
     case 'karantina_protokolu':
-      return temp >= 80 || press <= 40 || noise >= 65;
+      return temp >= 80 && press <= 40 && noise >= 65;
   }
 }
 
@@ -135,47 +135,96 @@ export function generateDiagnostic(env: EnvironmentType): DiagnosticData {
   };
 
   const correctBreaker = lineBreakerMap[faultyLine];
+  // Target valve angle varies deterministically by breaker: K1/K3 require 90°, K2/K4 require 135°
+  const targetValveAngle = (correctBreaker === 'K1' || correctBreaker === 'K3') ? 90 : 135;
 
-  const lines = {
-    reaktor: { temp: 58, press: 52, noise: 40, code: 'CIR-01' },
-    sogutucu: { temp: 48, press: 50, noise: 35, code: 'CIR-02' },
-    anten: { temp: 52, press: 48, noise: 42, code: 'CIR-03' },
-    yonlendirme: { temp: 60, press: 55, noise: 38, code: 'CIR-04' },
+  const lines: DiagnosticData['lines'] = {
+    reaktor: { temp: 58, press: 52, noise: 40, code: 'CIR-01', status: 'stabil' },
+    sogutucu: { temp: 48, press: 50, noise: 35, code: 'CIR-02', status: 'stabil' },
+    anten: { temp: 52, press: 48, noise: 42, code: 'CIR-03', status: 'stabil' },
+    yonlendirme: { temp: 60, press: 55, noise: 38, code: 'CIR-04', status: 'stabil' },
   };
 
-  // Configure measurements so ONLY faultyLine triggers isLineAnomaly(env, ...)
+  const distractorKeys = lineKeys.filter(k => k !== faultyLine);
+
+  if (env === 'buzul_istasyonu') {
+    // Kriter: temp <= -10 && press >= 70 && noise >= 60
+    // Distractor 0: Sadece aşırı soğuk (Isı alarmı verir, basınç/parazit normal)
+    lines[distractorKeys[0]].temp = -14 - Math.floor(Math.random() * 6);
+    lines[distractorKeys[0]].press = 48 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[0]].noise = 38 + Math.floor(Math.random() * 8);
+
+    // Distractor 1: Yüksek basınç ve yüksek parazit (2 kriter var, ama ısı normal)
+    lines[distractorKeys[1]].temp = 18 + Math.floor(Math.random() * 10);
+    lines[distractorKeys[1]].press = 74 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[1]].noise = 65 + Math.floor(Math.random() * 6);
+
+    // Distractor 2: Sadece parazit alarmı
+    lines[distractorKeys[2]].temp = 22 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[2]].press = 52 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[2]].noise = 68 + Math.floor(Math.random() * 8);
+
+    // Arızalı Hat: 3 şartı da sağlar
+    lines[faultyLine].temp = -16 - Math.floor(Math.random() * 8);
+    lines[faultyLine].press = 78 + Math.floor(Math.random() * 8);
+    lines[faultyLine].noise = 68 + Math.floor(Math.random() * 8);
+    lines[faultyLine].status = 'kritik';
+  } else if (env === 'meteor_yagmuru') {
+    // Kriter: En az 2 kritik eşik (temp >= 80, press <= 40, noise >= 65)
+    // Distractor 0: Sadece yüksek ısı (1 eşik, yetersiz)
+    lines[distractorKeys[0]].temp = 84 + Math.floor(Math.random() * 6);
+    lines[distractorKeys[0]].press = 55 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[0]].noise = 40 + Math.floor(Math.random() * 8);
+
+    // Distractor 1: Sadece düşük basınç (1 eşik, yetersiz)
+    lines[distractorKeys[1]].temp = 54 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[1]].press = 34 + Math.floor(Math.random() * 5);
+    lines[distractorKeys[1]].noise = 45 + Math.floor(Math.random() * 8);
+
+    // Distractor 2: Sadece yüksek parazit (1 eşik, yetersiz)
+    lines[distractorKeys[2]].temp = 58 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[2]].press = 58 + Math.floor(Math.random() * 6);
+    lines[distractorKeys[2]].noise = 70 + Math.floor(Math.random() * 8);
+
+    // Arızalı Hat: Tüm eşikleri (3/3) sağlar
+    lines[faultyLine].temp = 88 + Math.floor(Math.random() * 6);
+    lines[faultyLine].press = 33 + Math.floor(Math.random() * 6);
+    lines[faultyLine].noise = 72 + Math.floor(Math.random() * 8);
+    lines[faultyLine].status = 'kritik';
+  } else {
+    // 'kayip_sinyal' veya 'karantina_protokolu':
+    // Kriter: temp >= 80 && press <= 40 && noise >= 65 (Üçü de şart!)
+    // Distractor 0: Sadece yüksek ısı (Isı tek başına arızayı göstermez)
+    lines[distractorKeys[0]].temp = 83 + Math.floor(Math.random() * 6);
+    lines[distractorKeys[0]].press = 56 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[0]].noise = 42 + Math.floor(Math.random() * 8);
+
+    // Distractor 1: Düşük basınç VE yüksek parazit (2 kriter var, ısı normal)
+    lines[distractorKeys[1]].temp = 55 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[1]].press = 34 + Math.floor(Math.random() * 5);
+    lines[distractorKeys[1]].noise = 71 + Math.floor(Math.random() * 6);
+
+    // Distractor 2: Sadece yüksek parazit (Parazit tek başına arızayı göstermez)
+    lines[distractorKeys[2]].temp = 62 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[2]].press = 52 + Math.floor(Math.random() * 8);
+    lines[distractorKeys[2]].noise = 69 + Math.floor(Math.random() * 8);
+
+    // Arızalı Hat: Üç kriteri birden sağlar!
+    lines[faultyLine].temp = 86 + Math.floor(Math.random() * 8);
+    lines[faultyLine].press = 32 + Math.floor(Math.random() * 6);
+    lines[faultyLine].noise = 74 + Math.floor(Math.random() * 8);
+    lines[faultyLine].status = 'kritik';
+  }
+
+  // Double-check mathematical guarantee: EXACTLY ONE line must trigger isLineAnomaly
+  let anomalyCount = 0;
   for (const key of lineKeys) {
-    if (key === faultyLine) {
-      if (env === 'kayip_sinyal') {
-        lines[key].temp = 82 + Math.floor(Math.random() * 8);
-        lines[key].press = 32 + Math.floor(Math.random() * 7);
-        lines[key].noise = 68 + Math.floor(Math.random() * 8);
-      } else if (env === 'buzul_istasyonu') {
-        lines[key].temp = -15 - Math.floor(Math.random() * 12);
-        lines[key].press = 75 + Math.floor(Math.random() * 10);
-        lines[key].noise = 55;
-      } else if (env === 'meteor_yagmuru') {
-        lines[key].temp = 85 + Math.floor(Math.random() * 6);
-        lines[key].press = 34 + Math.floor(Math.random() * 5);
-        lines[key].noise = 45; // 2 conditions met
-      } else {
-        // karantina_protokolu
-        lines[key].temp = 88 + Math.floor(Math.random() * 8);
-        lines[key].press = 55;
-        lines[key].noise = 40;
-      }
-    } else {
-      // Safe values that fail all conditions
-      if (env === 'buzul_istasyonu') {
-        lines[key].temp = 20 + Math.floor(Math.random() * 15);
-        lines[key].press = 40 + Math.floor(Math.random() * 15);
-        lines[key].noise = 30 + Math.floor(Math.random() * 10);
-      } else {
-        lines[key].temp = 50 + Math.floor(Math.random() * 15);
-        lines[key].press = 50 + Math.floor(Math.random() * 12);
-        lines[key].noise = 35 + Math.floor(Math.random() * 12);
-      }
+    if (isLineAnomaly(env, lines[key])) {
+      anomalyCount++;
     }
+  }
+  if (anomalyCount !== 1) {
+    throw new Error(`Kritik arıza üretim anomalisi: ${anomalyCount} hat anomali verdi (tam olarak 1 olmalı).`);
   }
 
   return {
@@ -185,8 +234,13 @@ export function generateDiagnostic(env: EnvironmentType): DiagnosticData {
     engineerSuggestedLine: null,
     captainSelectedBreaker: null,
     correctBreaker,
+    targetValveAngle,
+    targetThrottleActive: true,
+    engineerValveAngle: null,
+    engineerThrottleActive: false,
     engineerActionTaken: false,
     isSolved: false,
+    unlockedBreaker: null,
   };
 }
 

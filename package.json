@@ -10,12 +10,13 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx scripts/testReviewRegressions.ts && tsx scripts/testColyseusMultiplayer.ts && tsx scripts/verifyGameLogic.ts && tsx scripts/testDualViewMode.ts && tsx scripts/testAdvancedScenario.ts",
+    "test": "tsx scripts/testReviewRegressions.ts && tsx scripts/testColyseusMultiplayer.ts && tsx scripts/verifyGameLogic.ts && tsx scripts/testDualViewMode.ts && tsx scripts/testAdvancedScenario.ts && tsx scripts/testReactorPuzzle.ts",
     "test:regressions": "tsx scripts/testReviewRegressions.ts",
     "test:multiplayer": "tsx scripts/testColyseusMultiplayer.ts",
     "test:logic": "tsx scripts/verifyGameLogic.ts",
     "test:dualview": "tsx scripts/testDualViewMode.ts",
-    "test:advanced": "tsx scripts/testAdvancedScenario.ts"
+    "test:advanced": "tsx scripts/testAdvancedScenario.ts",
+    "test:reactor": "tsx scripts/testReactorPuzzle.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
