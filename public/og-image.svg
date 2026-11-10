@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="ogBg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#1f1842" />
+      <stop offset="60%" stop-color="#0b081a" />
+      <stop offset="100%" stop-color="#05030a" />
+    </radialGradient>
+    <linearGradient id="ogGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe066" />
+      <stop offset="50%" stop-color="#ffb703" />
+      <stop offset="100%" stop-color="#fb8500" />
+    </linearGradient>
+    <linearGradient id="ogCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#0088ff" />
+    </linearGradient>
+    <filter id="ogGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="20" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#ogBg)" />
+
+  <!-- Outer Sci-Fi Border -->
+  <rect x="24" y="24" width="1152" height="582" rx="28" fill="none" stroke="url(#ogGold)" stroke-width="2" opacity="0.4" />
+  <rect x="36" y="36" width="1128" height="558" rx="20" fill="none" stroke="#00f0ff" stroke-width="1" opacity="0.2" stroke-dasharray="16,8" />
+
+  <!-- Corner Brackets -->
+  <path d="M 44 90 L 44 44 L 90 44" fill="none" stroke="#ffb703" stroke-width="4" />
+  <path d="M 1156 90 L 1156 44 L 1110 44" fill="none" stroke="#ffb703" stroke-width="4" />
+  <path d="M 44 540 L 44 586 L 90 586" fill="none" stroke="#ffb703" stroke-width="4" />
+  <path d="M 1156 540 L 1156 586 L 1110 586" fill="none" stroke="#ffb703" stroke-width="4" />
+
+  <!-- Ambient Glow Core Behind Logo -->
+  <circle cx="600" cy="220" r="180" fill="#ffb703" opacity="0.12" filter="url(#ogGlow)" />
+  <circle cx="600" cy="220" r="100" fill="#00f0ff" opacity="0.1" filter="url(#ogGlow)" />
+
+  <!-- Radar Hexagon Icon Centered -->
+  <polygon points="600,120 680,166 680,258 600,304 520,258 520,166" fill="#141123" stroke="url(#ogGold)" stroke-width="5" filter="url(#ogGlow)" />
+  <circle cx="600" cy="212" r="45" fill="none" stroke="#00f0ff" stroke-width="2.5" opacity="0.5" />
+  <circle cx="600" cy="212" r="22" fill="url(#ogGold)" filter="url(#ogGlow)" />
+  <line x1="600" y1="145" x2="600" y2="280" stroke="#00f0ff" stroke-width="2" opacity="0.7" />
+  <line x1="535" y1="212" x2="665" y2="212" stroke="#00f0ff" stroke-width="2" opacity="0.7" />
+
+  <!-- Top Ribbon Category Tag -->
+  <g transform="translate(600, 345)">
+    <rect x="-190" y="-16" width="380" height="32" rx="16" fill="#1f1a3a" stroke="#00f0ff" stroke-width="1.5" />
+    <text text-anchor="middle" y="5" fill="#00f0ff" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="bold" letter-spacing="3">
+      İKİ OYUNCULU ASİMETRİK CO-OP DENEYİMİ
+    </text>
+  </g>
+
+  <!-- Main Title -->
+  <text x="600" y="425" text-anchor="middle" fill="#ffffff" font-family="'Sora', sans-serif" font-size="52" font-weight="900" letter-spacing="-1">
+    PARTYVERSE // <tspan fill="url(#ogGold)">KAYIP SİNYAL</tspan>
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="475" text-anchor="middle" fill="#c6bce2" font-family="'Manrope', sans-serif" font-size="20" font-weight="500">
+    Kaptan &amp; Mühendis Asimetrik Konsol Arayüzü • 17 Modüler Ekran • 4 Tematik Operasyon
+  </text>
+
+  <!-- Telemetry Badge Pills at Bottom -->
+  <g transform="translate(600, 535)">
+    <!-- Pill 1: Kaptan -->
+    <rect x="-310" y="-15" width="180" height="30" rx="8" fill="#141123" stroke="#ffb703" stroke-width="1" />
+    <text text-anchor="middle" x="-220" y="5" fill="#ffb703" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="bold">
+      • KAPTAN KONSOLU
+    </text>
+
+    <!-- Pill 2: Mühendis -->
+    <rect x="-100" y="-15" width="200" height="30" rx="8" fill="#141123" stroke="#00f0ff" stroke-width="1" />
+    <text text-anchor="middle" x="0" y="5" fill="#00f0ff" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="bold">
+      • MÜHENDİS KONSOLU
+    </text>
+
+    <!-- Pill 3: Dual View & Yerel -->
+    <rect x="130" y="-15" width="180" height="30" rx="8" fill="#141123" stroke="#10b981" stroke-width="1" />
+    <text text-anchor="middle" x="220" y="5" fill="#34d399" font-family="'JetBrains Mono', monospace" font-size="12" font-weight="bold">
+      • ÇİFT EKRAN MODU
+    </text>
+  </g>
+</svg>

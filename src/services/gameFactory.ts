@@ -11,7 +11,9 @@ import {
   RadarData,
   EnergyData,
   RescueData,
-  AdvancedScenarioData
+  AdvancedScenarioData,
+  OperationTheme,
+  KarantinaData
 } from '../types/game';
 
 export const ALL_MINI_GAMES: MiniGameType[] = [
@@ -38,13 +40,51 @@ export function getRandomMiniGames(previousPair?: [MiniGameType, MiniGameType]):
   return candidate;
 }
 
-export function generateRoomCode(): string {
+export function generateRoomCode(theme?: OperationTheme): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = 'KYP-';
-  for (let i = 0; i < 4; i++) {
+  let prefix = 'KYP-';
+  if (theme === 'karantina_2088') prefix = 'KR88-';
+  else if (theme === 'golge_protokolu') prefix = 'SHDW-';
+  else if (theme === 'derin_basinc') prefix = 'DP-';
+
+  let code = prefix;
+  const count = prefix === 'KR88-' ? 2 : 4;
+  for (let i = 0; i < count; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
+}
+
+export function generateKarantinaData(): KarantinaData {
+  return {
+    spectralFilterNm: 415,
+    selectedBase: 'sitozin-9',
+    bioPhase1Transmitted: false,
+    selectedUvSector: 3,
+    selectedValve: 'B',
+    phase1Solved: false,
+
+    polymerPct: 45,
+    enzymePct: 30,
+    neutroPct: 25,
+    bondFreqGhz: 8.4,
+    bioPhase2Injected: false,
+    centrifugeRpm: 3800,
+    coolingValvePct: 75,
+    pressureReliefActive: true,
+    phase2Solved: false,
+
+    vacuumFlowRate: 6.2,
+    bioPhase3Started: false,
+    selectedChimney: 'BACA-02',
+    chimneyBar: 12.0,
+    safetyLatchUnlocked: true,
+    phase3Solved: false,
+
+    immunityScore: 10450,
+    selinAccuracy: 99.2,
+    baranValves: 3,
+  };
 }
 
 export function generateRoundId(): string {
@@ -111,6 +151,8 @@ export function isLineAnomaly(
       return count >= 2;
     }
     case 'karantina_protokolu':
+      return temp >= 80 && press <= 40 && noise >= 65;
+    default:
       return temp >= 80 && press <= 40 && noise >= 65;
   }
 }
@@ -581,7 +623,10 @@ export function generateAdvancedSignal() {
   };
 }
 
-export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'): AdvancedScenarioData {
+export function generateAdvancedScenario(
+  env: EnvironmentType = 'kayip_sinyal',
+  selectedGames?: [MiniGameType, MiniGameType]
+): AdvancedScenarioData {
   // Generate multi-criteria dynamic diagnostic puzzle consistent with environment rules
   const diag = generateDiagnostic(env);
 
@@ -594,6 +639,9 @@ export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'):
   const targetBreaker = diag.correctBreaker;
   const lines = diag.lines;
   const faultyTelemetry = lines[faultyLine];
+
+  const cableData = generateCable();
+  const radarData = generateRadar();
 
   return {
     subsystems: {
@@ -630,6 +678,19 @@ export function generateAdvancedScenario(env: EnvironmentType = 'kayip_sinyal'):
         targetVacuumMin: 70,
         targetVacuumMax: 85,
         externalPressureKpa: 36,
+      },
+      kablo: {
+        isRepaired: false,
+        cables: cableData.cables,
+        ports: cableData.ports,
+        portAssignments: {},
+      },
+      radar: {
+        isAligned: false,
+        targetAzimuth: radarData.targetAzimuth,
+        targetElevation: radarData.targetElevation,
+        currentAzimuth: 0,
+        currentElevation: 10,
       },
     },
     powerGrid: {
@@ -670,6 +731,7 @@ export function createInitialMissionState(
     roomCode,
     roundId: generateRoundId(),
     status: 'entry',
+    operationTheme: 'derin_basinc',
     gameMode: 'standart',
     activeEnvironment: env,
     selectedMiniGames: selectedGames,
@@ -704,7 +766,8 @@ export function createInitialMissionState(
     radar: generateRadar(),
     energy: generateEnergy(),
     rescue: generateRescue(),
-    advancedScenario: generateAdvancedScenario(env),
+    advancedScenario: generateAdvancedScenario(env, selectedGames),
+    karantinaData: generateKarantinaData(),
 
     rescuedCrewCount: 0,
     completedTasksCount: 0,

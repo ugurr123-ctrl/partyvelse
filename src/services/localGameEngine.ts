@@ -1,5 +1,5 @@
 import { MissionState, Role } from '../types/game';
-import { RESCUE_ROUTES, calculateFinalScore } from './gameFactory';
+import { RESCUE_ROUTES, calculateFinalScore, generateKarantinaData, generateRoundId } from './gameFactory';
 import { validateRescueDecision } from './phaseTransition';
 import { applyAdvancedAction } from './advancedScenarioLogic';
 
@@ -554,6 +554,243 @@ export function applyLocalGameAction(
         }
       }
       return candidateState;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Karantina 2088 Actions
+  // ---------------------------------------------------------------------------
+  if (actionType.startsWith('karantina_')) {
+    const kData = state.karantinaData || generateKarantinaData();
+
+    if (actionType === 'karantina_set_spectral_filter') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          spectralFilterNm: data.value,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase1_bio_transmit') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          bioPhase1Transmitted: true,
+        },
+        feedbackState: 'success',
+        feedbackMessage: 'MUTASYON TEŞHİSİ GÜVENLİK ŞEFİNE İLETİLDİ! Telsiz kanalı SEC_CH-4 aktif.',
+      };
+    }
+
+    if (actionType === 'karantina_phase1_sec_select_sector') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          selectedUvSector: data.sector,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase1_sec_select_valve') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          selectedValve: data.valve,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase1_sec_solve') {
+      const sector = data.sector ?? kData.selectedUvSector;
+      const valve = data.valve ?? kData.selectedValve;
+      if (sector === 3 && valve === 'B') {
+        return {
+          ...state,
+          currentPhaseIndex: 1,
+          karantinaData: {
+            ...kData,
+            selectedUvSector: 3,
+            selectedValve: 'B',
+            phase1Solved: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage: 'SEKTÖR 3 VE VANA-B MÜHÜRLENDİ! Sızıntı durduruldu. 2. Aşamaya geçildi.',
+        };
+      } else {
+        return applyPenalty(state, 'Hatalı sektör veya vana mühürlendi! Virüs ana hava kanallarına sızıyor.');
+      }
+    }
+
+    if (actionType === 'karantina_set_bond_freq') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          bondFreqGhz: data.value,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase2_bio_inject') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          bioPhase2Injected: true,
+        },
+        feedbackState: 'success',
+        feedbackMessage: 'PANZEHİR REAKTÖRE ENJEKTE EDİLDİ! Güvenlik Şefinin santrifüj devrini 3800 RPM ayarlaması bekleniyor.',
+      };
+    }
+
+    if (actionType === 'karantina_phase2_sec_adjust_rpm') {
+      const newRpm = Math.max(1000, Math.min(5000, (kData.centrifugeRpm || 3800) + (data.delta || 0)));
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          centrifugeRpm: newRpm,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase2_sec_set_cooling') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          coolingValvePct: data.pct,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase2_sec_toggle_relief') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          pressureReliefActive: !kData.pressureReliefActive,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase2_sec_solve') {
+      const rpm = data.rpm ?? kData.centrifugeRpm;
+      const cooling = data.coolingValvePct ?? kData.coolingValvePct;
+      if (rpm === 3800 && cooling === 75) {
+        return {
+          ...state,
+          currentPhaseIndex: 2,
+          karantinaData: {
+            ...kData,
+            centrifugeRpm: 3800,
+            coolingValvePct: 75,
+            phase2Solved: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage: 'SANTRİFÜJ 3800 RPM & %75 SOĞUTMA İLE KİLİTLENDİ! Antikor sentezlendi. 3. Aşamaya geçildi.',
+        };
+      } else {
+        return applyPenalty(state, 'Santrifüj devri veya soğutma seviyesi hatalı! Antikor zinciri parçalanma tehlikesinde.');
+      }
+    }
+
+    if (actionType === 'karantina_set_vacuum_flow') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          vacuumFlowRate: data.value,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase3_bio_start') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          bioPhase3Started: true,
+        },
+        feedbackState: 'success',
+        feedbackMessage: 'VAKUM DÖNGÜSÜ BAŞLATILDI! Güvenlik Şefinin BACA-02 sürgüsünü 12 Bar basınca ayarlaması bekleniyor.',
+      };
+    }
+
+    if (actionType === 'karantina_phase3_sec_select_chimney') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          selectedChimney: data.chimney,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase3_sec_adjust_bar') {
+      const newBar = Math.max(0, Math.min(25, Number(((kData.chimneyBar || 12.0) + (data.delta || 0)).toFixed(1))));
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          chimneyBar: newBar,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase3_sec_toggle_latch') {
+      return {
+        ...state,
+        karantinaData: {
+          ...kData,
+          safetyLatchUnlocked: !kData.safetyLatchUnlocked,
+        },
+      };
+    }
+
+    if (actionType === 'karantina_phase3_sec_solve') {
+      const chimney = data.chimney ?? kData.selectedChimney;
+      const bar = data.bar ?? kData.chimneyBar;
+      if (chimney === 'BACA-02' && Math.abs(bar - 12.0) < 0.1) {
+        return {
+          ...state,
+          status: 'phase_result',
+          outcomeType: 'tam_basari',
+          finalScore: 10450,
+          karantinaData: {
+            ...kData,
+            selectedChimney: 'BACA-02',
+            chimneyBar: 12.0,
+            phase3Solved: true,
+            immunityScore: 10450,
+            selinAccuracy: 99.2,
+            baranValves: 3,
+          },
+          feedbackState: 'success',
+          feedbackMessage: 'SALGIN DURDURULDU! Sektör-09 başarıyla dezenfekte edildi.',
+        };
+      } else {
+        return applyPenalty(state, 'Hatalı tahliye bacası veya yanlış pnömatik basınç! Zehirli gaz sızdı.');
+      }
+    }
+
+    if (actionType === 'karantina_restart') {
+      return {
+        ...state,
+        roundId: generateRoundId(),
+        status: 'lobby',
+        currentPhaseIndex: 0,
+        timeLeftSeconds: 300,
+        hullIntegrity: 100,
+        karantinaData: generateKarantinaData(),
+        feedbackState: 'idle',
+        feedbackMessage: '',
+      };
     }
   }
 

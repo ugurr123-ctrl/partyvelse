@@ -19,6 +19,7 @@ import {
   generateRoundId, 
   getRandomMiniGames, 
   calculateFinalScore, 
+  generateKarantinaData,
   RESCUE_ROUTES 
 } from '../src/services/gameFactory';
 import { 
@@ -27,6 +28,7 @@ import {
   isMiniGameCompleted 
 } from '../src/services/phaseTransition';
 import { applyAdvancedAction } from '../src/services/advancedScenarioLogic';
+import { applyLocalGameAction } from '../src/services/localGameEngine';
 
 interface PlayerSession {
   sessionId: string;
@@ -50,7 +52,8 @@ export class LostSignalRoom extends Room {
 
   onCreate(options: any) {
     const rawCode = (options.roomCode || 'KYP-' + Math.random().toString(36).substring(2, 6).toUpperCase()).toUpperCase().trim();
-    this.roomCode = rawCode.startsWith('KYP-') ? rawCode : `KYP-${rawCode}`;
+    const isPrefixed = rawCode.startsWith('KR') || rawCode.startsWith('SHDW') || rawCode.startsWith('DP') || rawCode.startsWith('KYP');
+    this.roomCode = isPrefixed ? rawCode : `KYP-${rawCode}`;
 
     // Prevent duplicate room creation with same code
     if (LostSignalRoom.activeRooms.has(this.roomCode)) {
@@ -66,7 +69,17 @@ export class LostSignalRoom extends Room {
     if (options.selectedMiniGames && Array.isArray(options.selectedMiniGames)) {
       this.missionState.selectedMiniGames = options.selectedMiniGames;
     }
+    if (options.operationTheme) {
+      this.missionState.operationTheme = options.operationTheme;
+      if (options.operationTheme === 'karantina_2088') {
+        this.missionState.karantinaData = generateKarantinaData();
+      }
+    }
     this.missionState.status = 'lobby';
+    this.missionState.players.kaptan.connected = false;
+    this.missionState.players.muhendis.connected = false;
+    this.missionState.players.muhendis.name = options.operationTheme === 'karantina_2088' ? 'Güvenlik Şefi Bekleniyor...' : 'Arkadaşın Bekleniyor...';
+    this.missionState.players.muhendis.id = '';
 
     // Set up 1-second authoritative server clock
     this.tickInterval = this.clock.setInterval(() => {
@@ -78,6 +91,19 @@ export class LostSignalRoom extends Room {
   }
 
   private registerMessageHandlers() {
+    // 0. State Request from newly connected / reconnected client
+    this.onMessage('request_state', (client) => {
+      const player = this.playerSessions.get(client.sessionId);
+      if (player) {
+        client.send('state_update', this.getFilteredStateForRole(player.role));
+      }
+    });
+
+    // 0B. Live Tactical Radio Transmission
+    this.onMessage('radio_transmission', (_client, transmission) => {
+      this.broadcast('radio_transmission', transmission);
+    });
+
     // 1. Ready Toggle: Player can ONLY toggle their own ready status
     this.onMessage('toggle_ready', (client) => {
       const player = this.playerSessions.get(client.sessionId);
@@ -122,6 +148,7 @@ export class LostSignalRoom extends Room {
           name: otherPlayer.name,
           role: otherPlayer.role,
           ready: false,
+          connected: true,
         };
       }
 
@@ -132,15 +159,21 @@ export class LostSignalRoom extends Room {
         name: player.name,
         role: targetRole,
         ready: false,
+        connected: true,
       };
 
       this.broadcastFilteredState();
     });
 
-    // 3. Start Game: Only Host can start, and only when both players are ready
+    // 3. Start Game: Only Host can start, and only when both players are connected and ready
     this.onMessage('start_game', (client) => {
       if (client.sessionId !== this.hostSessionId) {
         client.send('error_message', 'Yalnızca oda lideri oyunu başlatabilir.');
+        return;
+      }
+
+      if (this.playerSessions.size < 2) {
+        client.send('error_message', 'Oyunu başlatmak için arkadaşınızın odaya katılması gerekiyor (1/2).');
         return;
       }
 
@@ -246,6 +279,10 @@ export class LostSignalRoom extends Room {
       freshState.roundId = newRoundId;
       freshState.selectedMiniGames = newPair;
       freshState.status = 'lobby';
+      freshState.operationTheme = this.missionState.operationTheme;
+      if (this.missionState.operationTheme === 'karantina_2088') {
+        freshState.karantinaData = generateKarantinaData();
+      }
 
       // Preserve player names and roles
       freshState.players.kaptan.name = this.missionState.players.kaptan.name;
@@ -306,6 +343,13 @@ export class LostSignalRoom extends Room {
         return;
       }
       this.missionState = result.nextState;
+      this.broadcastFilteredState();
+      return;
+    }
+
+    // Handle Karantina 2088 Actions
+    if (actionType.startsWith('karantina_')) {
+      this.missionState = applyLocalGameAction(this.missionState, actionType, data, player.role);
       this.broadcastFilteredState();
       return;
     }
@@ -811,6 +855,7 @@ export class LostSignalRoom extends Room {
       name: playerName,
       role,
       ready: false,
+      connected: true,
     };
 
     // If game was paused waiting for this reconnecting player
@@ -840,7 +885,13 @@ export class LostSignalRoom extends Room {
       if (isGameInProgress) {
         this.handleMissionFailure(`Mürettebat üyesi (${player.name}) görevden ayrıldı. Görev sonlandırıldı.`);
       } else if (this.missionState.status === 'lobby') {
-        this.missionState.players[player.role].ready = false;
+        this.missionState.players[player.role] = {
+          id: '',
+          name: player.role === 'kaptan' ? 'Kaptan Bekleniyor...' : 'Arkadaşın Bekleniyor...',
+          role: player.role,
+          ready: false,
+          connected: false,
+        };
         this.broadcastFilteredState();
       }
       return;

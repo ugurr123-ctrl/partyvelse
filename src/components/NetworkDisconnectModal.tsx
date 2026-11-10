@@ -1,5 +1,6 @@
 import React from 'react';
-import { WifiOff, RefreshCw, AlertOctagon, ShieldAlert } from 'lucide-react';
+import { WifiOff, RefreshCw, AlertOctagon, ShieldAlert, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   isOpen: boolean;
@@ -10,8 +11,6 @@ interface Props {
 export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, countdownSeconds = 45 }) => {
   const [reconnecting, setReconnecting] = React.useState(false);
 
-  if (!isOpen) return null;
-
   const handleReconnect = () => {
     setReconnecting(true);
     setTimeout(() => {
@@ -21,8 +20,32 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, c
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="relative w-full max-w-md p-6 rounded-2xl bg-[#141123] border border-rose-500/50 shadow-[0_0_50px_rgba(244,63,94,0.3)] text-center text-[#e6dff9] space-y-4 animate-scaleUp">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={(e) => { if (e.target === e.currentTarget) onReconnect(); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-md p-6 rounded-2xl bg-[#141123] border border-rose-500/50 shadow-[0_0_50px_rgba(244,63,94,0.3)] text-center text-[#e6dff9] space-y-4"
+          >
+        
+        {/* Quick Close Button */}
+        <button
+          onClick={onReconnect}
+          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+          title="Kapat & Bağlan"
+        >
+          <X className="w-4 h-4" />
+        </button>
         
         {/* Animated warning beacon */}
         <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-[0_0_24px_rgba(244,63,94,0.4)]">
@@ -75,7 +98,9 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, c
         <p className="text-[11px] text-[#9e8f78]">
           (Bu ekran, gerçek uzay telsiz kopmalarını ve test senaryolarını doğrulamak için tasarlanmıştır.)
         </p>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

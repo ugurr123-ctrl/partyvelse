@@ -18,7 +18,8 @@ import {
   Image as ImageIcon,
   Loader2
 } from 'lucide-react';
-import { MissionState, Role } from '../types/game';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MissionState, Role, OperationTheme } from '../types/game';
 
 export interface ScreenMeta {
   id: number;
@@ -31,6 +32,7 @@ export interface ScreenMeta {
   statusKey: MissionState['status'];
   miniGameKey?: string;
   phaseIndex?: number;
+  theme?: OperationTheme;
 }
 
 export const ALL_17_SCREENS: ScreenMeta[] = [
@@ -247,6 +249,133 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_g_rev_basarisiz/code.html',
     statusKey: 'phase_result',
   },
+  {
+    id: 20,
+    name: '20. Karantina — Protokol Odası (Lobi)',
+    role: 'ortak',
+    category: 'Karantina 2088',
+    desc: 'KR88-Z9 acil protokol odası, Sektör-09 Derin İzolasyon koridoru ve Selin & Baran müfreze kadrosu.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'karantina_2088',
+  },
+  {
+    id: 21,
+    name: '21. Karantina — Baş Biyolog Rol Brifingi',
+    role: 'kaptan',
+    category: 'Karantina 2088',
+    desc: 'KOD-BIO-01 Baş Biyolog Selin, SARS-Ω88 Mutant Suşu %98.4 doğruluk ve 3 kritik görev protokolü.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'role_intro',
+    theme: 'karantina_2088',
+  },
+  {
+    id: 22,
+    name: '22. Karantina — Güvenlik Şefi Rol Brifingi',
+    role: 'muhendis',
+    category: 'Karantina 2088',
+    desc: 'KOD-SEC-04 Güvenlik Şefi Baran, Bulkhead-04 zırhlı savunma konsolu ve 3 öncelikli hava kilidi görevi.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'role_intro',
+    theme: 'karantina_2088',
+  },
+  {
+    id: 23,
+    name: '23. Karantina 1. Aşama — Baş Biyolog (Hücresel Analiz)',
+    role: 'kaptan',
+    category: 'Karantina 2088',
+    desc: 'DNA Double Helix hologramı, Sitozin-9 aşırı mutasyon tespiti ve 415 nm spektral filtre ayarı.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'karantina_2088',
+  },
+  {
+    id: 24,
+    name: '24. Karantina 1. Aşama — Güvenlik Şefi (UV & Vana Mühür)',
+    role: 'muhendis',
+    category: 'Karantina 2088',
+    desc: '2x2 UV Matris Izgarası (Sektör 03 %94 kontaminasyon) ve Mekanik Hava Kilidi Vana-B mühürleme.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'karantina_2088',
+  },
+  {
+    id: 25,
+    name: '25. Karantina 2. Aşama — Baş Biyolog (Panzehir Sentezi)',
+    role: 'kaptan',
+    category: 'Karantina 2088',
+    desc: 'Silindirik biyoreaktör odası, %45 Polimer-A7, %30 Enzim-Neo, %25 Nötro-9 reaktifleri ve 8.4 GHz frekansı.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 1,
+    theme: 'karantina_2088',
+  },
+  {
+    id: 26,
+    name: '26. Karantina 2. Aşama — Güvenlik Şefi (Santrifüj & Soğutma)',
+    role: 'muhendis',
+    category: 'Karantina 2088',
+    desc: 'Rotor Devri RPM dairesel takometresi (3800 RPM), %75 soğutma valfi kalibrasyonu ve basınç tahliye şalteri.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 1,
+    theme: 'karantina_2088',
+  },
+  {
+    id: 27,
+    name: '27. Karantina 3. Aşama — Baş Biyolog (Aerosol Vakumu)',
+    role: 'kaptan',
+    category: 'Karantina 2088',
+    desc: 'Sektör-04 Gaz Odası (820 PPM), 3 aşamalı filtre durumları ve 6.2 m³/sn vakum debi kaydırıcısı.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 2,
+    theme: 'karantina_2088',
+  },
+  {
+    id: 28,
+    name: '28. Karantina 3. Aşama — Güvenlik Şefi (Baca & 12 Bar)',
+    role: 'muhendis',
+    category: 'Karantina 2088',
+    desc: 'BACA-02 tahliye sürgüsü seçimi, Pnömatik 12 Bar basınç manometresi ve korumalı emniyet mandalı.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 2,
+    theme: 'karantina_2088',
+  },
+  {
+    id: 29,
+    name: '29. Karantina Zafer — Salgın Durduruldu!',
+    role: 'ortak',
+    category: 'Karantina 2088',
+    desc: 'Biyo-koruma teyit edildi, 10,450 İmmünite, Selin %99.2, Baran 3/3 vana mühürleme ve Safir Kovan zırh ödülü.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_result',
+    theme: 'karantina_2088',
+  },
+  {
+    id: 30,
+    name: '30. Karantina Yenilgi — İzolasyon Çöktü!',
+    role: 'ortak',
+    category: 'Karantina 2088',
+    desc: 'Laboratuvar tahliyesi başarısız oldu, virüs ana hava kanallarına yayıldı, 0 İmmünite ve kırmızı kod alarmı.',
+    referencePath: '/public/assets/karantina_2088',
+    htmlPath: '',
+    statusKey: 'phase_result',
+    theme: 'karantina_2088',
+  },
 ];
 
 interface Props {
@@ -270,6 +399,15 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
     if (!isOpen) return;
 
     if (codeCache[currentScreen.id]) {
+      return;
+    }
+
+    if (!currentScreen.htmlPath) {
+      setCodeCache((prev) => ({
+        ...prev,
+        [currentScreen.id]: `<!-- PARTYVERSE — ${currentScreen.name} -->\n<!-- Tema: ${currentScreen.theme || 'Varsayılan'} | Rol: ${currentScreen.role} -->\n<!-- Açıklama: ${currentScreen.desc} -->\n<div class="partyverse-screen-preview">\n  <header>\n    <h2>${currentScreen.name}</h2>\n    <span class="badge">${currentScreen.category}</span>\n  </header>\n  <main>\n    <p>${currentScreen.desc}</p>\n  </main>\n</div>`
+      }));
+      setLoadingCode(false);
       return;
     }
 
@@ -328,8 +466,23 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-6xl h-[94vh] bg-[#141123] border border-[#ffb703]/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#e6dff9]">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md"
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-6xl h-[94vh] bg-[#141123] border border-[#ffb703]/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-[#e6dff9]"
+          >
         
         {/* Top Header */}
         <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between bg-[#1a163b]/70">
@@ -361,7 +514,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* Left: 18 Screens Scrollable Sidebar */}
-          <div className="w-full md:w-80 border-r border-white/10 overflow-y-auto p-3 space-y-1.5 bg-[#0f0c1e]/60 shrink-0">
+          <div className="w-full md:w-80 max-h-[28vh] md:max-h-none border-b md:border-b-0 md:border-r border-white/10 overflow-y-auto p-3 space-y-1.5 bg-[#0f0c1e]/60 shrink-0">
             <span className="text-[10px] font-mono text-[#9e8f78] uppercase px-2 block mb-1">
               EKRAN SEÇİN ({ALL_17_SCREENS.length} EKRAN):
             </span>
@@ -524,15 +677,19 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
               <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 overflow-y-auto bg-[#0b081a]">
                 <div className="flex items-center justify-between w-full max-w-sm mb-2 text-xs font-mono text-[#a59db8]">
                   <span className="text-[#00f0ff]">390 × 844 Mobil Görünüm</span>
-                  <a 
-                    href={currentScreen.htmlPath} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex items-center gap-1 text-[#ffb703] hover:underline"
-                  >
-                    <span>Yeni Sekmede Aç</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
+                  {currentScreen.htmlPath ? (
+                    <a 
+                      href={currentScreen.htmlPath} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="flex items-center gap-1 text-[#ffb703] hover:underline cursor-pointer"
+                    >
+                      <span>Yeni Sekmede Aç</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <span className="text-amber-400 font-mono text-[11px] font-bold">Canlı React Bileşeni</span>
+                  )}
                 </div>
                 
                 {/* Smartphone Bezel */}
@@ -543,11 +700,35 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                   </div>
                   
                   {/* Iframe */}
-                  <iframe 
-                    src={currentScreen.htmlPath} 
-                    title={currentScreen.name}
-                    className="w-full flex-1 border-0 bg-[#141123]"
-                  />
+                  {currentScreen.htmlPath ? (
+                    <iframe 
+                      src={currentScreen.htmlPath} 
+                      title={currentScreen.name}
+                      className="w-full flex-1 border-0 bg-[#141123]"
+                    />
+                  ) : (
+                    <div className="w-full flex-1 p-6 bg-[#110e1e] text-[#e6dff9] flex flex-col items-center justify-center text-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+                        <span className="material-symbols-outlined text-[28px]">biotech</span>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-400/40 text-[10px] font-mono text-cyan-300 font-bold uppercase">
+                        {currentScreen.category}
+                      </span>
+                      <h4 className="text-base font-bold font-sora text-white">
+                        {currentScreen.name}
+                      </h4>
+                      <p className="text-xs text-[#9e8f78] max-w-xs leading-relaxed">
+                        {currentScreen.desc}
+                      </p>
+                      <button
+                        onClick={handleOpenLive}
+                        className="mt-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ffa000] text-black font-sora font-extrabold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                        <span>Canlı Konsolda Oyna</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -596,7 +777,9 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
 
         </div>
 
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

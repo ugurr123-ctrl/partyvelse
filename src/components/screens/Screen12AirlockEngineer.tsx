@@ -110,6 +110,259 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
       }
     : feedback;
 
+  const isDerinBasinc = state.operationTheme === 'derin_basinc';
+
+  // Derin Basınç Elektroliz state
+  const [derinVolt, setDerinVolt] = useState(180);
+  const [catalystPct, setCatalystPct] = useState(65);
+  const [cellSwitches, setCellSwitches] = useState({
+    katotA: true,
+    katotB: true,
+    anotC: true,
+  });
+
+  const toggleCellSwitch = (cell: 'katotA' | 'katotB' | 'anotC') => {
+    if (airlock.isSolved) return;
+    setCellSwitches(prev => ({ ...prev, [cell]: !prev[cell] }));
+  };
+
+  const handleStartOxygenProduction = () => {
+    // 180V (+- 5V), catalyst >= 60 && <= 70, all 3 cells active
+    const voltOk = Math.abs(derinVolt - 180) <= 5;
+    const catOk = catalystPct >= 60 && catalystPct <= 70;
+    const cellsOk = cellSwitches.katotA && cellSwitches.katotB && cellSwitches.anotC;
+
+    if (voltOk && catOk && cellsOk) {
+      if (onAction) {
+        onAction('airlock_verify', {
+          dialIndex: airlock.targetDialIndex,
+          sealLocked: airlock.targetSealLocked,
+          vacuumPower: Math.floor((airlock.targetVacuumMin + airlock.targetVacuumMax) / 2),
+        });
+      }
+      onUpdate((prev) => ({
+        ...prev,
+        airlock: {
+          ...prev.airlock,
+          isSolved: true,
+        },
+      }));
+    } else {
+      onUpdate((prev) => ({
+        ...prev,
+        hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
+        timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 15),
+      }));
+    }
+  };
+
+  if (isDerinBasinc) {
+    return (
+      <div className="w-full max-w-[420px] mx-auto flex flex-col text-on-surface select-none pb-8 animate-fadeIn font-sans space-y-3">
+        {/* HUD Top Bar Telemetry */}
+        <div className="w-full bg-[#1c192c] rounded-xl p-2.5 shadow-md border border-white/5 mt-1">
+          <div className="flex items-center justify-between gap-1 pb-1 border-b border-white/5">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[#ffba27] text-[16px]">navigation</span>
+              <span className="font-mono text-[9px] text-[#ffba27] uppercase">GÖREV AKIŞI: DERİN BASINÇ</span>
+            </div>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#2b273b]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00eefc] animate-ping"></span>
+              <span className="font-mono text-[9px] text-[#00eefc] uppercase">TELSİZ CH-02 AKTİF</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-1 pt-1.5">
+            <div className="flex flex-col bg-[#201d30] rounded-lg p-1 items-center justify-center">
+              <span className="font-mono text-[8px] text-[#d5c4ac] uppercase">DERİNLİK</span>
+              <span className="font-mono text-[11px] text-[#00eefc] font-bold">-910 m</span>
+            </div>
+            <div className="flex flex-col bg-[#201d30] rounded-lg p-1 items-center justify-center">
+              <span className="font-mono text-[8px] text-[#d5c4ac] uppercase">KALAN SÜRE</span>
+              <span className="font-mono text-[11px] text-[#ffba27] font-bold">
+                {Math.floor(state.timeLeftSeconds / 60)}:{String(state.timeLeftSeconds % 60).padStart(2, '0')}
+              </span>
+            </div>
+            <div className="flex flex-col bg-[#201d30] rounded-lg p-1 items-center justify-center">
+              <span className="font-mono text-[8px] text-[#d5c4ac] uppercase">GÖVDE</span>
+              <span className="font-mono text-[11px] text-[#dab5ff] font-bold">%{state.hullIntegrity}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Role Badge & Mission Header */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ffb703] text-[#271900] shadow-sm">
+              <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>build</span>
+              <span className="font-mono text-[9px] font-bold tracking-wider uppercase">ROL: MAKİNİST</span>
+            </span>
+            <span className="font-mono text-[9px] text-[#00eefc] uppercase bg-[#201d30] px-2 py-0.5 rounded">HÜCRE BİRİMİ 03</span>
+          </div>
+          <h2 className="font-sora text-lg text-white font-bold tracking-tight">
+            Elektroliz Voltajını Kilitle &amp; O₂ Üret
+          </h2>
+          <p className="text-xs text-[#d5c4ac] leading-relaxed">
+            Dümencinin telsizden verdiği hedef voltaj (180V) ve katot sırasına göre şalterleri devreye sok.
+          </p>
+        </div>
+
+        {/* Manometer & Gauge 2.5D Console Module */}
+        <div className="w-full bg-[#201d30] rounded-xl p-3 shadow-lg border border-white/5 flex flex-col items-center">
+          <div className="w-full flex items-center justify-between pb-1">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[#00eefc] text-[16px]">speed</span>
+              <span className="font-mono text-[9px] text-[#00eefc] uppercase tracking-wider font-bold">VOLTAJ &amp; AMPER DEĞERİ</span>
+            </div>
+            <span className="font-mono text-[9px] text-[#ffdba0] bg-[#ffb703]/20 px-2 py-0.5 rounded font-bold">2.5D MANOMETRE</span>
+          </div>
+
+          {/* Radial Dial */}
+          <div className="relative w-40 h-40 my-1 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-[#0f0c1e] shadow-inner flex items-center justify-center border border-white/5">
+              <div className="w-32 h-32 rounded-full bg-[#1c192c] flex items-center justify-center shadow-lg"></div>
+            </div>
+            <svg className="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" fill="none" r="82" stroke="#201d30" strokeDasharray="450" strokeDashoffset="120" strokeLinecap="round" strokeWidth="12"></circle>
+              <circle
+                cx="100"
+                cy="100"
+                fill="none"
+                r="82"
+                stroke={Math.abs(derinVolt - 180) <= 5 ? '#00eefc' : '#ffb703'}
+                strokeDasharray="515"
+                strokeDashoffset={`${320 - ((derinVolt - 140) / 80) * 180}`}
+                strokeLinecap="round"
+                strokeWidth="12"
+              ></circle>
+            </svg>
+            <div className="absolute flex flex-col items-center z-20">
+              <span className="font-sora text-2xl font-extrabold text-[#ffba27] tracking-tight">{derinVolt}V</span>
+              <span className="font-mono text-[8px] text-[#00eefc] uppercase font-bold tracking-wider">
+                {Math.abs(derinVolt - 180) <= 5 ? 'KİLİTLİ (180V)' : 'KALİBRASYON'}
+              </span>
+            </div>
+          </div>
+
+          {/* Stepper Buttons */}
+          <div className="w-full grid grid-cols-2 gap-2 pt-1">
+            <button
+              onClick={() => setDerinVolt(v => Math.max(140, v - 5))}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#2b273b] hover:bg-[#363246] active:scale-95 text-[#00eefc] border border-white/5"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[16px]">remove_circle</span>
+              <span className="font-mono text-xs font-bold">-5V DÜŞÜR</span>
+            </button>
+            <button
+              onClick={() => setDerinVolt(v => Math.min(220, v + 5))}
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-[#2b273b] hover:bg-[#363246] active:scale-95 text-[#ffba27] border border-white/5"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_circle</span>
+              <span className="font-mono text-xs font-bold">+5V YÜKSELT</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Catalyst Fluid Slide Injector */}
+        <div className="w-full bg-[#1c192c] rounded-xl p-3 shadow-md border border-white/5 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[#00eefc] text-[16px]">science</span>
+              <span className="font-mono text-[9px] text-[#00eefc] uppercase tracking-wider font-bold">KATALİZÖR SIVI ENJEKSİYONU</span>
+            </div>
+            <span className="font-sora text-sm text-[#00eefc] font-bold">%{catalystPct}</span>
+          </div>
+          <div className="relative w-full h-10 bg-[#0f0c1e] rounded-lg p-1 flex items-center border border-white/5">
+            <div
+              className="h-full rounded bg-[#00eefc]/30 relative overflow-hidden transition-all duration-150"
+              style={{ width: `${catalystPct}%` }}
+            >
+              <div className="absolute inset-0 bg-[#00eefc]/20 animate-pulse"></div>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={catalystPct}
+              onChange={(e) => setCatalystPct(Number(e.target.value))}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20"
+            />
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-3 text-[8px] font-mono text-zinc-400">
+              <span>%0</span>
+              <span className="text-[#00eefc] font-bold">OPTİMAL: %60 - %70</span>
+              <span>%100</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Switches: Cathode & Anode Cell Matrix */}
+        <div className="w-full bg-[#201d30] rounded-xl p-3 shadow-md border border-white/5 flex flex-col gap-2">
+          <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[#ffba27] text-[16px]">tune</span>
+              <span className="font-mono text-[9px] text-white uppercase tracking-wider font-bold">HÜCRE SEÇİCİ ŞALTERLERİ</span>
+            </div>
+            <span className="font-mono text-[8px] text-[#d5c4ac] uppercase font-semibold">3 BAĞLANTI</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: 'katotA' as const, label: 'KATOT-A' },
+              { id: 'anotC' as const, label: 'ANOT-C' },
+              { id: 'katotB' as const, label: 'KATOT-B' },
+            ].map(cell => {
+              const active = cellSwitches[cell.id];
+              return (
+                <button
+                  key={cell.id}
+                  onClick={() => toggleCellSwitch(cell.id)}
+                  className={`flex flex-col items-center justify-between p-2 rounded-lg transition-all border ${
+                    active ? 'bg-[#2b273b] border-[#00eefc]/50 shadow-md' : 'bg-[#141123] border-white/5'
+                  }`}
+                  type="button"
+                >
+                  <div className="w-full flex items-center justify-between">
+                    <span className="font-mono text-[9px] text-[#d5c4ac] font-bold">{cell.label}</span>
+                    <span className={`w-2 h-2 rounded-full ${active ? 'bg-[#00eefc] shadow-[0_0_6px_#00eefc]' : 'bg-zinc-600'}`}></span>
+                  </div>
+                  <div className={`w-8 h-10 rounded my-1.5 p-1 flex flex-col ${active ? 'justify-start bg-[#00eefc]/20' : 'justify-end bg-[#0f0c1e]'}`}>
+                    <div className={`w-full h-4 rounded shadow ${active ? 'bg-[#00eefc]' : 'bg-zinc-600'}`}></div>
+                  </div>
+                  <span className={`font-mono text-[9px] font-bold ${active ? 'text-[#00eefc]' : 'text-zinc-500'}`}>
+                    {active ? 'DEVREDE' : 'KAPALI'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Big Action Push Button */}
+        {!airlock.isSolved ? (
+          <div className="w-full pt-1">
+            <button
+              onClick={handleStartOxygenProduction}
+              className="w-full py-4 px-4 rounded-xl bg-gradient-to-b from-[#ffb703] to-[#ff8c00] active:translate-y-1 shadow-[0_6px_0_#9a5300,0_12px_24px_rgba(255,183,3,0.35)] flex items-center justify-center gap-2 text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider cursor-pointer"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+              <span>OKSİJEN ÜRETİMİNİ BAŞLAT</span>
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-[#00eefc] to-[#00dbe9] text-[#002022] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_0_#004f54,0_12px_24px_rgba(0,238,252,0.35)] active:translate-y-1 transition-all cursor-pointer animate-bounce mt-1"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[22px]">check_circle</span>
+            <span>OKSİJEN ÜRETİMİ STABİL • DEVAM ET</span>
+          </button>
+        )}
+      </div>
+    );
+  }
+
   const currentDial = dialLevels[dialIndex];
 
   return (

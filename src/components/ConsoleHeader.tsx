@@ -17,7 +17,8 @@ import {
   FileText, 
   ArrowRightLeft,
   Clock,
-  Sparkles
+  Sparkles,
+  Trophy
 } from 'lucide-react';
 
 interface Props {
@@ -29,11 +30,17 @@ interface Props {
   status: GameStatus;
   selectedMiniGames: [MiniGameType, MiniGameType];
   isDisconnected: boolean;
+  operationTheme?: 'kayip_sinyal' | 'derin_basinc' | 'golge_protokolu' | 'karantina_2088';
   onToggleDisconnect: () => void;
   onSwitchRole: () => void;
   onOpenRules: () => void;
   onOpenScreenExplorer: () => void;
+  onOpenOpening?: () => void;
+  onTestEpicSuccess?: () => void;
+  onOpenRadio?: () => void;
 }
+
+import { soundManager } from '../services/soundEffects';
 
 export const ConsoleHeader: React.FC<Props> = ({
   roomCode,
@@ -44,12 +51,22 @@ export const ConsoleHeader: React.FC<Props> = ({
   status,
   selectedMiniGames,
   isDisconnected,
+  operationTheme = 'kayip_sinyal',
   onToggleDisconnect,
   onSwitchRole,
   onOpenRules,
   onOpenScreenExplorer,
+  onOpenOpening,
+  onTestEpicSuccess,
+  onOpenRadio,
 }) => {
-  const [soundOn, setSoundOn] = React.useState(true);
+  const isKarantina = operationTheme === 'karantina_2088';
+  const isDerinBasinc = operationTheme === 'derin_basinc';
+  const isGolgeProtokolu = operationTheme === 'golge_protokolu';
+  const selectedGameName = isKarantina ? 'Karantina 2088' :
+                           isDerinBasinc ? 'Derin Basınç' :
+                           isGolgeProtokolu ? 'Gölge Protokolü' : 'Kayıp Sinyal';
+  const [soundOn, setSoundOn] = React.useState(!soundManager.isMuted());
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -58,20 +75,32 @@ export const ConsoleHeader: React.FC<Props> = ({
   };
 
   const getPhaseName = (idx: number) => {
+    if (isKarantina) {
+      if (idx === 0) return '1. Hücresel Analiz & UV';
+      if (idx === 1) return '2. Panzehir & Santrifüj';
+      if (idx === 2) return '3. Toksik Aerosol Vakumu';
+      return '4. Biyo-İzolasyon Sonucu';
+    }
+    if (isGolgeProtokolu) {
+      if (idx === 0) return '1. Güvenlik Duvarı Bypass';
+      if (idx === 1) return '2. Lazer İntikali & Körleme';
+      if (idx === 2) return '3. Kasa Şifresi & Biyometrik';
+      return '4. Kusursuz Kaçış';
+    }
     if (idx === 0) {
       return selectedMiniGames[0] === 'ariza_teshisi' ? '1. Arıza Teşhisi' :
-             selectedMiniGames[0] === 'sinyal_cozumu' ? '1. Sinyal Çözümü' :
+             selectedMiniGames[0] === 'sinyal_cozumu' ? (isDerinBasinc ? '1. Sonar & Glif' : '1. Sinyal Çözümü') :
              selectedMiniGames[0] === 'kablo_baglantisi' ? '1. Kablo Bağlantısı' :
-             selectedMiniGames[0] === 'hava_kilidi' ? '1. Hava Kilidi' : '1. Radar';
+             selectedMiniGames[0] === 'hava_kilidi' ? (isDerinBasinc ? '1. Kabin Kilidi' : '1. Hava Kilidi') : '1. Radar';
     }
     if (idx === 1) {
       return selectedMiniGames[1] === 'ariza_teshisi' ? '2. Arıza Teşhisi' :
-             selectedMiniGames[1] === 'sinyal_cozumu' ? '2. Sinyal Çözümü' :
+             selectedMiniGames[1] === 'sinyal_cozumu' ? (isDerinBasinc ? '2. Sonar & Glif' : '2. Sinyal Çözümü') :
              selectedMiniGames[1] === 'kablo_baglantisi' ? '2. Kablo Bağlantısı' :
-             selectedMiniGames[1] === 'hava_kilidi' ? '2. Hava Kilidi' : '2. Radar';
+             selectedMiniGames[1] === 'hava_kilidi' ? (isDerinBasinc ? '2. Kabin Kilidi' : '2. Hava Kilidi') : '2. Radar';
     }
-    if (idx === 2) return '3. Enerji Dağıtımı';
-    return '4. Kurtarma Kararı';
+    if (idx === 2) return isDerinBasinc ? '3. Enerji & Balast' : '3. Enerji Dağıtımı';
+    return isDerinBasinc ? '4. Yüzeye Çıkış' : '4. Kurtarma Kararı';
   };
 
   return (
@@ -81,13 +110,48 @@ export const ConsoleHeader: React.FC<Props> = ({
         
         {/* Brand & Room Info */}
         <div className="flex items-center gap-1 sm:gap-2 min-w-0 shrink">
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm bg-[#ffb703] rotate-45 shadow-[0_0_8px_#ffb703]"></span>
-            <span className="font-extrabold text-[#ffb703] tracking-wider sm:tracking-widest font-sora text-xs sm:text-sm truncate">
-              <span className="hidden xs:inline">PARTYVERSE</span>
-              <span className="xs:hidden">PV</span>
-            </span>
-          </div>
+          <button 
+            onClick={onOpenOpening}
+            title="Açılış Ekranı ve Tanıtım Kartlarına Dön"
+            className="flex items-center gap-1.5 shrink-0 hover:opacity-90 transition-opacity cursor-pointer group text-left"
+          >
+            <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm rotate-45 shadow-[0_0_8px] transition-transform group-hover:scale-125 ${
+              isKarantina ? 'bg-[#ffb703] text-[#ffb703]' :
+              isGolgeProtokolu ? 'bg-[#00eefc] text-[#00eefc]' :
+              isDerinBasinc ? 'bg-[#00f0ff] text-[#00f0ff]' : 'bg-[#ffb703] text-[#ffb703]'
+            }`}></span>
+            
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-[#ffb703] tracking-wider font-sora text-xs sm:text-sm shrink-0">
+                PARTYVERSE
+              </span>
+              <span className="text-white/30 text-xs hidden sm:inline font-mono">/</span>
+              <span className={`font-sora font-extrabold text-xs sm:text-sm tracking-tight flex items-center gap-1 ${
+                isKarantina ? 'text-[#ffb703]' :
+                isGolgeProtokolu ? 'text-[#00eefc]' :
+                isDerinBasinc ? 'text-[#00f0ff]' : 'text-amber-300'
+              }`}>
+                <span>{isKarantina ? '☣️' : isDerinBasinc ? '⚓' : isGolgeProtokolu ? '🕶️' : '🛸'}</span>
+                <span>{selectedGameName}</span>
+              </span>
+            </div>
+
+            {isKarantina && (
+              <span className="px-1.5 py-0.2 rounded bg-red-950/80 border border-red-500/40 text-[9px] font-mono text-amber-300 font-bold hidden md:inline">
+                SEC-04
+              </span>
+            )}
+            {isDerinBasinc && (
+              <span className="px-1.5 py-0.2 rounded bg-cyan-950/80 border border-cyan-400/40 text-[9px] font-mono text-cyan-300 font-bold hidden md:inline">
+                HİDRO-04
+              </span>
+            )}
+            {isGolgeProtokolu && (
+              <span className="px-1.5 py-0.2 rounded bg-purple-950/80 border border-[#00eefc]/40 text-[9px] font-mono text-[#00eefc] font-bold hidden md:inline">
+                KAT 84
+              </span>
+            )}
+          </button>
           <span className="text-white/20 hidden xs:inline">|</span>
           <div className="flex items-center gap-1 bg-[#1a163b] px-1.5 sm:px-2 py-0.5 rounded border border-white/10 shrink-0">
             <span className="text-[9px] sm:text-[10px] text-[#9e8f78] uppercase font-mono">ODA:</span>
@@ -97,7 +161,11 @@ export const ConsoleHeader: React.FC<Props> = ({
           {/* Role badge */}
           <button
             onClick={onSwitchRole}
-            title="Rolü Değiştir (Kaptan ⇄ Mühendis)"
+            title={
+              isKarantina ? 'Rolü Değiştir (Biyolog ⇄ Güvenlik Şefi)' :
+              isGolgeProtokolu ? 'Rolü Değiştir (Ajan ⇄ Hacker)' :
+              isDerinBasinc ? 'Rolü Değiştir (Dümenci ⇄ Makinist)' : 'Rolü Değiştir (Kaptan ⇄ Mühendis)'
+            }
             className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold transition-all shadow-sm shrink-0 ${
               myRole === 'kaptan' 
                 ? 'bg-amber-500/20 text-[#ffb703] border border-[#ffb703]/40 hover:bg-amber-500/30' 
@@ -106,7 +174,9 @@ export const ConsoleHeader: React.FC<Props> = ({
           >
             <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping"></span>
             <span className="uppercase tracking-wider font-sora">
-              {myRole === 'kaptan' ? 'KAPTAN' : 'MÜHENDİS'}
+              {myRole === 'kaptan' 
+                ? (isKarantina ? 'BAŞ BİYOLOG' : isGolgeProtokolu ? 'AJAN' : (isDerinBasinc ? 'DÜMENCİ' : 'KAPTAN')) 
+                : (isKarantina ? 'GÜVENLİK ŞEFİ' : isGolgeProtokolu ? 'HACKER' : (isDerinBasinc ? 'MAKİNİST' : 'MÜHENDİS'))}
             </span>
             <ArrowRightLeft className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-70" />
           </button>
@@ -159,6 +229,32 @@ export const ConsoleHeader: React.FC<Props> = ({
             <span className="hidden lg:inline">{isDisconnected ? 'Bağlantı Koptu' : 'Canlı Bağlantı'}</span>
           </button>
 
+          {/* Opening / Introduction Cards Trigger */}
+          {onOpenOpening && (
+            <button
+              onClick={onOpenOpening}
+              className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-[#00eefc]/10 hover:bg-[#00eefc]/20 border border-[#00eefc]/40 text-[#00eefc] text-[10px] sm:text-xs font-medium transition-all shadow-sm active:scale-95 shrink-0"
+              title="Açılış Ekranı ve Tanıtım Kartlarını Aç"
+            >
+              <Sparkles className="w-3 h-3 text-[#00eefc]" />
+              <span className="font-sora font-semibold hidden sm:inline">Tanıtım Kartları</span>
+              <span className="font-sora font-semibold sm:hidden">Tanıtım</span>
+            </button>
+          )}
+
+          {/* Tactical Radio Comms Trigger */}
+          {onOpenRadio && (
+            <button
+              onClick={onOpenRadio}
+              className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/60 text-emerald-300 text-[10px] sm:text-xs font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)] active:scale-95 shrink-0 cursor-pointer"
+              title="Taktik Telsiz Konsolunu Aç (142.85 MHz / Bas-Konuş)"
+            >
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span className="font-sora font-semibold hidden sm:inline">Telsiz</span>
+              <span className="font-mono text-[9px] text-emerald-400/90 hidden md:inline">142.85</span>
+            </button>
+          )}
+
           {/* Screen Explorer Trigger */}
           <button
             onClick={onOpenScreenExplorer}
@@ -169,6 +265,19 @@ export const ConsoleHeader: React.FC<Props> = ({
             <span className="font-sora font-semibold hidden sm:inline">17 Ekran Gezgini</span>
             <span className="font-sora font-semibold sm:hidden">Gezgin</span>
           </button>
+
+          {/* Epic Success Feedback Test Button */}
+          {onTestEpicSuccess && (
+            <button
+              onClick={onTestEpicSuccess}
+              className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-[#ffb703]/20 hover:bg-[#ffb703]/30 border border-[#ffb703]/60 text-[#ffb703] text-[10px] sm:text-xs font-semibold transition-all shadow-[0_0_12px_rgba(255,183,3,0.3)] active:scale-95 shrink-0"
+              title="Epik 'Görev Tamamlandı' Efektini Test Et (Altın Parlama & Ekran Sarsıntısı)"
+            >
+              <Trophy className="w-3 h-3 text-[#ffb703]" />
+              <span className="font-sora font-semibold hidden sm:inline">Zafer Efekti</span>
+              <span className="font-sora font-semibold sm:hidden">Zafer</span>
+            </button>
+          )}
 
           {/* Rule Evaluation Drawer Trigger */}
           <button
@@ -182,8 +291,11 @@ export const ConsoleHeader: React.FC<Props> = ({
 
           {/* Audio toggle */}
           <button 
-            onClick={() => setSoundOn(!soundOn)}
-            className="p-1 rounded text-white/50 hover:text-white transition-colors shrink-0"
+            onClick={() => {
+              const muted = soundManager.toggleMute();
+              setSoundOn(!muted);
+            }}
+            className="p-1 rounded text-white/50 hover:text-white transition-colors shrink-0 cursor-pointer"
             title={soundOn ? 'Sesi Kapat' : 'Sesi Aç'}
           >
             {soundOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}

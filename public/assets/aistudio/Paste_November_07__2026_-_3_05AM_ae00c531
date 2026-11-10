@@ -1,0 +1,2238 @@
+<!-- Derin Basınç — Balast & Vana (Makinist) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed": "#efdbff", "on-tertiary-container": "#7500cc", "surface-container-high": "#2b273b", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "on-surface-variant": "#d5c4ac", "outline-variant": "#514532", "on-secondary-fixed-variant": "#004f54", "on-primary-fixed": "#271900", "on-tertiary": "#480081", "primary-container": "#ffb703", "on-error": "#690005", "surface-container-lowest": "#0f0c1e", "outline": "#9e8f78", "surface-container-low": "#1c192c", "on-primary-container": "#6b4b00", "inverse-surface": "#e6dff9", "on-error-container": "#ffdad6", "on-background": "#e6dff9", "secondary-container": "#00eefc", "background": "#141123", "primary-fixed": "#ffdea9", "inverse-on-surface": "#312e42", "surface-container-highest": "#363246", "tertiary-fixed-dim": "#dcb8ff", "inverse-primary": "#7d5800", "on-tertiary-fixed": "#2c0051", "tertiary-container": "#dab5ff", "surface-variant": "#363246", "secondary": "#d3fbff", "on-primary": "#422c00", "error-container": "#93000a", "error": "#ffb4ab", "on-primary-fixed-variant": "#5e4100", "on-secondary-fixed": "#002022", "surface-container": "#201d30", "on-surface": "#e6dff9", "surface": "#141123", "tertiary": "#eed8ff", "secondary-fixed": "#7df4ff", "primary": "#ffdba0", "surface-bright": "#3a374b", "primary-fixed-dim": "#ffba27", "surface-dim": "#141123", "secondary-fixed-dim": "#00dbe9", "surface-tint": "#ffba27", "on-secondary": "#00363a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-tablet": "2rem", "gutter-sm": "0.75rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "gutter": "1rem", "space-xl": "2.5rem", "space-xs": "0.25rem", "margin": "1.25rem", "space-md": "1rem" }, "fontFamily": { "body-sm": ["Manrope"], "headline-lg": ["Sora"], "body-md": ["Manrope"], "label-telemetry": ["Sora"], "headline-md": ["Sora"], "label-status": ["Sora"], "display-hero": ["Sora"], "body-lg": ["Manrope"], "display-hero-mobile": ["Sora"], "headline-sm": ["Sora"], "headline-lg-mobile": ["Sora"] }, "fontSize": { "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;color:#e6dff9;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.45)]"><div class="h-20 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface hover:text-primary transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" onclick="history.back()"><span class="material-symbols-outlined text-[22px]">arrow_back_ios_new</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-secondary-fixed">lock_clock</span><span class="font-label-status text-label-status uppercase text-secondary-fixed">GÖREV AKIŞI</span></div><h1 class="font-headline-sm text-headline-sm text-on-surface leading-tight">Gövde Onarım Ve Telemetri</h1></div></div><div class="flex items-center gap-space-sm"><div class="flex flex-col items-end px-space-sm py-space-xs rounded-lg bg-surface-container-low"><span class="font-label-status text-label-status text-on-surface-variant uppercase">DERİNLİK</span><span class="font-label-telemetry text-label-telemetry text-primary-fixed">-1420m</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,183,3,0.3)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-20 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-safe space-y-space-md">
+<!-- Top Sub HUD (Bilateral Telemetry Readout) -->
+<div class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low shadow-md">
+<div class="flex items-center gap-space-xs">
+<div class="w-2 h-2 rounded-full bg-secondary-fixed animate-ping"></div>
+<div class="flex flex-col">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant">TELSİZ FREKANS</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">CH-02 ON</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex flex-col items-center">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant">SÜRE</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-fixed">06:40</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant">GÖVDE</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-container">%90</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant">DERİNLİK</span>
+<span class="font-label-telemetry text-label-telemetry text-primary">850m</span>
+</div>
+</div>
+</div>
+<!-- Role & Mission Briefing Header -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 rounded-lg bg-primary-container/20 text-primary-fixed font-label-status text-label-status uppercase">ROL: MAKİNİST</span>
+<span class="px-space-xs py-0.5 rounded-lg bg-surface-container-highest text-secondary font-label-status text-label-status uppercase">HİDROLİK BASINÇ KONSOLU</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Balastı Dengele &amp; Vanaları Kilitle</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Dümencinin telsizden aktardığı 042° kerteriz ve 48 Bar basınç değerine göre balast tanklarını devreye al.</p>
+</div>
+<!-- Tactile Control 1: Tank Seçici Matrisi (4-Grid Matrix) -->
+<div class="flex flex-col p-space-md rounded-xl bg-surface-container-low shadow-md space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed">valve</span>
+<span class="font-label-status text-label-status uppercase text-on-surface">TANK SEÇİCİ MATRİSİ</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">2/4 AKTİF</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Tank-1 (Boş/Pasif) -->
+<button class="tank-btn flex flex-col p-space-sm rounded-lg bg-surface-container-high transition-transform active:scale-95 text-left relative overflow-hidden" data-active="false" data-tank="1" type="button">
+<div class="flex items-center justify-between w-full">
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">Tank-1</span>
+<span class="material-symbols-outlined text-[16px] text-outline">radio_button_unchecked</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-lowest mt-space-sm overflow-hidden">
+<div class="h-full bg-outline w-[12%]"></div>
+</div>
+<span class="font-label-status text-label-status text-outline mt-1">%12 BALAST</span>
+</button>
+<!-- Tank-2 (Seçili / Dolu) -->
+<button class="tank-btn flex flex-col p-space-sm rounded-lg bg-surface-container-highest transition-transform active:scale-95 text-left relative overflow-hidden shadow-[inset_0_0_12px_rgba(0,238,252,0.15)]" data-active="true" data-tank="2" type="button">
+<div class="flex items-center justify-between w-full">
+<span class="font-headline-sm text-headline-sm text-secondary">Tank-2</span>
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-lowest mt-space-sm overflow-hidden">
+<div class="h-full bg-secondary-container w-[78%] animate-pulse"></div>
+</div>
+<span class="font-label-status text-label-status text-secondary-fixed mt-1">%78 DOLU [SEÇİLİ]</span>
+</button>
+<!-- Tank-3 (Pasif) -->
+<button class="tank-btn flex flex-col p-space-sm rounded-lg bg-surface-container-high transition-transform active:scale-95 text-left relative overflow-hidden" data-active="false" data-tank="3" type="button">
+<div class="flex items-center justify-between w-full">
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">Tank-3</span>
+<span class="material-symbols-outlined text-[16px] text-outline">radio_button_unchecked</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-lowest mt-space-sm overflow-hidden">
+<div class="h-full bg-outline w-[25%]"></div>
+</div>
+<span class="font-label-status text-label-status text-outline mt-1">%25 BALAST</span>
+</button>
+<!-- Tank-4 (Seçili / Dolu) -->
+<button class="tank-btn flex flex-col p-space-sm rounded-lg bg-surface-container-highest transition-transform active:scale-95 text-left relative overflow-hidden shadow-[inset_0_0_12px_rgba(0,238,252,0.15)]" data-active="true" data-tank="4" type="button">
+<div class="flex items-center justify-between w-full">
+<span class="font-headline-sm text-headline-sm text-secondary">Tank-4</span>
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container-lowest mt-space-sm overflow-hidden">
+<div class="h-full bg-secondary-container w-[82%] animate-pulse"></div>
+</div>
+<span class="font-label-status text-label-status text-secondary-fixed mt-1">%82 DOLU [SEÇİLİ]</span>
+</button>
+</div>
+</div>
+<!-- Tactile Control 2: Mekanik Basınç Manometresi & Hassas Çevirme -->
+<div class="flex flex-col p-space-md rounded-xl bg-surface-container-low shadow-md space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">speed</span>
+<span class="font-label-status text-label-status uppercase text-on-surface">ANA HİDROLİK MANOMETRE</span>
+</div>
+<div class="px-space-xs py-0.5 rounded-lg bg-primary-container/20">
+<span class="font-label-telemetry text-label-telemetry text-primary">HEDEF: 48 BAR</span>
+</div>
+</div>
+<!-- Gauge Dial Visualizer (2.5D Radial Manometer SVG) -->
+<div class="relative flex flex-col items-center justify-center py-space-sm">
+<div class="relative w-44 h-44 flex items-center justify-center rounded-full bg-surface-container-lowest shadow-inner">
+<!-- SVG Gauge Face -->
+<svg class="w-40 h-40 transform -rotate-90" viewbox="0 0 100 100">
+<!-- Background Track -->
+<circle cx="50" cy="50" fill="none" r="42" stroke="#2b273b" stroke-dasharray="197 66" stroke-linecap="round" stroke-width="8"></circle>
+<!-- Pressure Fill Arc (48 Bar target ~ 48% of scale) -->
+<circle class="transition-all duration-300" cx="50" cy="50" fill="none" r="42" stroke="#ffba27" stroke-dasharray="94 170" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<!-- Mechanical Dial Needle & Core -->
+<div class="absolute w-1 h-20 bg-primary origin-bottom rounded-t shadow-[0_0_8px_rgba(255,186,39,0.8)] transition-transform duration-300" id="gauge-needle" style="bottom: 50%; transform: rotate(86deg);"></div>
+<div class="absolute w-6 h-6 rounded-full bg-primary-container shadow-md flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-surface-container-lowest"></div>
+</div>
+<!-- Telemetry readout center badge -->
+<div class="absolute bottom-6 flex flex-col items-center">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary leading-none" id="pressure-val">48</span>
+<span class="font-label-status text-label-status uppercase text-on-surface-variant mt-0.5">BAR BASINÇ</span>
+</div>
+</div>
+<!-- Status Gem Alert -->
+<div class="flex items-center gap-space-xs mt-space-sm px-space-md py-1 rounded-full bg-surface-container-high shadow-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-status text-label-status uppercase text-primary-fixed">48 BAR KİLİTLİ • DEĞER STABİL</span>
+</div>
+</div>
+<!-- Stepper Buttons for Fine Calibration (+/- 1 Bar) -->
+<div class="flex items-center justify-between gap-space-md pt-space-xs">
+<button class="flex-1 py-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest active:scale-95 transition-transform flex items-center justify-center gap-space-xs text-on-surface" id="btn-dec" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+<span class="font-label-telemetry text-label-telemetry uppercase">-1 BAR</span>
+</button>
+<button class="flex-1 py-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest active:scale-95 transition-transform flex items-center justify-center gap-space-xs text-on-surface" id="btn-inc" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span class="font-label-telemetry text-label-telemetry uppercase">+1 BAR</span>
+</button>
+</div>
+</div>
+<!-- Tactile Control 3: Hidrolik Açı Dümeni (Kerteriz Çarkı) -->
+<div class="flex items-center justify-between p-space-md rounded-xl bg-surface-container-low shadow-md">
+<div class="flex items-center gap-space-md">
+<!-- Rotary Wheel Graphic -->
+<div class="relative w-14 h-14 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-inner">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center transform rotate-42">
+<span class="material-symbols-outlined text-secondary text-[24px]">explore</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-status text-label-status uppercase text-on-surface-variant">HİDROLİK AÇI DÜMENİ</span>
+<h3 class="font-headline-sm text-headline-sm text-secondary">042° Kerteriz</h3>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dümenci rotasıyla kilitlendi</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-space-xs py-0.5 rounded-lg bg-secondary-fixed/20 text-secondary font-label-telemetry text-label-telemetry">SENKRON</span>
+</div>
+</div>
+<!-- Kılavuz Bilgisi (Tactical Guidance Banner) -->
+<div class="flex items-start gap-space-sm p-space-md rounded-xl bg-surface-container shadow-sm">
+<span class="material-symbols-outlined text-primary-fixed text-[20px] mt-0.5">info</span>
+<div class="flex flex-col">
+<span class="font-label-status text-label-status uppercase text-primary-fixed">KILAVUZ BİLGİSİ</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Dümenci sadece sonar görür, basınç vanalarını sen yönetirsin! Kritik balast hatası su basıncını gövdeye iletir.</p>
+</div>
+</div>
+<!-- Primary Bottom CTA: Arcade 2.5D Physical Push Trigger -->
+<div class="w-full pt-space-xs pb-space-sm">
+<button class="w-full py-space-md px-space-lg rounded-xl bg-gradient-to-b from-[#ffba27] to-[#e69500] text-on-primary-fixed flex items-center justify-center gap-space-sm transition-transform active:translate-y-1 shadow-[0_6px_0_#8f5300,0_12px_24px_rgba(255,186,39,0.3)]" id="activate-valves-btn" type="button">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">power_settings_new</span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-wider font-extrabold">BALAST VANALARINI DEVREYE SOK</span>
+</button>
+</div>
+</div>
+<script>
+  (function() {
+    let currentPressure = 48;
+    const minPressure = 35;
+    const maxPressure = 65;
+    const pressureLabel = document.getElementById('pressure-val');
+    const needle = document.getElementById('gauge-needle');
+    const btnInc = document.getElementById('btn-inc');
+    const btnDec = document.getElementById('btn-dec');
+    const ctaBtn = document.getElementById('activate-valves-btn');
+    const tankButtons = document.querySelectorAll('.tank-btn');
+
+    function updateGauge() {
+      if (pressureLabel) {
+        pressureLabel.textContent = currentPressure;
+      }
+      if (needle) {
+        // Map 35..65 Bar to needle rotation angle
+        const baseAngle = ((currentPressure - minPressure) / (maxPressure - minPressure)) * 140;
+        needle.style.transform = `rotate(${baseAngle + 20}deg)`;
+      }
+    }
+
+    if (btnInc) {
+      btnInc.addEventListener('click', function() {
+        if (currentPressure < maxPressure) {
+          currentPressure++;
+          updateGauge();
+        }
+      });
+    }
+
+    if (btnDec) {
+      btnDec.addEventListener('click', function() {
+        if (currentPressure > minPressure) {
+          currentPressure--;
+          updateGauge();
+        }
+      });
+    }
+
+    tankButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const isCurrent = this.getAttribute('data-active') === 'true';
+        this.setAttribute('data-active', (!isCurrent).toString());
+      });
+    });
+
+    if (ctaBtn) {
+      ctaBtn.addEventListener('click', function() {
+        this.classList.add('scale-95');
+        setTimeout(() => {
+          this.classList.remove('scale-95');
+        }, 150);
+      });
+    }
+  })();
+</script></main></body></html>
+
+<!-- Derin Basınç — Sızıntı Teşhis (Dümenci) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed": "#efdbff", "on-tertiary-container": "#7500cc", "surface-container-high": "#2b273b", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "on-surface-variant": "#d5c4ac", "outline-variant": "#514532", "on-secondary-fixed-variant": "#004f54", "on-primary-fixed": "#271900", "on-tertiary": "#480081", "primary-container": "#ffb703", "on-error": "#690005", "surface-container-lowest": "#0f0c1e", "outline": "#9e8f78", "surface-container-low": "#1c192c", "on-primary-container": "#6b4b00", "inverse-surface": "#e6dff9", "on-error-container": "#ffdad6", "on-background": "#e6dff9", "secondary-container": "#00eefc", "background": "#141123", "primary-fixed": "#ffdea9", "inverse-on-surface": "#312e42", "surface-container-highest": "#363246", "tertiary-fixed-dim": "#dcb8ff", "inverse-primary": "#7d5800", "on-tertiary-fixed": "#2c0051", "tertiary-container": "#dab5ff", "surface-variant": "#363246", "secondary": "#d3fbff", "on-primary": "#422c00", "error-container": "#93000a", "error": "#ffb4ab", "on-primary-fixed-variant": "#5e4100", "on-secondary-fixed": "#002022", "surface-container": "#201d30", "on-surface": "#e6dff9", "surface": "#141123", "tertiary": "#eed8ff", "secondary-fixed": "#7df4ff", "primary": "#ffdba0", "surface-bright": "#3a374b", "primary-fixed-dim": "#ffba27", "surface-dim": "#141123", "secondary-fixed-dim": "#00dbe9", "surface-tint": "#ffba27", "on-secondary": "#00363a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-tablet": "2rem", "gutter-sm": "0.75rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "gutter": "1rem", "space-xl": "2.5rem", "space-xs": "0.25rem", "margin": "1.25rem", "space-md": "1rem" }, "fontFamily": { "body-sm": ["Manrope"], "headline-lg": ["Sora"], "body-md": ["Manrope"], "label-telemetry": ["Sora"], "headline-md": ["Sora"], "label-status": ["Sora"], "display-hero": ["Sora"], "body-lg": ["Manrope"], "display-hero-mobile": ["Sora"], "headline-sm": ["Sora"], "headline-lg-mobile": ["Sora"] }, "fontSize": { "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;color:#e6dff9;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.45)]"><div class="h-20 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface hover:text-primary transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" onclick="history.back()"><span class="material-symbols-outlined text-[22px]">arrow_back_ios_new</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-secondary-fixed">lock_clock</span><span class="font-label-status text-label-status uppercase text-secondary-fixed">GÖREV AKIŞI</span></div><h1 class="font-headline-sm text-headline-sm text-on-surface leading-tight">Canlı Operasyon Baskını</h1></div></div><div class="flex items-center gap-space-sm"><div class="flex flex-col items-end px-space-sm py-space-xs rounded-lg bg-surface-container-low"><span class="font-label-status text-label-status text-on-surface-variant uppercase">DERİNLİK</span><span class="font-label-telemetry text-label-telemetry text-primary-fixed">-1420m</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,183,3,0.3)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-20 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe">
+<!-- HUD TELEMETRY BAR -->
+<section class="px-margin pt-space-md pb-space-sm flex flex-col gap-space-xs">
+<div class="grid grid-cols-4 gap-space-xs">
+<!-- HUD item: Süre -->
+<div class="flex flex-col p-space-xs rounded-xl bg-surface-container-high shadow-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-error">timer</span>
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">SÜRE</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-error leading-tight tracking-tight mt-0.5" id="missionTimer">04:55</span>
+</div>
+<!-- HUD item: Gövde Bütünlüğü -->
+<div class="flex flex-col p-space-xs rounded-xl bg-surface-container-high shadow-sm relative overflow-hidden">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-primary-fixed-dim">shield_with_heart</span>
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">GÖVDE</span>
+</div>
+<div class="flex items-baseline gap-0.5 mt-0.5">
+<span class="font-headline-sm text-headline-sm text-primary leading-tight font-bold">%82</span>
+<span class="font-label-status text-label-status text-error-container uppercase">KRİTİK</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-1 rounded-full mt-1 overflow-hidden">
+<div class="bg-primary-fixed-dim h-full w-[82%]"></div>
+</div>
+</div>
+<!-- HUD item: Derinlik Sensor -->
+<div class="flex flex-col p-space-xs rounded-xl bg-surface-container-high shadow-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px] text-secondary-fixed">navigation</span>
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">DERİNLİK</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-secondary-fixed leading-tight mt-0.5">870m</span>
+</div>
+<!-- HUD item: Telsiz Durum -->
+<div class="flex flex-col p-space-xs rounded-xl bg-surface-container-high shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">TELSİZ</span>
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim animate-pulse"></span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-secondary leading-tight mt-1 text-[10px]">CH-02 ON</span>
+<span class="font-label-status text-[9px] text-secondary-fixed opacity-75">AKTİF</span>
+</div>
+</div>
+<!-- MISSION INSTRUCTION PANEL -->
+<div class="mt-space-sm p-space-md rounded-xl bg-surface-container shadow-md relative overflow-hidden">
+<div class="absolute -right-12 -top-12 w-32 h-32 rounded-full bg-error/10 blur-2xl pointer-events-none"></div>
+<div class="flex items-center gap-space-xs mb-1">
+<span class="inline-block px-2 py-0.5 rounded-lg bg-surface-container-lowest text-secondary font-label-telemetry text-[10px] tracking-widest uppercase">
+          ROL: DÜMENCİ (KILAVUZ)
+        </span>
+<span class="inline-block px-2 py-0.5 rounded-lg bg-error-container text-on-error font-label-telemetry text-[10px] uppercase">
+          TEHLİKE UYARISI
+        </span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Sızıntı Bölmesini Tespit Et</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-snug">
+        Akustik hidrofon dinleme verilerini analiz et, çatlayan kompartıman kodunu makiniste söyle.
+      </p>
+</div>
+</section>
+<!-- MAIN SCHEMATIC & TELEMETRY SECTION -->
+<main class="px-margin flex flex-col gap-space-md">
+<!-- 1. DENİZALTI GÖVDE KESİT ŞEMASI -->
+<section class="flex flex-col p-space-md rounded-xl bg-surface-container-low shadow-lg">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">subway</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed tracking-wider uppercase">GÖVDE KESİT ŞEMASI</span>
+</div>
+<span class="font-label-status text-label-status text-on-surface-variant">SİSMİK TARAMA: CANLI</span>
+</div>
+<!-- Submarine Hull Isometric Visualization Container -->
+<div class="relative w-full rounded-xl bg-surface-container-lowest p-space-sm mt-space-xs overflow-hidden shadow-inner">
+<!-- Structural Vector Grid Backdrop -->
+<svg class="w-full h-36" fill="none" viewbox="0 0 340 130" xmlns="http://www.w3.org/2000/svg">
+<!-- Background Grid lines -->
+<line class="text-surface-container-high opacity-50" stroke="currentColor" stroke-dasharray="2 4" x1="0" x2="340" y1="65" y2="65"></line>
+<line class="text-surface-container-high opacity-30" stroke="currentColor" stroke-dasharray="2 4" x1="170" x2="170" y1="0" y2="130"></line>
+<!-- Outer Hull Profile -->
+<path class="text-outline-variant" d="M25 65 C25 35, 60 20, 150 20 L270 24 C310 26, 325 50, 330 65 C325 80, 310 104, 270 106 L150 110 C60 110, 25 95, 25 65 Z" fill="#201D30" stroke="currentColor" stroke-width="2"></path>
+<!-- Conning Tower / Sail -->
+<path d="M175 20 L185 5 L215 5 L225 20 Z" fill="#2B273B"></path>
+<!-- Compartment 1: Burun / Torpido (LEAK DETECTED - FLASHING ALARM) -->
+<g class="cursor-pointer" id="comp-torpedo">
+<path class="animate-pulse" d="M30 65 C30 42, 55 25, 100 22 L100 108 C55 105, 30 88, 30 65 Z" fill="#93000A" opacity="0.8"></path>
+<circle class="animate-ping" cx="65" cy="65" fill="#FFB4AB" fill-opacity="0.3" r="14"></circle>
+<circle cx="65" cy="65" fill="#FFB4AB" r="6"></circle>
+<text fill="#E6DFF9" font-family="Sora" font-size="9" font-weight="700" text-anchor="middle" x="65" y="42">T-03</text>
+<text fill="#FFB4AB" font-family="Sora" font-size="8" font-weight="700" text-anchor="middle" x="65" y="98">SIZINTI</text>
+</g>
+<!-- Bulkhead Divider 1 -->
+<line stroke="#FFBA27" stroke-dasharray="3 2" stroke-width="2" x1="102" x2="102" y1="22" y2="108"></line>
+<!-- Compartment 2: Reaktör Odası (STABLE) -->
+<g id="comp-reactor">
+<rect fill="#2B273B" height="88" opacity="0.6" width="70" x="106" y="21"></rect>
+<circle cx="141" cy="65" fill="#00EEFC" r="5"></circle>
+<text fill="#E6DFF9" font-family="Sora" font-size="9" font-weight="600" text-anchor="middle" x="141" y="45">R-01</text>
+<text fill="#D3FBFF" font-family="Manrope" font-size="7" text-anchor="middle" x="141" y="95">REAKTÖR</text>
+</g>
+<!-- Bulkhead Divider 2 -->
+<line stroke="#514532" stroke-width="1.5" x1="178" x2="178" y1="18" y2="110"></line>
+<!-- Compartment 3: Balast Bölümü (STABLE) -->
+<g id="comp-ballast">
+<rect fill="#2B273B" height="87" opacity="0.6" width="68" x="182" y="21"></rect>
+<circle cx="216" cy="65" fill="#00EEFC" r="5"></circle>
+<text fill="#E6DFF9" font-family="Sora" font-size="9" font-weight="600" text-anchor="middle" x="216" y="45">B-02</text>
+<text fill="#D3FBFF" font-family="Manrope" font-size="7" text-anchor="middle" x="216" y="95">BALAST</text>
+</g>
+<!-- Bulkhead Divider 3 -->
+<line stroke="#514532" stroke-width="1.5" x1="252" x2="252" y1="24" y2="106"></line>
+<!-- Compartment 4: Dümen Kıçı (STABLE) -->
+<g id="comp-stern">
+<path d="M254 24 L275 25 C305 28, 320 52, 324 65 C320 78, 305 102, 275 105 L254 106 Z" fill="#2B273B" opacity="0.6"></path>
+<circle cx="282" cy="65" fill="#00EEFC" r="5"></circle>
+<text fill="#E6DFF9" font-family="Sora" font-size="9" font-weight="600" text-anchor="middle" x="282" y="45">K-04</text>
+<text fill="#D3FBFF" font-family="Manrope" font-size="7" text-anchor="middle" x="282" y="95">DÜMEN</text>
+</g>
+</svg>
+<!-- Status Legend Indicators -->
+<div class="grid grid-cols-4 gap-1 mt-2">
+<div class="flex flex-col items-center p-1 rounded-lg bg-error-container text-on-error-container">
+<span class="font-label-status text-[9px] font-bold">BURUN (T-03)</span>
+<span class="font-label-telemetry text-[9px] text-error font-extrabold uppercase">ALARM: %100</span>
+</div>
+<div class="flex flex-col items-center p-1 rounded-lg bg-surface-container-high">
+<span class="font-label-status text-[9px] text-on-surface-variant">REAKTÖR</span>
+<span class="font-label-telemetry text-[9px] text-secondary-fixed">STABİL</span>
+</div>
+<div class="flex flex-col items-center p-1 rounded-lg bg-surface-container-high">
+<span class="font-label-status text-[9px] text-on-surface-variant">BALAST</span>
+<span class="font-label-telemetry text-[9px] text-secondary-fixed">STABİL</span>
+</div>
+<div class="flex flex-col items-center p-1 rounded-lg bg-surface-container-high">
+<span class="font-label-status text-[9px] text-on-surface-variant">KIÇ MOTOR</span>
+<span class="font-label-telemetry text-[9px] text-secondary-fixed">STABİL</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. AKUSTİK HİDROFON DALGA ANALİZİ (Hydrophone Wave Analysis) -->
+<section class="flex flex-col p-space-md rounded-xl bg-surface-container-low shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">graphic_eq</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary tracking-widest uppercase">HİDROFON SES FREKANS OSİLOSKOPU</span>
+</div>
+<span class="font-label-status text-[10px] text-primary-fixed bg-on-primary-fixed-variant px-1.5 py-0.5 rounded-lg">CANLI TAYF</span>
+</div>
+<!-- Live Oscilloscope Audio Visualizer Card -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest mt-space-xs flex flex-col gap-space-xs">
+<div class="relative w-full h-20 flex items-center justify-center overflow-hidden rounded-lg bg-surface-container">
+<!-- Animated Frequency Waveform Canvas Simulation via Inline SVG -->
+<svg class="w-full h-full" fill="none" preserveaspectratio="none" viewbox="0 0 300 80">
+<path d="M0 40 Q 25 38, 45 41 T 90 39 T 130 41 L 140 15 L 148 68 L 158 8 L 168 74 L 176 22 L 186 52 L 194 38 L 220 40 T 260 41 T 300 40" stroke="#FFB703" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<path d="M0 40 Q 30 42, 60 40 T 120 40 L 145 25 L 155 58 L 165 20 L 175 60 L 185 30 L 210 40 T 300 40" opacity="0.4" stroke="#00EEFC" stroke-linecap="round" stroke-width="1.2"></path>
+</svg>
+<div class="absolute right-2 top-2 px-2 py-0.5 rounded-md bg-error/20 text-error font-label-telemetry text-[9px]">
+            1.2 kHz ÇATLAMA REZONANSI
+          </div>
+</div>
+<div class="p-space-xs rounded-lg bg-surface-container-high flex flex-col gap-0.5">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-error text-[16px]">sensors</span>
+<span class="font-headline-sm text-[12px] text-error font-semibold">1.2 kHz Metalik Çatlama Sesi Algılandı</span>
+</div>
+<p class="font-label-telemetry text-on-surface-variant text-[10px]">
+            SONAR TANIMI: <strong class="text-primary-fixed">KRİTİK HATA: BÖLME T-03 (TORPİDO KAPAĞI)</strong>
+</p>
+</div>
+</div>
+</section>
+<!-- 3. DÜMENCİYE ÖZEL ŞİFRE VE ONARIM KILAVUZU (Classified Helm Guide) -->
+<section class="flex flex-col p-space-md rounded-xl bg-surface-container shadow-xl relative overflow-hidden">
+<!-- Top Neon Amber Accent Bar -->
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]">lock</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-fixed-dim tracking-wider uppercase">GİZLİ KILAVUZ (DÜMENCİ PROTOKOLÜ)</span>
+</div>
+<span class="font-label-status text-[9px] text-on-primary-container bg-primary-container px-1.5 py-0.5 rounded-sm font-bold uppercase">
+          MAKİNİST GÖREMEZ
+        </span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant mb-space-xs">
+        Bu veriler sadece sizin kılavuz ekranınızda listelenir. Aşağıdaki adımları telsizden tek tek iletin.
+      </p>
+<!-- Protocol Data Tiles (Bento Grid) -->
+<div class="grid grid-cols-1 gap-space-xs">
+<!-- Kompartıman -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low shadow-sm">
+<div class="flex flex-col">
+<span class="font-label-status text-label-status text-on-surface-variant">HASARLI KOMPARTIMAN</span>
+<span class="font-headline-sm text-headline-sm text-error font-bold">T-03</span>
+</div>
+<span class="material-symbols-outlined text-error text-[24px]">crisis_alert</span>
+</div>
+<!-- Tahliye Bypass Sırası -->
+<div class="flex flex-col p-space-sm rounded-lg bg-surface-container-low shadow-sm">
+<span class="font-label-status text-label-status text-on-surface-variant mb-1">TAHLİYE BYPASS EŞLEŞME SIRASI</span>
+<div class="flex items-center justify-between gap-1 mt-0.5">
+<div class="flex-1 flex flex-col items-center py-1 rounded bg-surface-container-high">
+<span class="font-label-status text-[9px] text-on-surface-variant">1. ADIM</span>
+<span class="font-label-telemetry text-[12px] text-secondary font-bold">VALF-C</span>
+</div>
+<span class="material-symbols-outlined text-[14px] text-outline">arrow_forward</span>
+<div class="flex-1 flex flex-col items-center py-1 rounded bg-surface-container-high">
+<span class="font-label-status text-[9px] text-on-surface-variant">2. ADIM</span>
+<span class="font-label-telemetry text-[12px] text-secondary font-bold">ŞALTER-02</span>
+</div>
+<span class="material-symbols-outlined text-[14px] text-outline">arrow_forward</span>
+<div class="flex-1 flex flex-col items-center py-1 rounded bg-surface-container-high">
+<span class="font-label-status text-[9px] text-on-surface-variant">3. ADIM</span>
+<span class="font-label-telemetry text-[12px] text-primary-fixed-dim font-bold">ACİL KELEPÇE</span>
+</div>
+</div>
+</div>
+<!-- Kritik Basınç Toleransı -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low shadow-sm">
+<div class="flex flex-col">
+<span class="font-label-status text-label-status text-on-surface-variant">KRİTİK BASINÇ TOLERANSI</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">52 BAR</span>
+<span class="font-body-sm text-[11px] text-on-surface-variant">(Limit: 60 Bar Max)</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[24px]">speed</span>
+</div>
+</div>
+</section>
+<!-- 4. TELSİZ İLETİM DURUMU & AKSİYON DÜĞMESİ -->
+<section class="flex flex-col gap-space-sm mb-space-lg">
+<!-- Radio Status Message Bar -->
+<div class="flex items-center gap-space-xs p-space-sm rounded-xl bg-surface-container-high shadow-inner">
+<div class="relative w-8 h-8 rounded-full bg-secondary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">podcasts</span>
+<span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-secondary-fixed animate-ping"></span>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<span class="font-label-status text-label-status text-secondary-fixed uppercase">TELSİZ BAĞLANTISI AKTİF</span>
+<p class="font-body-sm text-body-sm text-on-surface truncate">Makinist basınç odasında talimat bekliyor...</p>
+</div>
+</div>
+<!-- PRIMARY TACTILE ARCADE BUTTON (Amber Gold Push Trigger) -->
+<button class="w-full py-4 px-space-md rounded-xl bg-gradient-to-r from-primary-container via-primary-fixed-dim to-primary text-on-primary font-headline-sm text-[15px] font-bold tracking-tight shadow-[0_4px_0_#6b4b00,0_10px_20px_rgba(255,183,3,0.3)] active:translate-y-1 active:shadow-[0_1px_0_#6b4b00] transition-all flex items-center justify-center gap-2 select-none" id="dispatchRadioBtn">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+<span>PROTOKOLÜ MAKİNİSTE TELSİZLE BİLDİR</span>
+</button>
+<!-- Transmission Confirmation Feedback Toast (Hidden by default, triggered by click) -->
+<div class="hidden p-space-sm rounded-xl bg-surface-container-highest text-secondary flex items-center justify-center gap-space-xs shadow-md" id="radioFeedback">
+<span class="material-symbols-outlined text-[18px] text-secondary">check_circle</span>
+<span class="font-label-telemetry text-label-telemetry">TELSİZ İLETİLDİ: 'T-03 / VALF-C / 52 BAR' GÖNDERİLDİ</span>
+</div>
+</section>
+</main>
+</div>
+<!-- CLIENT MICRO-INTERACTIONS -->
+<script>
+  (function() {
+    // Interactive button transmission feedback
+    const btn = document.getElementById('dispatchRadioBtn');
+    const feedback = document.getElementById('radioFeedback');
+    
+    if (btn && feedback) {
+      btn.addEventListener('click', function() {
+        feedback.classList.remove('hidden');
+        btn.classList.add('opacity-80');
+        btn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">sync</span><span>İLETİLİYOR...</span>';
+        
+        setTimeout(function() {
+          btn.classList.remove('opacity-80');
+          btn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check</span><span>PROTOKOL AKTARILDI</span>';
+        }, 1200);
+      });
+    }
+
+    // Countdown timer micro-interaction
+    const timerElem = document.getElementById('missionTimer');
+    if (timerElem) {
+      let seconds = 295; // 04:55
+      setInterval(function() {
+        if (seconds > 0) {
+          seconds--;
+          const mins = Math.floor(seconds / 60);
+          const remSecs = seconds % 60;
+          timerElem.textContent = (mins < 10 ? '0' : '') + mins + ':' + (remSecs < 10 ? '0' : '') + remSecs;
+        }
+      }, 1000);
+    }
+  })();
+</script></main></body></html>
+
+<!-- Derin Basınç — Sızıntı Onarım (Makinist) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed": "#efdbff", "on-tertiary-container": "#7500cc", "surface-container-high": "#2b273b", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "on-surface-variant": "#d5c4ac", "outline-variant": "#514532", "on-secondary-fixed-variant": "#004f54", "on-primary-fixed": "#271900", "on-tertiary": "#480081", "primary-container": "#ffb703", "on-error": "#690005", "surface-container-lowest": "#0f0c1e", "outline": "#9e8f78", "surface-container-low": "#1c192c", "on-primary-container": "#6b4b00", "inverse-surface": "#e6dff9", "on-error-container": "#ffdad6", "on-background": "#e6dff9", "secondary-container": "#00eefc", "background": "#141123", "primary-fixed": "#ffdea9", "inverse-on-surface": "#312e42", "surface-container-highest": "#363246", "tertiary-fixed-dim": "#dcb8ff", "inverse-primary": "#7d5800", "on-tertiary-fixed": "#2c0051", "tertiary-container": "#dab5ff", "surface-variant": "#363246", "secondary": "#d3fbff", "on-primary": "#422c00", "error-container": "#93000a", "error": "#ffb4ab", "on-primary-fixed-variant": "#5e4100", "on-secondary-fixed": "#002022", "surface-container": "#201d30", "on-surface": "#e6dff9", "surface": "#141123", "tertiary": "#eed8ff", "secondary-fixed": "#7df4ff", "primary": "#ffdba0", "surface-bright": "#3a374b", "primary-fixed-dim": "#ffba27", "surface-dim": "#141123", "secondary-fixed-dim": "#00dbe9", "surface-tint": "#ffba27", "on-secondary": "#00363a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-tablet": "2rem", "gutter-sm": "0.75rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "gutter": "1rem", "space-xl": "2.5rem", "space-xs": "0.25rem", "margin": "1.25rem", "space-md": "1rem" }, "fontFamily": { "body-sm": ["Manrope"], "headline-lg": ["Sora"], "body-md": ["Manrope"], "label-telemetry": ["Sora"], "headline-md": ["Sora"], "label-status": ["Sora"], "display-hero": ["Sora"], "body-lg": ["Manrope"], "display-hero-mobile": ["Sora"], "headline-sm": ["Sora"], "headline-lg-mobile": ["Sora"] }, "fontSize": { "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;color:#e6dff9;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.45)]"><div class="h-20 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><button class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-low text-on-surface hover:text-primary transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" onclick="history.back()"><span class="material-symbols-outlined text-[22px]">arrow_back_ios_new</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-secondary-fixed">lock_clock</span><span class="font-label-status text-label-status uppercase text-secondary-fixed">GÖREV AKIŞI</span></div><h1 class="font-headline-sm text-headline-sm text-on-surface leading-tight">Gövde Onarım Ve Telemetri</h1></div></div><div class="flex items-center gap-space-sm"><div class="flex flex-col items-end px-space-sm py-space-xs rounded-lg bg-surface-container-low"><span class="font-label-status text-label-status text-on-surface-variant uppercase">DERİNLİK</span><span class="font-label-telemetry text-label-telemetry text-primary-fixed">-1420m</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,183,3,0.3)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-20 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-safe space-y-space-md">
+<!-- Telemetry Sub-Status HUD Panel -->
+<div class="w-full bg-surface-container-low rounded-xl p-space-sm shadow-xl flex flex-col space-y-space-xs">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse shadow-[0_0_8px_rgba(0,238,252,0.8)]"></span>
+<span class="font-label-status text-label-status text-secondary tracking-widest uppercase">TELSİZ CH-02 AKTİF</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[14px] text-primary-container">timer</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container font-bold" id="timer-val">04:55</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-space-xs">
+<div class="flex flex-col items-center justify-center bg-surface-container rounded-lg p-space-xs">
+<span class="font-label-status text-label-status text-on-surface-variant">GÖVDE BÜTÜNLÜĞÜ</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">%82</span>
+<div class="w-full bg-surface-container-highest h-1 rounded-full mt-1 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 82%;"></div>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center bg-surface-container rounded-lg p-space-xs">
+<span class="font-label-status text-label-status text-on-surface-variant">BÖLME DERİNLİK</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">870<span class="text-xs">m</span></span>
+<div class="w-full bg-surface-container-highest h-1 rounded-full mt-1 overflow-hidden">
+<div class="bg-secondary-container h-full rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center bg-surface-container rounded-lg p-space-xs">
+<span class="font-label-status text-label-status text-on-surface-variant">TAHLİYE POMPASI</span>
+<span class="font-headline-sm text-headline-sm text-secondary-fixed font-bold">52 <span class="text-xs">BAR</span></span>
+<div class="w-full bg-surface-container-highest h-1 rounded-full mt-1 overflow-hidden">
+<div class="bg-secondary-fixed h-full rounded-full animate-pulse" style="width: 78%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Mission Operational Context -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-primary-container text-on-primary-container font-label-status text-label-status font-bold uppercase">ROL: MAKİNİST</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant">SEKTÖR: TORPİDO DAİRESİ</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface font-extrabold tracking-tight">Bölme T-03 Sızıntısını Mühürle</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+      Dümencinin telsizle bildirdiği sıraya göre baypas valflerini kapat ve hidrolik kelepçeyi kilitle.
+    </p>
+</div>
+<!-- Interactive Compartment Visual Feed -->
+<div class="relative w-full rounded-xl overflow-hidden shadow-2xl bg-surface-container-lowest">
+<div class="relative w-full h-44 bg-cover bg-center" data-alt="A gritty high-contrast underwater submarine torpedo mechanical bay interior filled with heavy bronze pipes, cyan atmospheric condensation, warning lights, steel hydraulics, dripping saltwater, dramatic midnight shadows, cinematic industrial realism with golden dial readouts." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB1Uy0DA9w8fPEEckVcBYWGfYjQvYNG3Mv95I1fspA5ATpfP1xpFkHSmxEz7Fc_Us_Xc_xUEXKf1ijlXw3u21hIdybwpEDwooW-iyuqtl7GYHM8351OY6S4Mjh3FcGwy1e6YZDi9NnxE58yNhRrVLyM1n9fkNB5lxrzmvL6TGw-Dbgpc8YoWZb7GiKVjnVacKdaZ2TyVHUXYywUX-N1j_Dxhfw8J_WpP3cSGPGjfKg')">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
+<!-- Visual HUD Overlay Elements inside viewport -->
+<div class="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+<span class="font-label-status text-label-status text-error uppercase font-bold">SIZINTI BÖLGESİ KRİTİK</span>
+</div>
+<div class="absolute top-2 right-2 px-2 py-1 rounded bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed">KAM-04 // CANLI</span>
+</div>
+<!-- Live Water Level Metric Overlay -->
+<div class="absolute bottom-2 left-2 right-2 flex flex-col space-y-1 bg-surface-container-high/90 backdrop-blur-md p-space-xs rounded-lg">
+<div class="flex justify-between items-center text-xs">
+<span class="font-label-status text-label-status text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-secondary">water_drop</span> BÖLME SU SEVİYESİ
+          </span>
+<span class="font-label-telemetry text-label-telemetry text-secondary font-bold" id="water-percent">%24 DÜŞÜŞTE</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-2 rounded-full overflow-hidden flex">
+<div class="bg-gradient-to-r from-secondary-fixed to-secondary h-full rounded-full transition-all duration-700" id="water-gauge" style="width: 24%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 1: Fiziksel Boru Hattı & Vana Konsolu -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-md shadow-lg space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]">valve</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">1. Mekanik Baypas Valfleri</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-primary-container px-2 py-0.5 rounded bg-surface-container-high">1/3 TAMAM</span>
+</div>
+<div class="grid grid-cols-3 gap-space-sm pt-space-xs">
+<!-- Valve A -->
+<div class="flex flex-col items-center bg-surface-container-low rounded-lg p-space-sm transition-all duration-200 cursor-pointer active:scale-95 shadow-md" id="card-valv-a" onclick="toggleValve('valv-a')">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold mb-1">VALF-A</span>
+<div class="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center shadow-inner relative transition-transform duration-500" id="icon-valv-a">
+<span class="material-symbols-outlined text-outline text-[32px]">settings</span>
+</div>
+<span class="mt-2 font-label-status text-label-status text-error uppercase font-bold tracking-wider" id="badge-valv-a">AÇIK</span>
+</div>
+<!-- Valve B -->
+<div class="flex flex-col items-center bg-surface-container-low rounded-lg p-space-sm transition-all duration-200 cursor-pointer active:scale-95 shadow-md" id="card-valv-b" onclick="toggleValve('valv-b')">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold mb-1">VALF-B</span>
+<div class="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center shadow-inner relative transition-transform duration-500" id="icon-valv-b">
+<span class="material-symbols-outlined text-outline text-[32px]">settings</span>
+</div>
+<span class="mt-2 font-label-status text-label-status text-error uppercase font-bold tracking-wider" id="badge-valv-b">AÇIK</span>
+</div>
+<!-- Valve C (Initially Sealed) -->
+<div class="flex flex-col items-center bg-surface-container-high rounded-lg p-space-sm transition-all duration-200 cursor-pointer active:scale-95 shadow-lg shadow-primary/10" id="card-valv-c" onclick="toggleValve('valv-c')">
+<span class="font-label-telemetry text-label-telemetry text-primary-fixed-dim font-bold mb-1">VALF-C</span>
+<div class="w-14 h-14 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-inner relative transform rotate-90 transition-transform duration-500" id="icon-valv-c">
+<span class="material-symbols-outlined text-primary-container text-[32px]">settings</span>
+<span class="absolute w-2 h-2 rounded-full bg-primary-container -top-0.5 right-2 shadow-[0_0_6px_#ffb703]"></span>
+</div>
+<span class="mt-2 font-label-status text-label-status text-primary-fixed uppercase font-bold tracking-wider" id="badge-valv-c">MÜHÜRLÜ</span>
+</div>
+</div>
+</div>
+<!-- SECTION 2: Elektrikli Ağır Metal Şalter Paneli -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-md shadow-lg space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">electric_bolt</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">2. Basınç Denge Şalterleri</span>
+</div>
+<span class="font-label-status text-label-status text-secondary uppercase bg-surface-container-high px-2 py-0.5 rounded">DÜMENCİ EMRİ: Ş-02</span>
+</div>
+<div class="grid grid-cols-4 gap-space-xs pt-space-xs">
+<!-- Switch 01 -->
+<div class="flex flex-col items-center bg-surface-container-low rounded-lg py-space-sm px-1 cursor-pointer transition-all duration-200" id="sw1" onclick="toggleSwitch('sw1')">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold">Ş-01</span>
+<div class="w-7 h-12 bg-surface-container-lowest rounded-md my-1.5 p-1 flex flex-col justify-end items-center relative">
+<div class="w-5 h-5 bg-surface-bright rounded shadow-sm"></div>
+</div>
+<span class="font-label-status text-label-status text-outline">KAPALI</span>
+</div>
+<!-- Switch 02 (Active Under Yellow Cover) -->
+<div class="flex flex-col items-center bg-surface-container-high rounded-lg py-space-sm px-1 cursor-pointer transition-all duration-200 shadow-md" id="sw2" onclick="toggleSwitch('sw2')">
+<div class="flex items-center gap-0.5">
+<span class="font-label-telemetry text-label-telemetry text-primary-container font-extrabold">Ş-02</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+</div>
+<!-- Yellow Industrial Guard Plate Visual -->
+<div class="w-7 h-12 bg-primary-container/20 rounded-md my-1.5 p-1 flex flex-col justify-start items-center relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/10"></div>
+<div class="w-5 h-5 bg-primary-container rounded shadow-md z-10"></div>
+</div>
+<span class="font-label-status text-label-status text-primary font-bold">DEVREDE</span>
+</div>
+<!-- Switch 03 -->
+<div class="flex flex-col items-center bg-surface-container-low rounded-lg py-space-sm px-1 cursor-pointer transition-all duration-200" id="sw3" onclick="toggleSwitch('sw3')">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold">Ş-03</span>
+<div class="w-7 h-12 bg-surface-container-lowest rounded-md my-1.5 p-1 flex flex-col justify-end items-center relative">
+<div class="w-5 h-5 bg-surface-bright rounded shadow-sm"></div>
+</div>
+<span class="font-label-status text-label-status text-outline">KAPALI</span>
+</div>
+<!-- Switch 04 -->
+<div class="flex flex-col items-center bg-surface-container-low rounded-lg py-space-sm px-1 cursor-pointer transition-all duration-200" id="sw4" onclick="toggleSwitch('sw4')">
+<span class="font-label-telemetry text-label-telemetry text-on-surface-variant font-bold">Ş-04</span>
+<div class="w-7 h-12 bg-surface-container-lowest rounded-md my-1.5 p-1 flex flex-col justify-end items-center relative">
+<div class="w-5 h-5 bg-surface-bright rounded shadow-sm"></div>
+</div>
+<span class="font-label-status text-label-status text-outline">KAPALI</span>
+</div>
+</div>
+</div>
+<!-- SECTION 3: Mekanik Hidrolik Kelepçe Sürgüsü -->
+<div class="flex flex-col bg-surface-container rounded-xl p-space-md shadow-lg space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">lock_reset</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">3. Hidrolik Kelepçe Kızak Kilit</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed" id="clamp-label">%75 SIKILDI</span>
+</div>
+<!-- Interactive Track Slider -->
+<div class="relative w-full bg-surface-container-lowest rounded-xl p-space-xs h-14 flex items-center shadow-inner">
+<div class="absolute left-1 top-1 bottom-1 bg-surface-container-high rounded-lg transition-all duration-300" id="clamp-progress" style="width: 75%;"></div>
+<input class="w-full h-8 opacity-0 z-20 cursor-ew-resize" id="clampSlider" max="100" min="0" oninput="updateClamp(this.value)" type="range" value="75"/>
+<!-- Visual Beveled Slider Handle representation -->
+<div class="absolute left-0 right-0 top-0 bottom-0 pointer-events-none flex items-center justify-between px-space-md z-10">
+<span class="font-label-status text-label-status text-on-surface-variant tracking-wider">SERBEST</span>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[20px] animate-pulse">tune</span>
+</div>
+<span class="font-label-status text-label-status text-secondary-fixed font-bold tracking-wider">KİLİTLİ (%100)</span>
+</div>
+</div>
+</div>
+<!-- Makinist Taktik Notu Card -->
+<div class="flex items-start gap-space-sm bg-surface-container-low rounded-xl p-space-md shadow-md">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center flex-shrink-0 text-primary-container shadow-sm">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-status text-label-status text-primary uppercase font-bold tracking-wider">MAKİNİST TAKTİK DİREKTİFİ</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-snug">
+        "Dümenci sızıntı bölgesini telsizden onaylamadan ana kelepçeyi gevşetme! Aşırı kabin basıncı riski mevcut."
+      </p>
+</div>
+</div>
+<!-- Primary Arc Action Trigger -->
+<div class="pt-space-xs pb-space-sm flex flex-col items-center">
+<button class="w-full h-14 bg-gradient-to-r from-primary-container to-primary-fixed-dim text-on-primary-fixed rounded-xl flex items-center justify-center gap-space-xs shadow-[0_4px_0_#6b4b00,0_10px_20px_rgba(255,183,3,0.3)] active:translate-y-1 active:shadow-[0_1px_0_#6b4b00] transition-all duration-150" id="main-cta-btn" onclick="executeSealProcess()">
+<span class="material-symbols-outlined text-[22px] font-bold">verified_user</span>
+<span class="font-headline-sm text-headline-sm font-extrabold tracking-wide uppercase">MÜHÜRÜ KİLİTLE &amp; TANKI BASINÇLANDIR</span>
+</button>
+<span class="font-label-status text-label-status text-on-surface-variant uppercase mt-2 tracking-widest">
+      PROTOKOL KODU: HYDR-99-SUB
+    </span>
+</div>
+</div>
+<script>
+  let sealedState = {
+    valvA: false,
+    valvB: false,
+    valvC: true,
+    sw2: true
+  };
+
+  function toggleValve(valvId) {
+    const icon = document.getElementById('icon-' + valvId);
+    const badge = document.getElementById('badge-' + valvId);
+    const card = document.getElementById('card-' + valvId);
+    
+    if (valvId === 'valv-a') {
+      sealedState.valvA = !sealedState.valvA;
+      if (sealedState.valvA) {
+        icon.classList.add('rotate-90');
+        badge.innerText = 'MÜHÜRLÜ';
+        badge.className = 'mt-2 font-label-status text-label-status text-primary-fixed uppercase font-bold tracking-wider';
+        card.classList.replace('bg-surface-container-low', 'bg-surface-container-high');
+      } else {
+        icon.classList.remove('rotate-90');
+        badge.innerText = 'AÇIK';
+        badge.className = 'mt-2 font-label-status text-label-status text-error uppercase font-bold tracking-wider';
+        card.classList.replace('bg-surface-container-high', 'bg-surface-container-low');
+      }
+    } else if (valvId === 'valv-b') {
+      sealedState.valvB = !sealedState.valvB;
+      if (sealedState.valvB) {
+        icon.classList.add('rotate-90');
+        badge.innerText = 'MÜHÜRLÜ';
+        badge.className = 'mt-2 font-label-status text-label-status text-primary-fixed uppercase font-bold tracking-wider';
+        card.classList.replace('bg-surface-container-low', 'bg-surface-container-high');
+      } else {
+        icon.classList.remove('rotate-90');
+        badge.innerText = 'AÇIK';
+        badge.className = 'mt-2 font-label-status text-label-status text-error uppercase font-bold tracking-wider';
+        card.classList.replace('bg-surface-container-high', 'bg-surface-container-low');
+      }
+    } else if (valvId === 'valv-c') {
+      sealedState.valvC = !sealedState.valvC;
+      if (sealedState.valvC) {
+        icon.classList.add('rotate-90');
+        badge.innerText = 'MÜHÜRLÜ';
+        badge.className = 'mt-2 font-label-status text-label-status text-primary-fixed uppercase font-bold tracking-wider';
+      } else {
+        icon.classList.remove('rotate-90');
+        badge.innerText = 'AÇIK';
+        badge.className = 'mt-2 font-label-status text-label-status text-error uppercase font-bold tracking-wider';
+      }
+    }
+  }
+
+  function toggleSwitch(id) {
+    const sw = document.getElementById(id);
+    if (!sw) return;
+    if (id === 'sw2') return; // Enforced per coxswain instruction
+    sw.classList.toggle('bg-surface-container-high');
+    const label = sw.querySelector('.text-outline, .text-secondary');
+    if (label) {
+      if (label.innerText === 'KAPALI') {
+        label.innerText = 'AÇIK';
+        label.className = 'font-label-status text-label-status text-secondary';
+      } else {
+        label.innerText = 'KAPALI';
+        label.className = 'font-label-status text-label-status text-outline';
+      }
+    }
+  }
+
+  function updateClamp(val) {
+    const progress = document.getElementById('clamp-progress');
+    const label = document.getElementById('clamp-label');
+    progress.style.width = val + '%';
+    label.innerText = '%' + val + (val == 100 ? ' KİLİTLENDİ' : ' SIKILDI');
+    if (val == 100) {
+      label.className = 'font-label-telemetry text-label-telemetry text-primary-fixed font-bold';
+    } else {
+      label.className = 'font-label-telemetry text-label-telemetry text-secondary-fixed';
+    }
+  }
+
+  function executeSealProcess() {
+    const btn = document.getElementById('main-cta-btn');
+    const waterGauge = document.getElementById('water-gauge');
+    const waterPercent = document.getElementById('water-percent');
+    
+    btn.innerHTML = `<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span> BASINÇLANDIRILIYOR...`;
+    btn.disabled = true;
+
+    setTimeout(() => {
+      waterGauge.style.width = '10%';
+      waterPercent.innerText = '%10 GÜVENLİ SEVİYE';
+      btn.innerHTML = `<span class="material-symbols-outlined text-[22px]">check_circle</span> MÜHÜR SAĞLANDI // T-03 EMNİYETTE`;
+      btn.className = 'w-full h-14 bg-secondary-container text-on-secondary-container rounded-xl flex items-center justify-center gap-space-xs shadow-lg font-headline-sm text-headline-sm font-extrabold uppercase';
+    }, 1200);
+  }
+</script></main></body></html>
+
+<!-- Derin Basınç — Elektroliz & Oksijen (Dümenci) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#514532", "surface-dim": "#141123", "on-secondary": "#00363a", "surface": "#141123", "on-secondary-fixed-variant": "#004f54", "secondary-container": "#00eefc", "tertiary": "#eed8ff", "primary-fixed-dim": "#ffba27", "on-surface": "#e6dff9", "tertiary-container": "#dab5ff", "tertiary-fixed": "#efdbff", "primary": "#ffdba0", "surface-bright": "#3a374b", "on-primary": "#422c00", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "secondary-fixed-dim": "#00dbe9", "inverse-primary": "#7d5800", "outline": "#9e8f78", "primary-container": "#ffb703", "on-error-container": "#ffdad6", "primary-fixed": "#ffdea9", "surface-container-high": "#2b273b", "surface-container-lowest": "#0f0c1e", "on-background": "#e6dff9", "on-primary-fixed-variant": "#5e4100", "surface-container-low": "#1c192c", "inverse-on-surface": "#312e42", "error": "#ffb4ab", "error-container": "#93000a", "surface-tint": "#ffba27", "on-tertiary": "#480081", "surface-variant": "#363246", "on-primary-container": "#6b4b00", "on-error": "#690005", "tertiary-fixed-dim": "#dcb8ff", "inverse-surface": "#e6dff9", "on-secondary-fixed": "#002022", "surface-container-highest": "#363246", "on-tertiary-fixed": "#2c0051", "surface-container": "#201d30", "secondary-fixed": "#7df4ff", "on-surface-variant": "#d5c4ac", "on-primary-fixed": "#271900", "secondary": "#d3fbff", "background": "#141123" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-md": "1rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "margin": "1.25rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-sm": "0.75rem" }, "fontFamily": { "display-hero": ["Sora"], "display-hero-mobile": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "headline-md": ["Sora"], "headline-lg-mobile": ["Sora"], "headline-sm": ["Sora"], "body-sm": ["Manrope"], "headline-lg": ["Sora"], "label-telemetry": ["Sora"], "label-status": ["Sora"] }, "fontSize": { "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.35)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Geri Dön" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-surface-container-high/60 active:bg-surface-container-highest flex items-center justify-center text-on-surface transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">KOMUTA</span><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span></div><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none uppercase truncate max-w-[130px]">Gorev Konsolu</h1></div></div><div class="flex items-center gap-space-sm"><div class="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/70"><span class="material-symbols-outlined text-secondary-fixed text-[14px]">cell_tower</span><span class="font-label-status text-label-status text-secondary-fixed uppercase tracking-wider">CH-04</span></div><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/20 text-primary"><span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ffb703]"></span><span class="font-label-status text-label-status uppercase font-bold tracking-wider">CANLI</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,219,160,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe">
+<!-- HUD Mini Telemetry Bar -->
+<section class="px-margin pt-space-sm pb-space-xs">
+<div class="bg-surface-container-low rounded-xl p-space-sm shadow-md flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-secondary text-[18px]">waves</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-status text-label-status text-outline uppercase truncate">DERİNLİK</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary font-bold">-910m</span>
+</div>
+</div>
+<div class="w-px h-6 bg-surface-variant"></div>
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-primary text-[18px]">timer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-status text-label-status text-outline uppercase truncate">SÜRE</span>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold" id="countdown">05:15</span>
+</div>
+</div>
+<div class="w-px h-6 bg-surface-variant"></div>
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-tertiary text-[18px]">shield</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-status text-label-status text-outline uppercase truncate">GÖVDE</span>
+<span class="font-label-telemetry text-label-telemetry text-tertiary font-bold">%78</span>
+</div>
+</div>
+<div class="w-px h-6 bg-surface-variant"></div>
+<div class="flex items-center gap-1 min-w-0">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span class="font-label-status text-label-status text-secondary font-bold truncate">CH-02</span>
+</div>
+</div>
+</section>
+<!-- Mission Stage & Role Banner -->
+<section class="px-margin py-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high shadow-inner">
+<span class="material-symbols-outlined text-primary-container text-[14px]">military_tech</span>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold tracking-wider">ROL: DÜMENCİ (KILAVUZ)</span>
+</div>
+<span class="font-label-status text-label-status text-outline uppercase tracking-widest">AŞAMA 03 // 04</span>
+</div>
+<div class="bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-space-xs relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-primary/5 pointer-events-none blur-xl"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-[20px]">air</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Oksijen Hücrelerini Teşhis Et</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+        Spektrometre gaz seviyelerini analiz et, kritik elektroliz voltajını ve katot sıralamasını makiniste telsizden bildir.
+      </p>
+</div>
+</section>
+<!-- 2.5D Spectrometer Console -->
+<section class="px-margin py-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-telemetry text-label-telemetry text-outline uppercase tracking-wider">GAZ SPEKTROMETRE MODÜLÜ</span>
+<span class="font-label-status text-label-status text-secondary tracking-widest font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+        2.5D HİDRO-STATİK
+      </span>
+</div>
+<!-- Main Visualizer Panel -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-lg flex flex-col gap-space-md relative">
+<!-- Grid of gas pods -->
+<div class="grid grid-cols-3 gap-space-sm items-end pt-space-xs">
+<!-- Oksijen (Kritik) -->
+<div class="flex flex-col items-center gap-2">
+<div class="relative w-full h-36 bg-surface-container-lowest rounded-lg p-1.5 flex flex-col justify-end overflow-hidden shadow-inner">
+<!-- Warning Pulse back-light -->
+<div class="absolute inset-0 bg-error/10 animate-pulse pointer-events-none"></div>
+<!-- Column Fluid Bar -->
+<div class="w-full bg-gradient-to-t from-error-container to-error rounded-DEFAULT transition-all duration-700 relative shadow-[0_0_12px_rgba(255,180,171,0.5)]" style="height: 28%;">
+<div class="absolute inset-x-0 top-0 h-1 bg-surface rounded-full opacity-60"></div>
+</div>
+<!-- Glass ticks -->
+<div class="absolute inset-y-2 left-1.5 flex flex-col justify-between pointer-events-none opacity-40">
+<span class="w-2 h-0.5 bg-outline"></span>
+<span class="w-1.5 h-0.5 bg-outline"></span>
+<span class="w-2 h-0.5 bg-outline"></span>
+<span class="w-1.5 h-0.5 bg-outline"></span>
+<span class="w-2 h-0.5 bg-outline"></span>
+</div>
+<span class="absolute top-1.5 right-1.5 font-label-status text-label-status text-error font-bold">%18.2</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">O₂</span>
+<span class="font-label-status text-label-status text-error font-bold tracking-tight uppercase">KRİTİK DÜŞÜK</span>
+</div>
+</div>
+<!-- Karbondioksit (Yüksek) -->
+<div class="flex flex-col items-center gap-2">
+<div class="relative w-full h-36 bg-surface-container-lowest rounded-lg p-1.5 flex flex-col justify-end overflow-hidden shadow-inner">
+<!-- Alert glow -->
+<div class="w-full bg-gradient-to-t from-primary-fixed-dim to-primary rounded-DEFAULT transition-all duration-700 relative shadow-[0_0_12px_rgba(255,183,3,0.35)]" style="height: 64%;">
+<div class="absolute inset-x-0 top-0 h-1 bg-surface rounded-full opacity-60"></div>
+</div>
+<div class="absolute inset-y-2 left-1.5 flex flex-col justify-between pointer-events-none opacity-40">
+<span class="w-2 h-0.5 bg-outline"></span>
+<span class="w-1.5 h-0.5 bg-outline"></span>
+<span class="w-2 h-0.5 bg-outline"></span>
+<span class="w-1.5 h-0.5 bg-outline"></span>
+<span class="w-2 h-0.5 bg-outline"></span>
+</div>
+<span class="absolute top-1.5 right-1.5 font-label-status text-label-status text-primary font-bold">%4.8</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">CO₂</span>
+<span class="font-label-status text-label-status text-primary font-bold tracking-tight uppercase">YÜKSEK</span>
+</div>
+</div>
+<!-- Azot (Stabil) -->
+<div class="flex flex-col items-center gap-2">
+<div class="relative w-full h-36 bg-surface-container-lowest rounded-lg p-1.5 flex flex-col justify-end overflow-hidden shadow-inner">
+<div class="w-full bg-gradient-to-t from-on-secondary-container to-secondary-container rounded-DEFAULT transition-all duration-700 relative shadow-[0_0_12px_rgba(0,238,252,0.35)]" style="height: 82%;">
+<div class="absolute inset-x-0 top-0 h-1 bg-surface rounded-full opacity-60"></div>
+</div>
+<div class="absolute inset-y-2 left-1.5 flex flex-col justify-between pointer-events-none opacity-40">
+<span class="w-2 h-0.5 bg-outline"></span>
+<span class="w-1.5 h-0.5 bg-outline"></span>
+<span class="w-2 h-0.5 bg-outline"></span>
+<span class="w-1.5 h-0.5 bg-outline"></span>
+<span class="w-2 h-0.5 bg-outline"></span>
+</div>
+<span class="absolute top-1.5 right-1.5 font-label-status text-label-status text-secondary-fixed font-bold">%77.0</span>
+</div>
+<div class="flex flex-col items-center text-center">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight">N₂</span>
+<span class="font-label-status text-label-status text-secondary font-bold tracking-tight uppercase">STABİL</span>
+</div>
+</div>
+</div>
+<!-- Live telemetry status ticker -->
+<div class="bg-surface-container-high rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">sensors</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface tracking-wider">HİDROTERMAL BASINÇ DÖNGÜSÜ</span>
+</div>
+<span class="font-label-status text-label-status text-primary font-bold uppercase">SENKRON 99.4%</span>
+</div>
+</div>
+</section>
+<!-- Confidential Protocol Panel (Kılavuz Özel) -->
+<section class="px-margin py-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[18px]">lock</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container uppercase font-bold tracking-wider">GİZLİ ELEKTROLİZ PROTOKOLÜ</span>
+</div>
+<span class="font-label-status text-label-status text-error uppercase font-bold px-2 py-0.5 rounded-full bg-error-container/30 text-error">
+        MAKİNİST GÖREMEZ
+      </span>
+</div>
+<div class="bg-surface-container rounded-xl p-space-md shadow-lg flex flex-col gap-space-sm relative overflow-hidden">
+<!-- Glow Accent -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-container/10 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Protocol Parameter 1: Hedef Voltaj -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-status text-label-status text-outline uppercase">HEDEF VOLTAJ</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">Ana Reaktör Kalibrasyonu</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-headline-sm text-headline-sm text-primary font-extrabold tracking-tight">180V</span>
+<span class="block font-label-status text-label-status text-outline">(± 5V TOLERANS)</span>
+</div>
+</div>
+<!-- Protocol Parameter 2: Hücre Sırası -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">schema</span>
+<span class="font-label-status text-label-status text-outline uppercase font-semibold">KRİTİK HÜCRE DİZİLİM SIRASI</span>
+</div>
+<span class="font-label-status text-label-status text-secondary uppercase font-bold">KADEMELİ AKTİVASYON</span>
+</div>
+<!-- Visual Flow Pipeline -->
+<div class="flex items-center justify-between gap-1 pt-1">
+<div class="flex-1 bg-surface-container-highest rounded-lg p-2 flex flex-col items-center justify-center text-center">
+<span class="font-label-status text-label-status text-outline">1. ADIM</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary font-bold">KATOT-A</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[16px]">arrow_forward</span>
+<div class="flex-1 bg-surface-container-highest rounded-lg p-2 flex flex-col items-center justify-center text-center">
+<span class="font-label-status text-label-status text-outline">2. ADIM</span>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold">ANOT-C</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[16px]">arrow_forward</span>
+<div class="flex-1 bg-surface-container-highest rounded-lg p-2 flex flex-col items-center justify-center text-center">
+<span class="font-label-status text-label-status text-outline">3. ADIM</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary font-bold">KATOT-B</span>
+</div>
+</div>
+</div>
+<!-- Protocol Parameter 3: Eşik Basıncı -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">speed</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-status text-label-status text-outline uppercase">BASINÇ EŞİĞİ</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">Maksimum Emniyet Sınırı</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-headline-sm text-headline-sm text-secondary font-extrabold tracking-tight">35 Bar</span>
+<span class="block font-label-status text-label-status text-error font-bold">AŞILAMAZ LİMİT</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Crew Radio Status Console -->
+<section class="px-margin py-space-xs">
+<div class="bg-surface-container-low rounded-xl p-space-sm shadow-md flex items-center gap-space-sm">
+<div class="relative flex-shrink-0">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">engineering</span>
+</div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-secondary shadow-[0_0_6px_#00eefc]"></span>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-telemetry text-label-telemetry text-secondary uppercase font-bold truncate">MAKİNİST (ÇEVRİMİÇİ)</span>
+<span class="font-label-status text-label-status text-outline">TELSİZ BAĞLI</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">
+          Makinist elektroliz odasında voltaj kadranı başında bekliyor...
+        </p>
+</div>
+</div>
+</section>
+<!-- Tactical Arcade Action Button Section -->
+<section class="px-margin pt-space-xs pb-space-lg flex flex-col gap-space-sm">
+<button class="w-full group relative rounded-lg bg-gradient-to-r from-primary-container via-primary-fixed-dim to-primary p-0.5 active:translate-y-1 transition-transform shadow-[0_6px_20px_rgba(255,183,3,0.3)]" id="radioTransmitterBtn" type="button">
+<div class="w-full bg-primary-container rounded-[0.2rem] py-3.5 px-space-md flex items-center justify-center gap-space-sm text-on-primary font-bold shadow-inner">
+<span class="material-symbols-outlined text-on-primary text-[24px] animate-pulse">mic</span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-wide">PROTOKOLÜ MAKİNİSTE AKTAR</span>
+</div>
+</button>
+<div class="flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-outline text-[14px]">lock_clock</span>
+<span class="font-label-status text-label-status text-outline uppercase tracking-wider text-center">
+        VERİ İLETİMİ CH-02 ÜZERİNDEN ŞİFRELİ OLARAK SAĞLANIR
+      </span>
+</div>
+</section>
+<!-- Script for Micro-Interactions -->
+<script>
+    (function() {
+      // Countdown Timer Emulation
+      let seconds = 315;
+      const timerEl = document.getElementById('countdown');
+      if (timerEl) {
+        setInterval(() => {
+          if (seconds > 0) {
+            seconds--;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+          }
+        }, 1000);
+      }
+
+      // Arcade Button Push Feedback
+      const btn = document.getElementById('radioTransmitterBtn');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const micIcon = btn.querySelector('.material-symbols-outlined');
+          const originalText = btn.querySelector('span:last-child');
+          
+          if (originalText && micIcon) {
+            originalText.textContent = 'İLETİLİYOR... CH-02 AKTİF';
+            micIcon.classList.add('text-error');
+            
+            setTimeout(() => {
+              originalText.textContent = 'PROTOKOL İLETİLDİ!';
+              micIcon.classList.remove('text-error');
+              setTimeout(() => {
+                originalText.textContent = 'PROTOKOLÜ MAKİNİSTE AKTAR';
+              }, 1800);
+            }, 900);
+          }
+        });
+      }
+    })();
+  </script>
+</div></main></body></html>
+
+<!-- Derin Basınç — Elektroliz & Oksijen (Makinist) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#514532", "surface-dim": "#141123", "on-secondary": "#00363a", "surface": "#141123", "on-secondary-fixed-variant": "#004f54", "secondary-container": "#00eefc", "tertiary": "#eed8ff", "primary-fixed-dim": "#ffba27", "on-surface": "#e6dff9", "tertiary-container": "#dab5ff", "tertiary-fixed": "#efdbff", "primary": "#ffdba0", "surface-bright": "#3a374b", "on-primary": "#422c00", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "secondary-fixed-dim": "#00dbe9", "inverse-primary": "#7d5800", "outline": "#9e8f78", "primary-container": "#ffb703", "on-error-container": "#ffdad6", "primary-fixed": "#ffdea9", "surface-container-high": "#2b273b", "surface-container-lowest": "#0f0c1e", "on-background": "#e6dff9", "on-primary-fixed-variant": "#5e4100", "surface-container-low": "#1c192c", "inverse-on-surface": "#312e42", "error": "#ffb4ab", "error-container": "#93000a", "surface-tint": "#ffba27", "on-tertiary": "#480081", "surface-variant": "#363246", "on-primary-container": "#6b4b00", "on-error": "#690005", "tertiary-fixed-dim": "#dcb8ff", "inverse-surface": "#e6dff9", "on-secondary-fixed": "#002022", "surface-container-highest": "#363246", "on-tertiary-fixed": "#2c0051", "surface-container": "#201d30", "secondary-fixed": "#7df4ff", "on-surface-variant": "#d5c4ac", "on-primary-fixed": "#271900", "secondary": "#d3fbff", "background": "#141123" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-md": "1rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "margin": "1.25rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-sm": "0.75rem" }, "fontFamily": { "display-hero": ["Sora"], "display-hero-mobile": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "headline-md": ["Sora"], "headline-lg-mobile": ["Sora"], "headline-sm": ["Sora"], "body-sm": ["Manrope"], "headline-lg": ["Sora"], "label-telemetry": ["Sora"], "label-status": ["Sora"] }, "fontSize": { "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.35)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Geri Dön" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-surface-container-high/60 active:bg-surface-container-highest flex items-center justify-center text-on-surface transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">KOMUTA</span><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span></div><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none uppercase truncate max-w-[130px]">Gorev Konsolu</h1></div></div><div class="flex items-center gap-space-sm"><div class="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/70"><span class="material-symbols-outlined text-secondary-fixed text-[14px]">cell_tower</span><span class="font-label-status text-label-status text-secondary-fixed uppercase tracking-wider">CH-04</span></div><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/20 text-primary"><span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ffb703]"></span><span class="font-label-status text-label-status uppercase font-bold tracking-wider">CANLI</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,219,160,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md">
+<!-- HUD Top Bar Telemetry -->
+<div class="w-full bg-surface-container-low rounded-xl p-space-sm shadow-md mt-space-sm">
+<div class="flex items-center justify-between gap-space-xs pb-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[16px]">navigation</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container uppercase">GÖREV AKIŞI: DERİN BASINÇ</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-ping"></span>
+<span class="font-label-status text-label-status text-secondary uppercase">TELSİZ CH-02 AKTİF</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-space-xs pt-space-xs">
+<div class="flex flex-col bg-surface-container rounded-lg p-space-xs items-center justify-center">
+<span class="font-label-status text-label-status text-outline uppercase">DERİNLİK</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed font-bold tracking-tight">-910 m</span>
+</div>
+<div class="flex flex-col bg-surface-container rounded-lg p-space-xs items-center justify-center">
+<span class="font-label-status text-label-status text-outline uppercase">KALAN SÜRE</span>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold tracking-tight">05:15</span>
+</div>
+<div class="flex flex-col bg-surface-container rounded-lg p-space-xs items-center justify-center">
+<span class="font-label-status text-label-status text-outline uppercase">GÖVDE BÜTÜNLÜĞÜ</span>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-telemetry text-label-telemetry text-secondary font-bold tracking-tight">%78</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Role Badge & Mission Header -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container text-on-primary-container shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">build</span>
+<span class="font-label-telemetry text-label-telemetry font-bold tracking-wider uppercase">ROL: MAKİNİST</span>
+</span>
+<span class="font-label-status text-label-status text-secondary uppercase bg-surface-container-high px-2 py-1 rounded">HÜCRE BİRİMİ 03</span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface uppercase tracking-tight">
+      Elektroliz Voltajını Kitle &amp; O<sub>2</sub> Üret
+    </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+      Dümencinin telsizden verdiği hedef voltaj ve katot sırasına göre amper anahtarlarını çek ve elektrolizi başlat.
+    </p>
+</div>
+<!-- Manometer & Gauge 2.5D Console Module -->
+<div class="w-full bg-surface-container-high rounded-xl p-space-md shadow-lg flex flex-col items-center relative overflow-hidden">
+<div class="w-full flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">speed</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">VOLTAJ &amp; AMPER DEĞERİ</span>
+</div>
+<div class="px-2 py-0.5 rounded bg-primary-container/20">
+<span class="font-label-status text-label-status text-primary font-bold">2.5D MANOMETRE</span>
+</div>
+</div>
+<!-- Radial Manometer Dial Visual -->
+<div class="relative w-56 h-56 my-space-xs flex items-center justify-center">
+<!-- Glow Pod Plate -->
+<div class="absolute inset-0 rounded-full bg-surface-container-lowest shadow-inner flex items-center justify-center">
+<div class="w-48 h-48 rounded-full bg-surface-container flex items-center justify-center shadow-lg"></div>
+</div>
+<!-- Segmented Vector Dial -->
+<svg class="absolute inset-0 w-full h-full transform -rotate-90 pointer-events-none" viewbox="0 0 200 200">
+<circle cx="100" cy="100" fill="none" r="82" stroke="#201d30" stroke-dasharray="450" stroke-dashoffset="120" stroke-linecap="round" stroke-width="12"></circle>
+<circle cx="100" cy="100" fill="none" id="gaugeArc" r="82" stroke="#ffb703" stroke-dasharray="515" stroke-dashoffset="230" stroke-linecap="round" stroke-width="12"></circle>
+<!-- Tick marks -->
+<g opacity="0.6" stroke="#9e8f78" stroke-width="1.5">
+<line x1="100" x2="100" y1="22" y2="30"></line>
+<line x1="155" x2="149" y1="45" y2="52"></line>
+<line x1="178" x2="170" y1="100" y2="100"></line>
+<line x1="155" x2="149" y1="155" y2="148"></line>
+<line x1="100" x2="100" y1="178" y2="170"></line>
+<line x1="45" x2="52" y1="155" y2="148"></line>
+<line x1="22" x2="30" y1="100" y2="100"></line>
+<line x1="45" x2="52" y1="45" y2="52"></line>
+</g>
+</svg>
+<!-- Needle pointer indicator -->
+<div class="absolute w-1 h-24 origin-bottom transform rotate-[42deg] pb-6 flex justify-center transition-transform duration-300 ease-out z-10" id="needle" style="bottom: 50%;">
+<div class="w-1.5 h-16 bg-primary-container rounded-full shadow-[0_0_8px_#ffb703]"></div>
+</div>
+<div class="w-5 h-5 rounded-full bg-primary z-20 shadow-md"></div>
+<!-- Dial Center Readout -->
+<div class="absolute bottom-6 flex flex-col items-center z-20">
+<span class="font-headline-md text-headline-md text-primary font-bold tracking-tight" id="voltageValue">180V</span>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-container/20">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-status text-label-status text-primary uppercase font-bold tracking-wider">KİLİTLİ</span>
+</div>
+</div>
+</div>
+<!-- Stepper Buttons -->
+<div class="w-full grid grid-cols-2 gap-space-sm pt-space-xs">
+<button class="flex items-center justify-center gap-2 py-3 px-space-md rounded-lg bg-surface-container active:bg-surface-container-highest shadow-sm text-secondary active:scale-[0.98] transition-all" id="btnVoltDown" type="button">
+<span class="material-symbols-outlined text-[18px]">remove_circle</span>
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">-5V DÜŞÜR</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-3 px-space-md rounded-lg bg-surface-container active:bg-surface-container-highest shadow-sm text-primary active:scale-[0.98] transition-all" id="btnVoltUp" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">+5V YÜKSELT</span>
+</button>
+</div>
+</div>
+<!-- Catalyst Fluid Slide Injector & Valves Grid -->
+<div class="grid grid-cols-1 gap-space-md">
+<!-- Injector Vertical Slider Panel -->
+<div class="w-full bg-surface-container-low rounded-xl p-space-md shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">science</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed uppercase tracking-wider">KATALİZÖR SIVI ENJEKSİYONU</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-secondary-fixed font-bold" id="catalystPercentText">%65</span>
+</div>
+<div class="w-full flex items-center gap-space-md py-space-xs">
+<div class="flex flex-col items-center justify-between h-28 text-outline text-label-status font-label-status py-1">
+<span>%100</span>
+<span>%75</span>
+<span>%50</span>
+<span>%25</span>
+<span>%0</span>
+</div>
+<div class="relative flex-1 h-12 bg-surface-container-lowest rounded-lg p-1.5 flex items-center shadow-inner">
+<!-- Fluid chamber fill bar -->
+<div class="h-full rounded bg-secondary-fixed-dim/40 relative overflow-hidden transition-all duration-200" id="fluidBar" style="width: 65%;">
+<div class="absolute inset-0 bg-secondary-fixed-dim/30 animate-pulse"></div>
+</div>
+<input class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20" id="catalystRange" max="100" min="0" type="range" value="65"/>
+<div class="absolute top-1 bottom-1 w-6 bg-secondary-fixed rounded shadow-lg flex items-center justify-center pointer-events-none transition-all duration-100" id="sliderThumbIndicator" style="left: calc(65% - 12px);">
+<div class="w-1 h-5 bg-on-secondary rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-status text-label-status px-1">
+<span>OPTİMAL ARALIK: %60 - %70</span>
+<span class="text-secondary">ENJEKTÖR HAZIR</span>
+</div>
+</div>
+<!-- Switches: Cathode & Anode Cell Matrix -->
+<div class="w-full bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">tune</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface uppercase tracking-wider">HÜCRE SEÇİCİ ŞALTERLERİ</span>
+</div>
+<span class="font-label-status text-label-status text-outline uppercase font-semibold">3 BAĞLANTI</span>
+</div>
+<div class="grid grid-cols-3 gap-space-sm">
+<!-- Switch 1: Katot-A -->
+<button class="flex flex-col items-center justify-between p-space-sm rounded-lg bg-surface-container-high active:bg-surface-container-highest transition-all shadow text-left" id="sw1" onclick="toggleSwitch('sw1', 'led1', 'status1', 'AÇIK', 'KAPALI')" type="button">
+<div class="w-full flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase font-bold">KATOT-A</span>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-fixed-dim shadow-[0_0_6px_#00dbe9]" id="led1"></span>
+</div>
+<div class="w-10 h-14 bg-surface-container-lowest rounded my-2 p-1 flex flex-col justify-start">
+<div class="w-full h-6 rounded bg-primary-container shadow-md transition-transform duration-200" id="sw1Thumb"></div>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold" id="status1">AÇIK</span>
+</button>
+<!-- Switch 2: Katot-B -->
+<button class="flex flex-col items-center justify-between p-space-sm rounded-lg bg-surface-container-high active:bg-surface-container-highest transition-all shadow text-left" id="sw2" onclick="toggleSwitch('sw2', 'led2', 'status2', 'SIRADA', 'DEVREDE')" type="button">
+<div class="w-full flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase font-bold">KATOT-B</span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_6px_#ffb703]" id="led2"></span>
+</div>
+<div class="w-10 h-14 bg-surface-container-lowest rounded my-2 p-1 flex flex-col justify-end">
+<div class="w-full h-6 rounded bg-surface-bright shadow-md transition-transform duration-200" id="sw2Thumb"></div>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-outline font-bold" id="status2">SIRADA</span>
+</button>
+<!-- Switch 3: Anot-C -->
+<button class="flex flex-col items-center justify-between p-space-sm rounded-lg bg-surface-container-high active:bg-surface-container-highest transition-all shadow text-left" id="sw3" onclick="toggleSwitch('sw3', 'led3', 'status3', 'DEVREDE', 'BOŞTA')" type="button">
+<div class="w-full flex items-center justify-between">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase font-bold">ANOT-C</span>
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-fixed-dim shadow-[0_0_6px_#00dbe9]" id="led3"></span>
+</div>
+<div class="w-10 h-14 bg-surface-container-lowest rounded my-2 p-1 flex flex-col justify-start">
+<div class="w-full h-6 rounded bg-secondary-container shadow-md transition-transform duration-200" id="sw3Thumb"></div>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-secondary-container font-bold" id="status3">DEVREDE</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Tactical Guide / Warning Callout -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-md shadow-md flex items-start gap-space-sm">
+<div class="p-2 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex flex-col gap-0.5 min-w-0">
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold tracking-wider uppercase">MAKİNİST TAKTİK KILAVUZU</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight">
+        "Dümenci spektrometre eşiğini doğrulamadan reaksiyonu ateşleme!" Basınç düşümünde CH-02 kanalından teyit iste.
+      </p>
+</div>
+</div>
+<!-- Big Tactile Arcade Action Trigger -->
+<div class="w-full pt-space-xs">
+<button class="w-full relative py-4 px-space-md rounded-xl bg-gradient-to-b from-[#ffb703] to-[#ff8c00] active:translate-y-1 active:shadow-none shadow-[0_6px_0_#9a5300,0_12px_24px_rgba(255,183,3,0.35)] flex items-center justify-center gap-space-sm text-on-primary font-headline-sm text-headline-sm font-bold uppercase tracking-wider transition-all select-none" id="btnIgnite" type="button">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span>OKSİJEN ÜRETİMİNİ BAŞLAT</span>
+</button>
+<div class="w-full flex justify-center pt-2">
+<span class="font-label-status text-label-status text-outline tracking-widest uppercase">BASINÇ SİSTEMİ 3.8 BAR GÜVENLİ DEĞERDE</span>
+</div>
+</div>
+<!-- Live Micro-Interaction Script -->
+<script>
+    (function initConsoleControls() {
+      let currentVolt = 180;
+      const voltEl = document.getElementById('voltageValue');
+      const needleEl = document.getElementById('needle');
+      const gaugeArc = document.getElementById('gaugeArc');
+
+      function updateVoltage(val) {
+        currentVolt = Math.max(140, Math.min(220, val));
+        if (voltEl) voltEl.textContent = currentVolt + 'V';
+        
+        // Map 140V-220V to -50deg to +130deg needle rotation
+        const deg = -50 + ((currentVolt - 140) / (220 - 140)) * 180;
+        if (needleEl) needleEl.style.transform = 'rotate(' + deg + 'deg)';
+
+        // Offset arc stroke
+        const dashOffset = 320 - ((currentVolt - 140) / (220 - 140)) * 180;
+        if (gaugeArc) gaugeArc.style.strokeDashoffset = dashOffset;
+      }
+
+      const upBtn = document.getElementById('btnVoltUp');
+      const downBtn = document.getElementById('btnVoltDown');
+      if (upBtn) upBtn.addEventListener('click', () => updateVoltage(currentVolt + 5));
+      if (downBtn) downBtn.addEventListener('click', () => updateVoltage(currentVolt - 5));
+
+      // Slider logic
+      const slider = document.getElementById('catalystRange');
+      const fluidBar = document.getElementById('fluidBar');
+      const percentText = document.getElementById('catalystPercentText');
+      const thumbInd = document.getElementById('sliderThumbIndicator');
+
+      if (slider) {
+        slider.addEventListener('input', (e) => {
+          const val = e.target.value;
+          if (percentText) percentText.textContent = '%' + val;
+          if (fluidBar) fluidBar.style.width = val + '%';
+          if (thumbInd) thumbInd.style.left = 'calc(' + val + '% - 12px)';
+        });
+      }
+
+      // Switch toggle mechanism
+      window.toggleSwitch = function(btnId, ledId, statusId, activeLabel, inactiveLabel) {
+        const btn = document.getElementById(btnId);
+        const led = document.getElementById(ledId);
+        const status = document.getElementById(statusId);
+        if (!status) return;
+
+        const isCurrentlyActive = status.textContent.trim() === activeLabel;
+        if (isCurrentlyActive) {
+          status.textContent = inactiveLabel;
+          status.className = 'font-label-telemetry text-label-telemetry text-outline font-bold';
+          if (led) {
+            led.className = 'w-2.5 h-2.5 rounded-full bg-surface-bright';
+          }
+        } else {
+          status.textContent = activeLabel;
+          status.className = 'font-label-telemetry text-label-telemetry text-primary font-bold';
+          if (led) {
+            led.className = 'w-2.5 h-2.5 rounded-full bg-secondary-fixed-dim shadow-[0_0_6px_#00dbe9]';
+          }
+        }
+      };
+
+      // Ignite confirmation micro-feedback
+      const ignite = document.getElementById('btnIgnite');
+      if (ignite) {
+        ignite.addEventListener('click', () => {
+          ignite.classList.add('scale-95');
+          setTimeout(() => {
+            ignite.classList.remove('scale-95');
+          }, 150);
+        });
+      }
+    })();
+  </script>
+</div></main></body></html>
+
+<!-- Derin Basınç — Manyetik Torpido (Dümenci) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#514532", "surface-dim": "#141123", "on-secondary": "#00363a", "surface": "#141123", "on-secondary-fixed-variant": "#004f54", "secondary-container": "#00eefc", "tertiary": "#eed8ff", "primary-fixed-dim": "#ffba27", "on-surface": "#e6dff9", "tertiary-container": "#dab5ff", "tertiary-fixed": "#efdbff", "primary": "#ffdba0", "surface-bright": "#3a374b", "on-primary": "#422c00", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "secondary-fixed-dim": "#00dbe9", "inverse-primary": "#7d5800", "outline": "#9e8f78", "primary-container": "#ffb703", "on-error-container": "#ffdad6", "primary-fixed": "#ffdea9", "surface-container-high": "#2b273b", "surface-container-lowest": "#0f0c1e", "on-background": "#e6dff9", "on-primary-fixed-variant": "#5e4100", "surface-container-low": "#1c192c", "inverse-on-surface": "#312e42", "error": "#ffb4ab", "error-container": "#93000a", "surface-tint": "#ffba27", "on-tertiary": "#480081", "surface-variant": "#363246", "on-primary-container": "#6b4b00", "on-error": "#690005", "tertiary-fixed-dim": "#dcb8ff", "inverse-surface": "#e6dff9", "on-secondary-fixed": "#002022", "surface-container-highest": "#363246", "on-tertiary-fixed": "#2c0051", "surface-container": "#201d30", "secondary-fixed": "#7df4ff", "on-surface-variant": "#d5c4ac", "on-primary-fixed": "#271900", "secondary": "#d3fbff", "background": "#141123" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-md": "1rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "margin": "1.25rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-sm": "0.75rem" }, "fontFamily": { "display-hero": ["Sora"], "display-hero-mobile": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "headline-md": ["Sora"], "headline-lg-mobile": ["Sora"], "headline-sm": ["Sora"], "body-sm": ["Manrope"], "headline-lg": ["Sora"], "label-telemetry": ["Sora"], "label-status": ["Sora"] }, "fontSize": { "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.35)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Geri Dön" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-surface-container-high/60 active:bg-surface-container-highest flex items-center justify-center text-on-surface transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">KOMUTA</span><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span></div><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none uppercase truncate max-w-[130px]">Gorev Konsolu</h1></div></div><div class="flex items-center gap-space-sm"><div class="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/70"><span class="material-symbols-outlined text-secondary-fixed text-[14px]">cell_tower</span><span class="font-label-status text-label-status text-secondary-fixed uppercase tracking-wider">CH-04</span></div><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/20 text-primary"><span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ffb703]"></span><span class="font-label-status text-label-status uppercase font-bold tracking-wider">CANLI</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,219,160,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe">
+<!-- HUD Mini Telemetry Strip -->
+<section class="px-margin pt-space-sm pb-space-xs">
+<div class="bg-surface-container-lowest/90 backdrop-blur-md rounded-xl p-space-sm shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+<div class="flex items-center justify-between gap-space-xs text-secondary-fixed">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-secondary">explore</span>
+<span class="font-label-status text-label-status uppercase">GÖREV 04</span>
+</div>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+<span class="font-label-telemetry text-label-telemetry">-990M</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[14px] text-primary-container">timer</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-fixed" id="countdown">04:30</span>
+</div>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+<span class="font-label-telemetry text-label-telemetry">%74</span>
+</div>
+<div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary-container/10 text-secondary-fixed-dim">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container animate-ping"></span>
+<span class="font-label-status text-label-status tracking-tight">CH-02</span>
+</div>
+</div>
+<!-- Hull Integrity & Sonar Ping Meter -->
+<div class="w-full bg-surface-container-high rounded-full h-1 mt-2 overflow-hidden flex">
+<div class="bg-secondary-fixed-dim h-full w-[74%] rounded-full transition-all duration-500"></div>
+<div class="bg-error/30 h-full w-[26%]"></div>
+</div>
+</div>
+</section>
+<!-- Role Indicator & Briefing Header -->
+<section class="px-margin py-space-xs">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/15 text-primary">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">fitbit_push_ups</span>
+<span class="font-label-telemetry text-label-telemetry tracking-wider uppercase">ROL: DÜMENCİ (KILAVUZ)</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-error-container/20 text-error font-label-status text-label-status">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+<span>KRİTİK BASINÇ</span>
+</div>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface uppercase tracking-tight mt-1">
+        Sualtı Tehdidini Kilitle
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+        Yüksek frekanslı sonar haritasındaki abisal manyetik mayın koordinatlarını süz ve doğru deşarj frekansını makiniste telsizle bildir.
+      </p>
+</div>
+</section>
+<!-- 360 Tactical Sonar Grid -->
+<section class="px-margin py-space-xs">
+<div class="bg-surface-container-low rounded-xl p-space-sm relative overflow-hidden shadow-[0_8px_28px_rgba(0,0,0,0.5)]">
+<!-- Sonar Header Flags -->
+<div class="flex items-center justify-between relative z-10 mb-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">radar</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">360° AKTİF SONAR TARAMA</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-primary-fixed font-label-status text-label-status">
+<span class="material-symbols-outlined text-[13px] text-primary">gps_fixed</span>
+<span>HEDEF: M-02 (120M)</span>
+</div>
+</div>
+<!-- Tactical Radar Visual Element -->
+<div class="relative w-full aspect-square max-h-[290px] mx-auto rounded-full bg-surface-container-lowest flex items-center justify-center overflow-hidden shadow-inner">
+<!-- Concentric Distance Rings -->
+<div class="absolute w-[86%] h-[86%] rounded-full bg-transparent shadow-[0_0_0_1px_rgba(0,238,252,0.12)]"></div>
+<div class="absolute w-[62%] h-[62%] rounded-full bg-transparent shadow-[0_0_0_1px_rgba(0,238,252,0.18)]"></div>
+<div class="absolute w-[36%] h-[36%] rounded-full bg-transparent shadow-[0_0_0_1px_rgba(0,238,252,0.25)]"></div>
+<div class="absolute w-[12%] h-[12%] rounded-full bg-transparent shadow-[0_0_0_1px_rgba(0,238,252,0.35)]"></div>
+<!-- Crosshair Axes -->
+<div class="absolute w-full h-[1px] bg-secondary-container/10"></div>
+<div class="absolute h-full w-[1px] bg-secondary-container/10"></div>
+<div class="absolute w-full h-[1px] bg-secondary-container/5 rotate-45"></div>
+<div class="absolute w-full h-[1px] bg-secondary-container/5 -rotate-45"></div>
+<!-- Sweeping Radar Cone Animation -->
+<div class="absolute inset-0 rounded-full animate-[spin_4s_linear_infinite] origin-center pointer-events-none opacity-40" style="background: conic-gradient(from 0deg, rgba(0,238,252,0.3) 0deg, rgba(0,238,252,0) 65deg);"></div>
+<!-- Target Marker: M-01 (Dormant) -->
+<div class="absolute top-[22%] left-[28%] flex flex-col items-center group cursor-pointer">
+<span class="w-3.5 h-3.5 rounded-full bg-surface-variant flex items-center justify-center shadow-[0_0_6px_rgba(213,196,172,0.4)]">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+</span>
+<span class="font-label-status text-label-status text-on-surface-variant/80 mt-0.5">M-01 · 240m</span>
+</div>
+<!-- Target Marker: M-03 (Dormant) -->
+<div class="absolute bottom-[24%] right-[22%] flex flex-col items-center group cursor-pointer">
+<span class="w-3.5 h-3.5 rounded-full bg-surface-variant flex items-center justify-center shadow-[0_0_6px_rgba(213,196,172,0.4)]">
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+</span>
+<span class="font-label-status text-label-status text-on-surface-variant/80 mt-0.5">M-03 · 195m</span>
+</div>
+<!-- Target Marker: M-02 (LOCKED & ENGAGED) -->
+<div class="absolute top-[34%] right-[27%] flex flex-col items-center z-20">
+<div class="relative flex items-center justify-center">
+<!-- Pulsing Lock Ring -->
+<div class="absolute w-9 h-9 rounded-full bg-error-container/20 animate-ping"></div>
+<div class="w-7 h-7 rounded-full bg-error/30 flex items-center justify-center shadow-[0_0_12px_rgba(255,180,171,0.8)]">
+<span class="material-symbols-outlined text-[16px] text-error font-bold">crisis_alert</span>
+</div>
+</div>
+<div class="mt-1 px-1.5 py-0.5 rounded bg-surface-container-high/90 text-center shadow-md">
+<div class="font-label-telemetry text-label-telemetry text-error uppercase font-extrabold tracking-wider leading-none">M-02 [KİLİTLİ]</div>
+<div class="font-label-status text-label-status text-primary leading-none mt-0.5">120m • -14° AÇI</div>
+</div>
+</div>
+<!-- Central Player Submarine Icon -->
+<div class="relative z-10 w-9 h-9 rounded-full bg-primary-container flex items-center justify-center shadow-[0_0_16px_rgba(255,183,3,0.7)] text-on-primary">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">directions_boat</span>
+<!-- Dynamic Heading Pointer -->
+<div class="absolute -top-1 w-1.5 h-1.5 bg-primary-fixed rotate-45"></div>
+</div>
+</div>
+<!-- Telemetry Sub-panel footer inside radar card -->
+<div class="mt-2.5 pt-2 flex items-center justify-between text-on-surface-variant font-label-status text-label-status">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span>DENİZALTI: S-301 BARBAROS</span>
+</div>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[13px]">waves</span>
+<span>ABİSAL AKINTI: 2.4 KT GÜNEY</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Sonar Frequency Analysis Banner -->
+<section class="px-margin py-space-xs">
+<div class="bg-surface-container rounded-xl p-space-sm shadow-md flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-secondary-container/15 flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[20px] animate-pulse">graphic_eq</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="font-label-telemetry text-label-telemetry text-secondary-fixed uppercase tracking-wider">
+          SONAR FREKANS ANALİZ ŞERİDİ
+        </div>
+<div class="font-body-sm text-body-sm text-on-surface truncate">
+          Darbe Yankısı Tespit Edildi: <span class="text-primary font-bold">Manyetik Kovan-2 Eşleşiyor</span>
+</div>
+</div>
+<div class="ml-auto flex items-center gap-0.5">
+<span class="w-1 h-3 bg-secondary rounded-full animate-bounce"></span>
+<span class="w-1 h-5 bg-secondary rounded-full animate-bounce [animation-delay:0.15s]"></span>
+<span class="w-1 h-2 bg-secondary rounded-full animate-bounce [animation-delay:0.3s]"></span>
+</div>
+</div>
+</section>
+<!-- Secret Countermeasure Guide (PILOT ONLY) -->
+<section class="px-margin py-space-xs">
+<div class="bg-surface-container-high rounded-xl p-space-md shadow-[0_6px_20px_rgba(0,0,0,0.4)] relative overflow-hidden">
+<!-- High-security Accent Glow -->
+<div class="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-primary-container/10 blur-xl pointer-events-none"></div>
+<!-- Confidentiality Warning Banner -->
+<div class="flex items-center justify-between pb-2 mb-3">
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">visibility_off</span>
+<span class="font-label-telemetry text-label-telemetry tracking-wider uppercase font-bold">GİZLİ KARŞI TEDBİR KILAVUZU</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error/20 text-error font-label-status text-label-status uppercase font-bold tracking-wider">
+          MAKİNİST GÖREMEZ!
+        </span>
+</div>
+<!-- Telemetry Spec Bento Grid -->
+<div class="grid grid-cols-3 gap-2">
+<!-- Target Tube Card -->
+<div class="bg-surface-container-lowest/80 rounded-lg p-2.5 flex flex-col justify-between shadow-inner">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">HEDEF KOVAN</span>
+<div class="my-1 flex items-baseline gap-1">
+<span class="font-headline-sm text-headline-sm text-primary uppercase">KVN-2</span>
+</div>
+<span class="font-label-status text-label-status text-secondary truncate">Torpido Yuvası</span>
+</div>
+<!-- Frequency Card -->
+<div class="bg-surface-container-lowest/80 rounded-lg p-2.5 flex flex-col justify-between shadow-inner">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">FREKANS</span>
+<div class="my-1 flex items-baseline gap-0.5">
+<span class="font-headline-sm text-headline-sm text-secondary-fixed">433.8</span>
+</div>
+<span class="font-label-status text-label-status text-primary truncate">MHz Deşarj</span>
+</div>
+<!-- Angle Card -->
+<div class="bg-surface-container-lowest/80 rounded-lg p-2.5 flex flex-col justify-between shadow-inner">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">PÜSKÜRTME</span>
+<div class="my-1 flex items-baseline gap-0.5">
+<span class="font-headline-sm text-headline-sm text-on-surface">+14°</span>
+</div>
+<span class="font-label-status text-label-status text-secondary truncate">Elevasyon Açısı</span>
+</div>
+</div>
+<!-- Comms Radio Protocol Reminder -->
+<div class="mt-3 pt-2.5 flex items-center justify-between text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">mic</span>
+<span class="font-body-sm text-body-sm">CH-02 Telsizden makiniste kovan ve frekansı sesli aktarın.</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Crew Presence & Channel Status -->
+<section class="px-margin py-space-xs">
+<div class="bg-surface-container-low rounded-xl p-space-sm flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="relative">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold font-label-telemetry">
+            MK
+          </div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-low"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-telemetry text-label-telemetry text-on-surface">MAKİNİST: Korhan (P-02)</span>
+<span class="font-label-status text-label-status text-secondary-fixed">Kovan Seçimi Bekleniyor...</span>
+</div>
+</div>
+<div class="px-2 py-1 rounded bg-surface-container text-on-surface-variant flex items-center gap-1 font-label-status text-label-status">
+<span class="material-symbols-outlined text-[13px] text-secondary">headphones</span>
+<span>SES AÇIK</span>
+</div>
+</div>
+</section>
+<!-- Arcade Push Button Section -->
+<section class="px-margin pt-space-sm pb-space-lg mt-auto">
+<div class="relative flex flex-col gap-2">
+<!-- Tactile Arcade Push Button -->
+<button class="w-full relative group overflow-hidden rounded-lg bg-gradient-to-b from-primary to-primary-container text-on-primary font-headline-sm text-headline-sm uppercase tracking-wider py-3.5 px-4 shadow-[0_6px_0_#9e6f00,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1 active:shadow-[0_2px_0_#9e6f00,0_6px_12px_rgba(255,183,3,0.2)] transition-all flex items-center justify-center gap-2" id="transmitBtn" type="button">
+<span class="material-symbols-outlined text-[24px] font-bold" style="font-variation-settings: 'FILL' 1;">send_to_mobile</span>
+<span>Fırlatma Verilerini Makiniste Aktar</span>
+</button>
+<!-- Feedback toast (hidden initially) -->
+<div class="hidden text-center py-1.5 px-3 bg-secondary-container/20 rounded-lg text-secondary-fixed font-label-telemetry text-label-telemetry uppercase tracking-wider" id="transmitFeedback">
+<span class="material-symbols-outlined text-[14px] align-middle mr-1">check_circle</span>
+        VERİLER MAKİNİST KONSOLUNA AKTARILDI (CH-02)
+      </div>
+</div>
+</section>
+</div>
+<script>
+  // Simple micro-interaction for tactical data transmission
+  document.getElementById('transmitBtn')?.addEventListener('click', function() {
+    const feedback = document.getElementById('transmitFeedback');
+    if (feedback) {
+      feedback.classList.remove('hidden');
+      setTimeout(() => {
+        feedback.classList.add('hidden');
+      }, 3500);
+    }
+  });
+
+  // Countdown timer micro-interaction
+  let timeLeft = 270;
+  const countdownEl = document.getElementById('countdown');
+  if (countdownEl) {
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const secs = String(timeLeft % 60).padStart(2, '0');
+        countdownEl.textContent = `${mins}:${secs}`;
+      }
+    }, 1000);
+  }
+</script></main></body></html>
+
+<!-- Derin Basınç — Manyetik Torpido (Makinist) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline-variant": "#514532", "surface-dim": "#141123", "on-secondary": "#00363a", "surface": "#141123", "on-secondary-fixed-variant": "#004f54", "secondary-container": "#00eefc", "tertiary": "#eed8ff", "primary-fixed-dim": "#ffba27", "on-surface": "#e6dff9", "tertiary-container": "#dab5ff", "tertiary-fixed": "#efdbff", "primary": "#ffdba0", "surface-bright": "#3a374b", "on-primary": "#422c00", "on-secondary-container": "#00686f", "on-tertiary-fixed-variant": "#6700b5", "secondary-fixed-dim": "#00dbe9", "inverse-primary": "#7d5800", "outline": "#9e8f78", "primary-container": "#ffb703", "on-error-container": "#ffdad6", "primary-fixed": "#ffdea9", "surface-container-high": "#2b273b", "surface-container-lowest": "#0f0c1e", "on-background": "#e6dff9", "on-primary-fixed-variant": "#5e4100", "surface-container-low": "#1c192c", "inverse-on-surface": "#312e42", "error": "#ffb4ab", "error-container": "#93000a", "surface-tint": "#ffba27", "on-tertiary": "#480081", "surface-variant": "#363246", "on-primary-container": "#6b4b00", "on-error": "#690005", "tertiary-fixed-dim": "#dcb8ff", "inverse-surface": "#e6dff9", "on-secondary-fixed": "#002022", "surface-container-highest": "#363246", "on-tertiary-fixed": "#2c0051", "surface-container": "#201d30", "secondary-fixed": "#7df4ff", "on-surface-variant": "#d5c4ac", "on-primary-fixed": "#271900", "secondary": "#d3fbff", "background": "#141123" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "gutter": "1rem", "space-md": "1rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "margin": "1.25rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-sm": "0.75rem" }, "fontFamily": { "display-hero": ["Sora"], "display-hero-mobile": ["Sora"], "body-lg": ["Manrope"], "body-md": ["Manrope"], "headline-md": ["Sora"], "headline-lg-mobile": ["Sora"], "headline-sm": ["Sora"], "body-sm": ["Manrope"], "headline-lg": ["Sora"], "label-telemetry": ["Sora"], "label-status": ["Sora"] }, "fontSize": { "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen selection:bg-primary selection:text-on-primary"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.35)]"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Geri Dön" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-lg bg-surface-container-high/60 active:bg-surface-container-highest flex items-center justify-center text-on-surface transition-colors" onclick="history.back()" type="button"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-widest">KOMUTA</span><span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span></div><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none uppercase truncate max-w-[130px]">Gorev Konsolu</h1></div></div><div class="flex items-center gap-space-sm"><div class="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high/70"><span class="material-symbols-outlined text-secondary-fixed text-[14px]">cell_tower</span><span class="font-label-status text-label-status text-secondary-fixed uppercase tracking-wider">CH-04</span></div><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/20 text-primary"><span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#ffb703]"></span><span class="font-label-status text-label-status uppercase font-bold tracking-wider">CANLI</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(255,219,160,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full text-on-surface pb-12">
+<!-- Telemetri Tepe Durum Şeridi -->
+<div class="px-margin pt-space-sm pb-space-xs flex flex-col gap-space-xs">
+<div class="flex items-center justify-between py-1.5 px-3 rounded-full bg-surface-container-lowest text-secondary-fixed shadow-inner">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span class="font-label-telemetry text-label-telemetry uppercase tracking-wider">DERİNLİK: -990m</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-status text-label-status text-primary-fixed uppercase">GÖVDE: %74</span>
+<span class="w-1 h-3 rounded-full bg-surface-variant"></span>
+<span class="font-label-telemetry text-label-telemetry text-error uppercase font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">timer</span>
+          04:30
+        </span>
+</div>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">cell_tower</span>
+<span class="font-label-status text-label-status uppercase">CH-02 AKTİF</span>
+</div>
+</div>
+<!-- Rol Etiketi & Konsol Görev Başlığı -->
+<div class="flex items-center justify-between mt-1">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-high text-primary shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">build</span>
+<span class="font-label-telemetry text-label-telemetry tracking-widest uppercase">ROL: MAKİNİST</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded bg-primary-container/20 text-primary">
+<span class="font-label-status text-label-status uppercase">GÖREV 4 / 06</span>
+</div>
+</div>
+<div class="flex flex-col gap-0.5 mt-1">
+<h2 class="font-headline-md text-headline-md text-primary tracking-tight leading-tight uppercase font-extrabold drop-shadow">
+        Karşı Tedbir Torpidosunu Ateşle
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug">
+        Dümencinin telsizle ilettiği kovan numarası ve frekans değerine göre pnömatik kapağı aç, manyetik deşarjı ayarla ve kovanı fırlat.
+      </p>
+</div>
+</div>
+<!-- Konsol Ana Akış Paneli -->
+<div class="px-margin flex flex-col gap-space-md mt-space-xs">
+<!-- 1. 4'lü Ağır Torpido Kovan Matrisi -->
+<div class="flex flex-col gap-space-xs p-3.5 rounded-lg bg-surface-container-low shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">dataset</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary uppercase tracking-wider">AĞIR TORPİDO MATRİSİ</span>
+</div>
+<span class="font-label-status text-label-status text-primary uppercase">OTO-DENGE AKTİF</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm pt-1">
+<!-- Kovan 1 -->
+<div class="flex flex-col p-2.5 rounded bg-surface-container opacity-60">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-telemetry text-label-telemetry text-outline uppercase">KOVAN-01</span>
+<span class="font-label-status text-label-status text-outline">KİLİTLİ</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant py-1">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+<span class="font-label-status text-label-status">0.0 BAR</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-outline h-full w-[10%]"></div>
+</div>
+</div>
+<!-- Kovan 2 (Seçili & Hazır) -->
+<div class="relative flex flex-col p-2.5 rounded bg-surface-container-high shadow-lg">
+<div class="absolute -top-1.5 -right-1 px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary font-label-status text-label-status uppercase font-bold shadow">
+            SEÇİLİ
+          </div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-telemetry text-label-telemetry text-primary uppercase font-bold">KOVAN-02</span>
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+</div>
+<div class="flex items-center justify-between text-secondary py-1">
+<span class="material-symbols-outlined text-[20px]">waves</span>
+<span class="font-label-telemetry text-label-telemetry font-bold text-secondary">SU ALMA TAMAM</span>
+</div>
+<div class="flex items-center justify-between font-label-status text-label-status text-on-surface-variant">
+<span>BASINÇ:</span>
+<span class="text-primary font-bold">89.4 BAR</span>
+</div>
+<div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden mt-1">
+<div class="bg-primary-container h-full w-[100%]"></div>
+</div>
+</div>
+<!-- Kovan 3 -->
+<div class="flex flex-col p-2.5 rounded bg-surface-container opacity-60">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-telemetry text-label-telemetry text-outline uppercase">KOVAN-03</span>
+<span class="font-label-status text-label-status text-error">BOŞ</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant py-1">
+<span class="material-symbols-outlined text-[20px]">cancel</span>
+<span class="font-label-status text-label-status">DEŞARJ</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-error h-full w-[0%]"></div>
+</div>
+</div>
+<!-- Kovan 4 -->
+<div class="flex flex-col p-2.5 rounded bg-surface-container opacity-60">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-telemetry text-label-telemetry text-outline uppercase">KOVAN-04</span>
+<span class="font-label-status text-label-status text-outline">REZERV</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant py-1">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="font-label-status text-label-status">BEKLEMEDE</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded-full overflow-hidden mt-1">
+<div class="bg-outline h-full w-[45%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Frekans Akort Kadranı & Spektrum Monitörü -->
+<div class="flex flex-col gap-space-sm p-3.5 rounded-lg bg-surface-container-high shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary-fixed text-[18px]">graphic_eq</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-fixed uppercase tracking-wider">MANYETİK AKORT KADRANI</span>
+</div>
+<div class="flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container text-secondary font-label-status text-label-status">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          KİLİTLENDİ
+        </div>
+</div>
+<!-- Kadran Frekans Ekranı -->
+<div class="flex items-center justify-between bg-surface-container-lowest px-4 py-3 rounded-lg shadow-inner">
+<div class="flex flex-col">
+<span class="font-label-status text-label-status text-on-surface-variant uppercase">HEDEF FREKANS</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight font-extrabold font-headline-lg" id="freq-display">433.8</span>
+<span class="font-label-telemetry text-label-telemetry text-secondary">MHz</span>
+</div>
+</div>
+<!-- Akort İğnesi & Dalga Formu Görseli -->
+<div class="flex flex-col items-end gap-1">
+<svg class="w-24 h-8 text-secondary-container" fill="none" viewbox="0 0 100 30" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 15 Q 12 0, 25 15 T 50 15 T 75 15 T 100 15" fill="none" opacity="0.4" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path>
+<path d="M0 15 Q 8 28, 20 15 T 45 15 T 65 2, 72 28 T 90 15 T 100 15" fill="none" stroke="#ffba27" stroke-linecap="round" stroke-width="2.2"></path>
+</svg>
+<span class="font-label-status text-label-status text-primary-fixed-dim">MANYETİK REZONANS: %99.2</span>
+</div>
+</div>
+<!-- İnce Ayar Butonları -->
+<div class="grid grid-cols-4 gap-2 pt-0.5">
+<button class="h-10 rounded bg-surface-container active:bg-surface-container-highest text-on-surface flex items-center justify-center font-label-telemetry text-label-telemetry active:scale-95 transition-transform" onclick="adjustFreq(-1.0)" type="button">
+          -1.0
+        </button>
+<button class="h-10 rounded bg-surface-container active:bg-surface-container-highest text-on-surface flex items-center justify-center font-label-telemetry text-label-telemetry active:scale-95 transition-transform" onclick="adjustFreq(-0.1)" type="button">
+          -0.1
+        </button>
+<button class="h-10 rounded bg-surface-container active:bg-surface-container-highest text-on-surface flex items-center justify-center font-label-telemetry text-label-telemetry active:scale-95 transition-transform" onclick="adjustFreq(0.1)" type="button">
+          +0.1
+        </button>
+<button class="h-10 rounded bg-surface-container active:bg-surface-container-highest text-on-surface flex items-center justify-center font-label-telemetry text-label-telemetry active:scale-95 transition-transform" onclick="adjustFreq(1.0)" type="button">
+          +1.0
+        </button>
+</div>
+</div>
+<!-- 3. Basınç Doldurma Piston Kolu & Pnömatik Güç -->
+<div class="flex flex-col gap-space-xs p-3.5 rounded-lg bg-surface-container shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">speed</span>
+<span class="font-label-telemetry text-label-telemetry text-primary uppercase tracking-wider">PNÖMATİK PİSTON GÜCÜ</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-secondary font-bold">%100 HAZIR</span>
+</div>
+<!-- Kademe Segmentleri -->
+<div class="grid grid-cols-6 gap-1 py-1">
+<div class="h-3 rounded-sm bg-primary"></div>
+<div class="h-3 rounded-sm bg-primary"></div>
+<div class="h-3 rounded-sm bg-primary"></div>
+<div class="h-3 rounded-sm bg-primary"></div>
+<div class="h-3 rounded-sm bg-primary"></div>
+<div class="h-3 rounded-sm bg-secondary animate-pulse"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm pt-0.5">
+<span>Basınç Odası Doyumu: 420 kPa</span>
+<span class="text-secondary font-label-status text-label-status">DEŞARJ VENTİLİ SERBEST</span>
+</div>
+</div>
+<!-- 4. Makinist Güvenlik Uyarısı (Protokol Bayrağı) -->
+<div class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-low shadow-sm">
+<div class="w-8 h-8 rounded bg-error-container/40 flex items-center justify-center text-error shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-telemetry text-label-telemetry text-error uppercase tracking-wider font-bold">GÜVENLİK PROTOKOLÜ 04-B</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-snug mt-0.5">
+          Kovan-2 sel vanası açılmadan ateşleme pimi serbest bırakılamaz. Hidrolik baypas şu an devrede.
+        </p>
+</div>
+</div>
+<!-- 5. Büyük Beveled VIP/Arcade Fırlatma Butonu -->
+<div class="flex flex-col gap-2 pt-2">
+<button class="w-full py-4 px-4 rounded-xl bg-gradient-to-b from-primary-fixed to-primary-container text-on-primary font-headline-sm text-headline-sm uppercase tracking-wide font-extrabold shadow-[0_8px_0_#5e4100,0_12px_24px_rgba(255,183,3,0.3)] active:translate-y-1.5 active:shadow-[0_2px_0_#5e4100] transition-all flex items-center justify-center gap-2 select-none" id="fire-btn" onclick="triggerTorpedoLaunch()" type="button">
+<span class="material-symbols-outlined text-[26px]" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+<span>TORPİDO KOVANINI FIRLAT &amp; İMHA ET</span>
+</button>
+<!-- Geri Bildirim Toast / Telemetri Konsol Logu -->
+<div class="text-center font-label-telemetry text-label-telemetry text-outline uppercase tracking-widest py-1" id="status-console">
+        FIRLATMA ANAHTARI BEKLEMEDE // HAZIR KOD: TK-02
+      </div>
+</div>
+</div>
+</div>
+<script>
+  let currentFreq = 433.8;
+
+  function adjustFreq(delta) {
+    currentFreq = Math.round((currentFreq + delta) * 10) / 10;
+    const disp = document.getElementById('freq-display');
+    if (disp) {
+      disp.innerText = currentFreq.toFixed(1);
+    }
+    const log = document.getElementById('status-console');
+    if (log) {
+      log.innerText = 'FREKANS KALİBRASYONU: ' + currentFreq.toFixed(1) + ' MHz';
+      log.classList.remove('text-outline', 'text-error');
+      log.classList.add('text-secondary');
+    }
+  }
+
+  function triggerTorpedoLaunch() {
+    const btn = document.getElementById('fire-btn');
+    const log = document.getElementById('status-console');
+    if (!btn || !log) return;
+
+    btn.disabled = true;
+    btn.classList.add('opacity-90', 'scale-95');
+    log.innerText = 'DEŞARJ BAŞLATILDI! KOVAN-02 ATEŞLENDİ >> HEDEF İMHA ROTASINDA';
+    log.classList.remove('text-outline', 'text-secondary');
+    log.classList.add('text-primary');
+
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.classList.remove('opacity-90', 'scale-95');
+      log.innerText = 'KOVAN BOŞALTILDI // SOĞUTMA DÖNGÜSÜ AKTİF';
+      log.classList.remove('text-primary');
+      log.classList.add('text-secondary-fixed');
+    }, 2800);
+  }
+</script></main></body></html>
+
+<!-- Derin Basınç — Sonar & Açı (Dümenci) -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Sora:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#141123;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary-container": "#dab5ff", "tertiary-fixed": "#efdbff", "background": "#141123", "surface-container": "#201d30", "surface-variant": "#363246", "surface-tint": "#ffba27", "on-primary-fixed-variant": "#5e4100", "inverse-surface": "#e6dff9", "secondary-fixed-dim": "#00dbe9", "on-secondary-fixed": "#002022", "on-secondary-fixed-variant": "#004f54", "tertiary-fixed-dim": "#dcb8ff", "surface-bright": "#3a374b", "outline-variant": "#514532", "primary": "#ffdba0", "surface-container-low": "#1c192c", "on-primary-fixed": "#271900", "inverse-primary": "#7d5800", "surface-container-high": "#2b273b", "error-container": "#93000a", "surface-container-lowest": "#0f0c1e", "on-tertiary-container": "#7500cc", "on-secondary": "#00363a", "on-tertiary-fixed-variant": "#6700b5", "surface": "#141123", "error": "#ffb4ab", "on-error-container": "#ffdad6", "secondary": "#d3fbff", "primary-container": "#ffb703", "outline": "#9e8f78", "on-tertiary": "#480081", "on-background": "#e6dff9", "on-surface": "#e6dff9", "inverse-on-surface": "#312e42", "primary-fixed": "#ffdea9", "on-primary-container": "#6b4b00", "on-secondary-container": "#00686f", "on-surface-variant": "#d5c4ac", "on-tertiary-fixed": "#2c0051", "on-primary": "#422c00", "secondary-container": "#00eefc", "tertiary": "#eed8ff", "primary-fixed-dim": "#ffba27", "secondary-fixed": "#7df4ff", "surface-dim": "#141123", "surface-container-highest": "#363246", "on-error": "#690005" }, borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, spacing: { "space-xs": "0.25rem", "margin": "1.25rem", "space-sm": "0.5rem", "space-xl": "2.5rem", "gutter-sm": "0.75rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "space-md": "1rem", "gutter": "1rem" }, fontFamily: { "label-status": ["Sora"], "body-lg": ["Manrope"], "display-hero-mobile": ["Sora"], "display-hero": ["Sora"], "headline-lg-mobile": ["Sora"], "label-telemetry": ["Sora"], "headline-md": ["Sora"], "headline-sm": ["Sora"], "headline-lg": ["Sora"], "body-md": ["Manrope"], "body-sm": ["Manrope"] }, fontSize: { "label-status": ["10px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }], "display-hero-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "display-hero": ["48px", { "lineHeight": "54px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "headline-lg-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-telemetry": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 px-margin flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-sm"><button aria-label="Geri Dön" class="w-11 h-11 flex items-center justify-center rounded-lg bg-surface-container-high text-on-surface hover:text-secondary-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[22px]">arrow_back</span></button><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-label-telemetry text-label-telemetry text-secondary-container uppercase tracking-wider">DERİN DALIP // PROTOKOL</span></div><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[150px]">Aktif Çatışma Operasyonu</h1></div></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs px-2.5 py-1.5 rounded-lg bg-surface-container-high/80"><span class="material-symbols-outlined text-primary-container text-[18px] animate-pulse">timer</span><span class="font-label-status text-label-status text-primary font-bold">04:32</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-20 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full px-margin pb-space-xl space-y-space-md">
+<!-- Top Tactical HUD telemetry strip -->
+<section class="w-full bg-surface-container-low rounded-xl p-space-sm shadow-md mt-space-sm">
+<div class="grid grid-cols-4 gap-space-xs text-center">
+<div class="flex flex-col items-center justify-center p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="font-label-status text-label-status text-on-surface-variant flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px] text-primary-container">timer</span> SÜRE
+        </span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container font-bold mt-0.5">06:40</span>
+</div>
+<div class="flex flex-col items-center justify-center p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="font-label-status text-label-status text-on-surface-variant flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px] text-secondary-container">shield</span> GÖVDE
+        </span>
+<span class="font-label-telemetry text-label-telemetry text-secondary-container font-bold mt-0.5">%90</span>
+</div>
+<div class="flex flex-col items-center justify-center p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="font-label-status text-label-status text-on-surface-variant flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px] text-primary">south</span> DERİNLİK
+        </span>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold mt-0.5">850m</span>
+</div>
+<div class="flex flex-col items-center justify-center p-space-xs bg-surface-container-lowest rounded-lg">
+<span class="font-label-status text-label-status text-on-surface-variant flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px] text-tertiary">cell_tower</span> TELSİZ
+        </span>
+<span class="font-label-status text-[9px] leading-tight text-tertiary-fixed font-bold mt-0.5 tracking-tighter truncate max-w-full">CH-02 ON</span>
+</div>
+</div>
+</section>
+<!-- Role Tag & Directive Header -->
+<section class="flex flex-col space-y-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded bg-secondary-container/15 text-secondary-container font-label-telemetry text-label-telemetry tracking-widest uppercase">
+        DÜMENCİ // SONAR HARİTASI
+      </span>
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-ping"></span>
+</div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">
+      Resifleri Tara &amp; Açıyı Bildir
+    </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+      Sonar ekranındaki güvenli koridor açısını ve derinlik kademesini makiniste ilet.
+    </p>
+</section>
+<!-- Circular 360° Tactical Deep Sea Sonar Interactive Display -->
+<section class="relative w-full aspect-square max-w-[340px] mx-auto bg-surface-container-lowest rounded-full p-2 flex items-center justify-center shadow-xl overflow-hidden">
+<!-- Ambient Sonar Glow Underlay -->
+<div class="absolute inset-0 bg-radial from-secondary-container/10 via-transparent to-transparent pointer-events-none"></div>
+<!-- Sonar Radar SVG Canvas -->
+<svg class="w-full h-full select-none" viewbox="0 0 300 300">
+<defs>
+<!-- Sonar Sweep Gradient -->
+<lineargradient gradienttransform="rotate(90)" id="sonarSweepGrad">
+<stop offset="0%" stop-color="#00eefc" stop-opacity="0.45"></stop>
+<stop offset="60%" stop-color="#00eefc" stop-opacity="0.08"></stop>
+<stop offset="100%" stop-color="#00eefc" stop-opacity="0"></stop>
+</lineargradient>
+<!-- Obstacle Pulse -->
+<radialgradient id="dangerGlow">
+<stop offset="0%" stop-color="#ffb4ab" stop-opacity="0.8"></stop>
+<stop offset="100%" stop-color="#93000a" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<!-- Concentric Range Rings -->
+<circle cx="150" cy="150" fill="none" opacity="0.6" r="135" stroke="#363246" stroke-dasharray="4 4" stroke-width="1.2"></circle>
+<circle cx="150" cy="150" fill="none" opacity="0.7" r="100" stroke="#363246" stroke-width="1"></circle>
+<circle cx="150" cy="150" fill="none" opacity="0.5" r="65" stroke="#363246" stroke-dasharray="2 3" stroke-width="1"></circle>
+<circle cx="150" cy="150" fill="none" opacity="0.4" r="30" stroke="#00eefc" stroke-width="1"></circle>
+<!-- Crosshairs Axes -->
+<line opacity="0.5" stroke="#363246" stroke-width="1" x1="150" x2="150" y1="12" y2="288"></line>
+<line opacity="0.5" stroke="#363246" stroke-width="1" x1="12" x2="288" y1="150" y2="150"></line>
+<!-- Compass Degree Ticks -->
+<text fill="#d3fbff" font-family="Sora" font-size="9" font-weight="700" text-anchor="middle" x="150" y="24">000° K</text>
+<text fill="#9e8f78" font-family="Sora" font-size="8" text-anchor="end" x="282" y="153">090° D</text>
+<text fill="#9e8f78" font-family="Sora" font-size="8" text-anchor="middle" x="150" y="284">180° G</text>
+<text fill="#9e8f78" font-family="Sora" font-size="8" text-anchor="start" x="18" y="153">270° B</text>
+<!-- 135° Obstacle Sector (Underwater Rocky Trench) -->
+<g transform="translate(150, 150)">
+<!-- Angle 135 deg: x = cos(45)*85 = 60, y = sin(45)*85 = 60 -->
+<circle cx="62" cy="62" fill="url(#dangerGlow)" r="22"></circle>
+<!-- Jagged Rock Trench Graphic -->
+<path d="M 45 55 Q 60 48 78 60 Q 72 75 52 72 Z" fill="#93000a" opacity="0.85"></path>
+<path d="M 48 58 L 56 66 L 68 56 L 74 65" fill="none" stroke="#ffb4ab" stroke-width="1.5"></path>
+<circle cx="62" cy="62" fill="#ffb4ab" r="3"></circle>
+<text fill="#ffb4ab" font-family="Sora" font-size="8" font-weight="700" text-anchor="middle" x="62" y="92">135° RESİF ENGELİ</text>
+</g>
+<!-- 042° Safe Passage Trench (Safe Corridor Vector) -->
+<g transform="translate(150, 150)">
+<!-- Angle 042 deg: 90 - 42 = 48 deg from X; rad = 42 deg clockwise from North -> rad = (42-90)*pi/180 -->
+<!-- x = 150 + 95*sin(42) = 63.5, y = 150 - 95*cos(42) = -70.6 -->
+<!-- Corridor Guide Ray -->
+<line opacity="0.9" stroke="#00eefc" stroke-dasharray="3 2" stroke-width="1.8" x1="0" x2="68" y1="0" y2="-75"></line>
+<circle cx="68" cy="-75" fill="#00eefc" fill-opacity="0.25" r="9"></circle>
+<circle cx="68" cy="-75" fill="#00eefc" r="4"></circle>
+<!-- Trench Corridor Opening Boundary -->
+<path d="M 52 -88 L 76 -60" stroke="#ffba27" stroke-linecap="round" stroke-width="2"></path>
+<text fill="#00eefc" font-family="Sora" font-size="9" font-weight="800" text-anchor="start" x="76" y="-88">042° KORİDOR</text>
+</g>
+<!-- Rotating Sonar Sweep Beam -->
+<g transform="translate(150, 150)">
+<path d="M 0 0 L 135 0 A 135 135 0 0 0 95 -95 Z" fill="url(#sonarSweepGrad)" transform="rotate(0)">
+<animatetransform attributename="transform" dur="4s" from="0" repeatcount="indefinite" to="360" type="rotate"></animatetransform>
+</path>
+<line opacity="0.85" stroke="#00eefc" stroke-width="1.8" x1="0" x2="135" y1="0" y2="0">
+<animatetransform attributename="transform" dur="4s" from="0" repeatcount="indefinite" to="360" type="rotate"></animatetransform>
+</line>
+</g>
+<!-- Center Submarine Ping -->
+<circle cx="150" cy="150" fill="#ffb703" r="5"></circle>
+<circle cx="150" cy="150" fill="none" opacity="0.6" r="11" stroke="#ffb703" stroke-width="1">
+<animate attributename="r" dur="2s" repeatcount="indefinite" values="6;18;6"></animate>
+<animate attributename="opacity" dur="2s" repeatcount="indefinite" values="0.8;0;0.8"></animate>
+</circle>
+</svg>
+<!-- Sonar Corner Status Badge -->
+<div class="absolute bottom-3 left-4 flex items-center gap-1 bg-surface-container-high/90 px-2 py-0.5 rounded-lg shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container animate-pulse"></span>
+<span class="font-label-status text-[9px] text-secondary tracking-widest">360° AKTİF TARAMA</span>
+</div>
+</section>
+<!-- Interactive Sonar Tool Bar -->
+<div class="grid grid-cols-2 gap-space-sm">
+<button class="flex items-center justify-center gap-space-xs py-2.5 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-variant active:scale-95 transition-all text-on-surface" id="markerToggleBtn" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary-container">radar</span>
+<span class="font-label-telemetry text-label-telemetry font-bold">HEDEF İŞARETÇİ: AÇIK</span>
+</button>
+<button class="flex items-center justify-center gap-space-xs py-2.5 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-variant active:scale-95 transition-all text-on-surface" id="compassSyncBtn" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary-container">explore</span>
+<span class="font-label-telemetry text-label-telemetry font-bold">PUSULA SENKRONU</span>
+</button>
+</div>
+<!-- Asymmetric Secret Telemetry Box (Visible strictly to Dümenci) -->
+<section class="w-full bg-surface-container rounded-xl p-space-md shadow-xl relative overflow-hidden">
+<!-- Classified Decorative Banner Accent -->
+<div class="flex items-center justify-between pb-space-xs mb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">lock</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container font-extrabold uppercase tracking-widest">
+          GİZLİ TELEMETRİ // DÜMENCİ ÖZEL
+        </span>
+</div>
+<span class="px-2 py-0.5 rounded bg-error-container/40 text-error font-label-status text-[9px] font-bold tracking-wider">
+        MAKİNİST GÖREMEZ!
+      </span>
+</div>
+<div class="space-y-space-xs">
+<!-- Secret Telemetry 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-container text-[18px]">explore</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">GÜVENLİ KERTERİZ:</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-secondary-container tracking-wider font-bold">
+          042° <span class="text-xs font-normal text-on-surface-variant">(KUZEYDOĞU)</span>
+</span>
+</div>
+<!-- Secret Telemetry 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">valve</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">GEREKLİ BALAST TANKI:</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-primary font-bold">
+          TANK-2 VE TANK-4
+        </span>
+</div>
+<!-- Secret Telemetry 3 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[18px]">speed</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">HEDEF BASINÇ:</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-tertiary-fixed-dim font-bold">
+          48 BAR
+        </span>
+</div>
+</div>
+</section>
+<!-- High-Impact Transmit Action Trigger -->
+<section class="w-full pt-space-xs">
+<button class="w-full relative flex items-center justify-center gap-space-sm py-3.5 px-space-md rounded-xl bg-gradient-to-r from-primary-container to-surface-tint text-on-primary-container shadow-xl active:translate-y-1 transition-all" id="transmitBtn" type="button">
+<span class="material-symbols-outlined text-[24px]">satellite_alt</span>
+<span class="font-headline-sm text-headline-sm font-extrabold tracking-wide uppercase">
+        KOORDİNATLARI MAKİNİSTE AKTAR
+      </span>
+</button>
+</section>
+<!-- Tactical Communication Alert Callout -->
+<div class="flex items-start gap-space-xs p-space-sm rounded-xl bg-surface-container-high/60">
+<span class="material-symbols-outlined text-primary-container text-[20px] shrink-0 mt-0.5">tips_and_updates</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight">
+<span class="text-primary font-semibold">Taktik İpucu:</span> Makinist kadranı <span class="text-secondary-container font-bold">042°</span> yapana kadar vanaları serbest bırakma.
+    </p>
+</div>
+<!-- Inline Micro-Interactions -->
+<script>
+    const transmitBtn = document.getElementById('transmitBtn');
+    const markerToggleBtn = document.getElementById('markerToggleBtn');
+    const compassSyncBtn = document.getElementById('compassSyncBtn');
+
+    if (transmitBtn) {
+      transmitBtn.addEventListener('click', () => {
+        const originalText = transmitBtn.innerHTML;
+        transmitBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[24px] animate-spin">sync</span>
+          <span class="font-headline-sm text-headline-sm font-extrabold tracking-wide uppercase">
+            TELSİZDEN GÖNDERİLDİ! [042°]
+          </span>
+        `;
+        setTimeout(() => {
+          transmitBtn.innerHTML = originalText;
+        }, 2200);
+      });
+    }
+
+    if (markerToggleBtn) {
+      markerToggleBtn.addEventListener('click', () => {
+        const isOff = markerToggleBtn.innerText.includes('KAPALI');
+        markerToggleBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[18px] text-secondary-container">radar</span>
+          <span class="font-label-telemetry text-label-telemetry font-bold">HEDEF İŞARETÇİ: ${isOff ? 'AÇIK' : 'KAPALI'}</span>
+        `;
+      });
+    }
+
+    if (compassSyncBtn) {
+      compassSyncBtn.addEventListener('click', () => {
+        compassSyncBtn.classList.add('opacity-50');
+        compassSyncBtn.querySelector('.material-symbols-outlined').classList.add('animate-spin');
+        setTimeout(() => {
+          compassSyncBtn.classList.remove('opacity-50');
+          compassSyncBtn.querySelector('.material-symbols-outlined').classList.remove('animate-spin');
+        }, 1000);
+      });
+    }
+  </script>
+</div></main></body></html>

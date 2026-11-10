@@ -780,5 +780,109 @@ export function applyAdvancedAction(
     };
   }
 
+  // 10. Cable Assignment & Test in Advanced Scenario
+  if (actionType === 'advanced_cable_assign') {
+    if (actingRole !== 'muhendis') {
+      return { nextState: state, error: 'Yalnızca Mühendis kablo terminallerini bağlayabilir.' };
+    }
+    if (!adv.subsystems.kablo) {
+      adv.subsystems.kablo = { isRepaired: false, cables: state.cable.cables, ports: state.cable.ports, portAssignments: {} };
+    }
+    const { portId, cableId } = data;
+    adv.subsystems.kablo.portAssignments[portId] = cableId || null;
+    return {
+      nextState: {
+        ...state,
+        advancedScenario: adv,
+      },
+    };
+  }
+
+  if (actionType === 'advanced_cable_test') {
+    if (actingRole !== 'muhendis') {
+      return { nextState: state, error: 'Yalnızca Mühendis veri hattını test edebilir.' };
+    }
+    if (!adv.subsystems.kablo) {
+      adv.subsystems.kablo = { isRepaired: false, cables: state.cable.cables, ports: state.cable.ports, portAssignments: {} };
+    }
+    const { ports, portAssignments } = adv.subsystems.kablo;
+    let allCorrect = true;
+    for (const port of ports) {
+      if (portAssignments[port.id] !== port.requiredCableId) {
+        allCorrect = false;
+        break;
+      }
+    }
+    if (allCorrect) {
+      adv.subsystems.kablo.isRepaired = true;
+      feedbackState = 'success';
+      feedbackMessage = 'Tüm veri hatları doğru frekans terminallerine bağlandı ve onarıldı!';
+      adv.evacuationLog.push('⚡ [Kablo] Veri hatları frekans eşleşmesi doğrulandı ve onarıldı.');
+    } else {
+      applyPenalty('Kablo frekans eşleşmesi hatalı! Veri hattında kısa devre oluştu.', 10, 5);
+    }
+    return {
+      nextState: {
+        ...state,
+        hullIntegrity: hull,
+        timeLeftSeconds: timeLeft,
+        feedbackState,
+        feedbackMessage,
+        advancedScenario: adv,
+      },
+      penaltyApplied,
+    };
+  }
+
+  // 11. Radar Alignment & Lock in Advanced Scenario
+  if (actionType === 'advanced_radar_params') {
+    if (actingRole !== 'muhendis') {
+      return { nextState: state, error: 'Yalnızca Mühendis radar açı ve yüksekliğini ayarlayabilir.' };
+    }
+    if (!adv.subsystems.radar) {
+      adv.subsystems.radar = { isAligned: false, targetAzimuth: state.radar.targetAzimuth, targetElevation: state.radar.targetElevation, currentAzimuth: 0, currentElevation: 10 };
+    }
+    if (data.azimuth !== undefined || data.angle !== undefined) adv.subsystems.radar.currentAzimuth = Number(data.azimuth ?? data.angle);
+    if (data.elevation !== undefined || data.range !== undefined) adv.subsystems.radar.currentElevation = Number(data.elevation ?? data.range);
+    return {
+      nextState: {
+        ...state,
+        advancedScenario: adv,
+      },
+    };
+  }
+
+  if (actionType === 'advanced_radar_lock') {
+    if (actingRole !== 'muhendis') {
+      return { nextState: state, error: 'Yalnızca Mühendis radarı hizalayabilir ve kilitleyebilir.' };
+    }
+    if (!adv.subsystems.radar) {
+      adv.subsystems.radar = { isAligned: false, targetAzimuth: state.radar.targetAzimuth, targetElevation: state.radar.targetElevation, currentAzimuth: 0, currentElevation: 10 };
+    }
+    const { currentAzimuth, targetAzimuth, currentElevation, targetElevation } = adv.subsystems.radar;
+    const azDiff = Math.abs(currentAzimuth - targetAzimuth);
+    const elDiff = Math.abs(currentElevation - targetElevation);
+    const isMatched = azDiff <= 15 && elDiff <= 8;
+    if (isMatched) {
+      adv.subsystems.radar.isAligned = true;
+      feedbackState = 'success';
+      feedbackMessage = 'Radar işaretçisi hedef kerterizine kilitlendi!';
+      adv.evacuationLog.push(`📡 [Radar] Koordinat hizalaması başarılı: ${currentAzimuth}° Azimut / ${currentElevation}° İrtifa.`);
+    } else {
+      applyPenalty('Radar koordinatları saptı! Kör sektör taraması başarısız oldu.', 10, 5);
+    }
+    return {
+      nextState: {
+        ...state,
+        hullIntegrity: hull,
+        timeLeftSeconds: timeLeft,
+        feedbackState,
+        feedbackMessage,
+        advancedScenario: adv,
+      },
+      penaltyApplied,
+    };
+  }
+
   return { nextState: state };
 }

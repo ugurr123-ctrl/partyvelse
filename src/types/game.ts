@@ -5,6 +5,42 @@
 
 export type Role = 'kaptan' | 'muhendis';
 
+export type OperationTheme = 'kayip_sinyal' | 'derin_basinc' | 'golge_protokolu' | 'karantina_2088';
+
+export interface KarantinaData {
+  // Phase 1: Hücresel Analiz & UV İzolasyonu
+  spectralFilterNm: number;
+  selectedBase: string;
+  bioPhase1Transmitted: boolean;
+  selectedUvSector: number;
+  selectedValve: 'A' | 'B' | 'C';
+  phase1Solved: boolean;
+
+  // Phase 2: Sentetik Panzehir Sentezi & Santrifüj
+  polymerPct: number;
+  enzymePct: number;
+  neutroPct: number;
+  bondFreqGhz: number;
+  bioPhase2Injected: boolean;
+  centrifugeRpm: number;
+  coolingValvePct: number;
+  pressureReliefActive: boolean;
+  phase2Solved: boolean;
+
+  // Phase 3: Dekontaminasyon Protokolü & Pnömatik Tahliye
+  vacuumFlowRate: number;
+  bioPhase3Started: boolean;
+  selectedChimney: 'BACA-01' | 'BACA-02' | 'BACA-03';
+  chimneyBar: number;
+  safetyLatchUnlocked: boolean;
+  phase3Solved: boolean;
+
+  // Stats & Scoring
+  immunityScore: number;
+  selinAccuracy: number;
+  baranValves: number;
+}
+
 export type MiniGameType = 
   | 'ariza_teshisi' 
   | 'sinyal_cozumu' 
@@ -73,9 +109,11 @@ export interface PlayerInfo {
   role: Role;
   ready: boolean;
   roleConfirmed?: boolean;
+  connected?: boolean;
 }
 
 export type GameStatus = 
+  | 'opening'
   | 'entry'
   | 'lobby'
   | 'role_intro'
@@ -118,6 +156,7 @@ export interface SignalData {
   correctFrequency: string; // e.g. "142.8 MHz"
   frequencies: Array<{ freq: string; code: string; label: string }>;
   engineerTunedFreq: string;
+  frequencyMatched?: boolean;
   isLocked: boolean;
   isSolved: boolean;
 }
@@ -218,7 +257,7 @@ export interface RescueData {
 
 export type GameMode = 'standart' | 'gelismis';
 
-export type AdvancedSubsystemId = 'reaktor' | 'sinyal' | 'hava_kilidi' | 'guc_matrisi' | 'tahliye';
+export type AdvancedSubsystemId = 'reaktor' | 'sinyal' | 'hava_kilidi' | 'kablo' | 'radar' | 'guc_matrisi' | 'tahliye';
 
 export interface AdvancedEventData {
   id: 'plasma_surge';
@@ -295,6 +334,19 @@ export interface AdvancedScenarioData {
       targetVacuumMax: number;
       externalPressureKpa: number;
     };
+    kablo?: {
+      isRepaired: boolean;
+      cables: CableData['cables'];
+      ports: CableData['ports'];
+      portAssignments: Record<string, string | null>;
+    };
+    radar?: {
+      isAligned: boolean;
+      targetAzimuth: number;
+      targetElevation: number;
+      currentAzimuth: number;
+      currentElevation: number;
+    };
   };
   powerGrid: AdvancedPowerGrid;
   event: AdvancedEventData;
@@ -307,6 +359,7 @@ export interface MissionState {
   roomCode: string;
   roundId: string; // Unique identifier regenerated on each new round
   status: GameStatus;
+  operationTheme?: OperationTheme; // 'kayip_sinyal' (Space Station) or 'derin_basinc' (Deep Sea Bathyscaphe)
   gameMode?: GameMode; // 'standart' (classic) or 'gelismis' (interdependent tactical)
   activeEnvironment: EnvironmentType;
   selectedMiniGames: [MiniGameType, MiniGameType];
@@ -323,6 +376,10 @@ export interface MissionState {
   isDisconnected: boolean;
   feedbackState: FeedbackState;
   feedbackMessage: string;
+  captainName?: string;
+  engineerName?: string;
+  stealthLevel?: number;
+  currentRoundId?: string;
 
   // Mini-game payloads
   diagnostic: DiagnosticData;
@@ -335,6 +392,9 @@ export interface MissionState {
 
   // Advanced interdependent scenario payload
   advancedScenario?: AdvancedScenarioData;
+
+  // Karantina 2088 payload
+  karantinaData?: KarantinaData;
 
   // Final stats
   rescuedCrewCount: number;

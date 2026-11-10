@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { 
   MissionState, 
   Role, 
-  AdvancedSubsystemId 
+  AdvancedSubsystemId,
+  MiniGameType
 } from '../../types/game';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   state: MissionState;
@@ -19,6 +21,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 }) => {
   const adv = state.advancedScenario;
   const isCaptain = role === 'kaptan';
+  const isDerinBasinc = state.operationTheme === 'derin_basinc';
   const [activeTab, setActiveTab] = useState<AdvancedSubsystemId>(
     adv?.activeSubsystemTab || 'reaktor'
   );
@@ -37,7 +40,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   // If advanced scenario data is not initialized
   if (!adv) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-[880px] bg-[#0a0815] text-white flex items-center justify-center p-6 rounded-[36px] border border-white/10">
+      <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#0a0815] text-white flex items-center justify-center p-6 rounded-[36px] border border-white/10">
         <p className="text-sm font-mono text-cyan-400">Gelişmiş senaryo verisi yükleniyor...</p>
       </div>
     );
@@ -64,8 +67,56 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const gameToSubsystem = (g: MiniGameType): AdvancedSubsystemId => {
+    switch (g) {
+      case 'ariza_teshisi': return 'reaktor';
+      case 'sinyal_cozumu': return 'sinyal';
+      case 'kablo_baglantisi': return 'kablo';
+      case 'hava_kilidi': return 'hava_kilidi';
+      case 'radar_yonlendirme': return 'radar';
+    }
+  };
+
+  const getMiniGameLabel = (g: MiniGameType, isDerin: boolean): string => {
+    if (isDerin) {
+      switch (g) {
+        case 'ariza_teshisi': return 'Balast Valfi';
+        case 'sinyal_cozumu': return 'Sonar & Glif';
+        case 'kablo_baglantisi': return 'Veri Hattı';
+        case 'hava_kilidi': return 'Basınç Kabini';
+        case 'radar_yonlendirme': return 'Derin Radar';
+      }
+    }
+    switch (g) {
+      case 'ariza_teshisi': return 'Reaktör Çekirdeği';
+      case 'sinyal_cozumu': return 'Sinyal Çözümü';
+      case 'kablo_baglantisi': return 'Kablo Bağlantısı';
+      case 'hava_kilidi': return 'Hava Kilidi';
+      case 'radar_yonlendirme': return 'Radar Hizalama';
+    }
+  };
+
+  const getSubsystemSolved = (g: MiniGameType): boolean => {
+    switch (g) {
+      case 'ariza_teshisi': return !!adv?.subsystems.reaktor.isStabilized;
+      case 'sinyal_cozumu': return !!adv?.subsystems.sinyal.isLocked;
+      case 'hava_kilidi': return !!adv?.subsystems.hava_kilidi.isSealed;
+      case 'kablo_baglantisi': return !!adv?.subsystems.kablo?.isRepaired;
+      case 'radar_yonlendirme': return !!adv?.subsystems.radar?.isAligned;
+      default: return false;
+    }
+  };
+
+  const randomSubsystems: AdvancedSubsystemId[] = (state.selectedMiniGames || ['ariza_teshisi', 'sinyal_cozumu']).map(gameToSubsystem);
+  const displayedTabs: AdvancedSubsystemId[] = [...randomSubsystems];
+  if (['reaktor', 'sinyal', 'hava_kilidi', 'kablo', 'radar'].includes(activeTab) && !displayedTabs.includes(activeTab)) {
+    displayedTabs.push(activeTab);
+  }
+  displayedTabs.push('guc_matrisi');
+  displayedTabs.push('tahliye');
+
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[915px] bg-[#080711] text-white flex flex-col justify-between p-4 rounded-[40px] border border-white/10 shadow-2xl relative select-none font-sans overflow-hidden animate-fadeIn">
+    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#080711] text-white flex flex-col justify-between p-4 rounded-[40px] border border-white/10 shadow-2xl relative select-none font-sans overflow-hidden animate-fadeIn">
       
       {/* Background ambient light */}
       <div className="absolute -top-20 -left-20 w-72 h-72 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>
@@ -78,7 +129,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
               <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
-                OPERASYON: ÇÖKÜŞ EŞİĞİ
+                {isDerinBasinc ? 'DERİN DALIP // PROTOKOLÜ' : 'OPERASYON: ÇÖKÜŞ EŞİĞİ'}
               </span>
             </div>
             <div className="flex items-center space-x-1.5 mt-0.5">
@@ -87,7 +138,9 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
                   : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
               }`}>
-                {isCaptain ? '★ KAPTAN (PROTOKOL VE KURALLAR)' : '⚙ MÜHENDİS (ÖLÇÜM VE KONTROL)'}
+                {isCaptain 
+                  ? (isDerinBasinc ? '★ DÜMENCİ (KILAVUZ NAVİGASYON)' : '★ KAPTAN (PROTOKOL VE KURALLAR)')
+                  : (isDerinBasinc ? '⚙ MAKİNİST (BALAST VE BASINÇ)' : '⚙ MÜHENDİS (ÖLÇÜM VE KONTROL)')}
               </span>
             </div>
           </div>
@@ -105,7 +158,9 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
         {/* Hull Integrity Bar */}
         <div className="bg-[#131124] border border-white/5 rounded-xl px-3 py-1.5 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-mono text-slate-400 uppercase">Gövde Bütünlüğü:</span>
+            <span className="text-[10px] font-mono text-slate-400 uppercase">
+              {isDerinBasinc ? 'Gövde Dayanımı (85.2 ATM):' : 'Gövde Bütünlüğü:'}
+            </span>
             <span className={`text-xs font-mono font-bold ${
               state.hullIntegrity > 60 ? 'text-emerald-400' : state.hullIntegrity > 30 ? 'text-amber-400' : 'text-red-400'
             }`}>
@@ -121,22 +176,52 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
             ></div>
           </div>
         </div>
+
+        {/* System Randomized Tasks Indicator Ribbon */}
+        <div className="bg-[#121026] border border-cyan-500/20 rounded-xl px-2.5 py-1.5 flex items-center justify-between text-[10px] font-mono shadow-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span className="text-cyan-300 font-bold uppercase tracking-wider text-[9px]">
+              🎲 AKTİF GÖREVLER:
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {state.selectedMiniGames?.map((g, idx) => {
+              const solved = getSubsystemSolved(g);
+              return (
+                <span 
+                  key={g}
+                  className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-bold flex items-center gap-1 ${
+                    solved 
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                  }`}
+                >
+                  <span>{idx + 1}. {getMiniGameLabel(g, isDerinBasinc)}</span>
+                  <span>{solved ? '✓' : '⚠️'}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
       </header>
 
-      {/* 2. Critical Event Banner: Plasma Surge */}
+      {/* 2. Critical Event Banner */}
       {adv.event.isActive && !adv.event.isResolved && (
         <div className="relative z-20 mb-2 p-3 bg-red-950/80 border-2 border-red-500 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-black uppercase text-red-200 tracking-wider flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-              ⚠️ {adv.event.name}
+              ⚠️ {isDerinBasinc ? 'ABİSAL SU BASINÇ DALGASI' : adv.event.name}
             </span>
             <span className="text-[10px] font-mono font-bold text-amber-300">
               Temas: ~{Math.max(0, state.timeLeftSeconds - adv.event.strikeTime)}s
             </span>
           </div>
           <p className="text-[11px] text-red-100 leading-tight mb-2">
-            {adv.event.desc} Kaptan ve Mühendis ortak savunma kararı almalıdır!
+            {isDerinBasinc 
+              ? 'Hendek çökme şoku tespit edildi! Dümenci ve Makinist ortak basınç koruma kararı almalıdır!'
+              : `${adv.event.desc} Kaptan ve Mühendis ortak savunma kararı almalıdır!`}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -144,100 +229,107 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
               className="py-1.5 px-2 bg-cyan-600/90 hover:bg-cyan-500 active:scale-95 text-white rounded-xl text-[10px] font-bold tracking-wide uppercase border border-cyan-400/50 cursor-pointer shadow"
               type="button"
             >
-              🛡️ Kalkanlara 3 MW Ver (%100 Koruma)
+              {isDerinBasinc ? '🛡️ Basınç Kalkanı (3 MW)' : '🛡️ Kalkanlara 3 MW Ver (%100 Koruma)'}
             </button>
             <button
               onClick={() => onAction('advanced_event_react', { reaction: 'tahliye' })}
               className="py-1.5 px-2 bg-amber-600/90 hover:bg-amber-500 active:scale-95 text-white rounded-xl text-[10px] font-bold tracking-wide uppercase border border-amber-400/50 cursor-pointer shadow"
               type="button"
             >
-              💨 Bacaları Aç (-%5 Gövde)
+              {isDerinBasinc ? '💨 Valfleri Tahliye Et (-%5 Gövde)' : '💨 Bacaları Aç (-%5 Gövde)'}
             </button>
           </div>
         </div>
       )}
 
       {/* 3. Subsystem Tactical Tabs */}
-      <nav className="relative z-10 grid grid-cols-5 gap-1 mb-2">
-        <button
-          onClick={() => handleTabChange('reaktor')}
-          className={`py-1.5 rounded-xl text-[10px] font-bold font-mono uppercase flex flex-col items-center justify-center transition-all cursor-pointer border ${
-            activeTab === 'reaktor'
-              ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
-              : 'bg-[#151329] border-white/5 text-slate-400 hover:text-white'
-          }`}
-          type="button"
-        >
-          <span className="text-xs">⚡</span>
-          <span>Reaktör</span>
-          <span className={`text-[8px] font-normal ${adv.subsystems.reaktor.isStabilized ? 'text-emerald-400' : 'text-slate-500'}`}>
-            {adv.subsystems.reaktor.isStabilized ? 'STABİL' : 'KRİTİK'}
-          </span>
-        </button>
+      <nav 
+        className="relative z-10 grid gap-1 mb-2"
+        style={{ gridTemplateColumns: `repeat(${displayedTabs.length}, minmax(0, 1fr))` }}
+      >
+        {displayedTabs.map((tab) => {
+          const isAct = activeTab === tab;
+          let icon = '⚡';
+          let label = 'Reaktör';
+          let statusLabel = 'KRİTİK';
+          let isSolved = false;
 
-        <button
-          onClick={() => handleTabChange('sinyal')}
-          className={`py-1.5 rounded-xl text-[10px] font-bold font-mono uppercase flex flex-col items-center justify-center transition-all cursor-pointer border ${
-            activeTab === 'sinyal'
-              ? 'bg-cyan-500/25 border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,238,252,0.3)]'
-              : 'bg-[#151329] border-white/5 text-slate-400 hover:text-white'
-          }`}
-          type="button"
-        >
-          <span className="text-xs">📡</span>
-          <span>Sinyal</span>
-          <span className={`text-[8px] font-normal ${adv.subsystems.sinyal.isLocked ? 'text-emerald-400' : 'text-slate-500'}`}>
-            {adv.subsystems.sinyal.isLocked ? 'KİLİTLİ' : '%'+adv.subsystems.sinyal.noiseLevel+' PAR'}
-          </span>
-        </button>
+          if (tab === 'reaktor') {
+            icon = isDerinBasinc ? '⚓' : '⚡';
+            label = isDerinBasinc ? 'Balast' : 'Reaktör';
+            isSolved = adv.subsystems.reaktor.isStabilized;
+            statusLabel = isSolved ? (isDerinBasinc ? 'DENGEDE' : 'STABİL') : 'KRİTİK';
+          } else if (tab === 'sinyal') {
+            icon = '📡';
+            label = isDerinBasinc ? 'Sonar' : 'Sinyal';
+            isSolved = adv.subsystems.sinyal.isLocked;
+            statusLabel = isSolved ? 'KİLİTLİ' : `%${adv.subsystems.sinyal.noiseLevel} PAR`;
+          } else if (tab === 'hava_kilidi') {
+            icon = '🚪';
+            label = isDerinBasinc ? 'Kabin' : 'Kilid';
+            isSolved = adv.subsystems.hava_kilidi.isSealed;
+            statusLabel = isSolved ? 'MÜHÜRLÜ' : 'AÇIK';
+          } else if (tab === 'kablo') {
+            icon = '🔌';
+            label = isDerinBasinc ? 'Veri' : 'Kablo';
+            isSolved = !!adv.subsystems.kablo?.isRepaired;
+            statusLabel = isSolved ? 'ONARILDI' : 'KOPUK';
+          } else if (tab === 'radar') {
+            icon = '🧭';
+            label = isDerinBasinc ? 'Radar' : 'Radar';
+            isSolved = !!adv.subsystems.radar?.isAligned;
+            statusLabel = isSolved ? 'HİZALANDI' : 'SAPMA';
+          } else if (tab === 'guc_matrisi') {
+            icon = '🔋';
+            label = isDerinBasinc ? 'Enerji' : 'Güç';
+            isSolved = true;
+            statusLabel = `${adv.powerGrid.totalBudget} MW`;
+          } else if (tab === 'tahliye') {
+            icon = isDerinBasinc ? '🌊' : '🛸';
+            label = isDerinBasinc ? 'Yüzey' : 'Tahliye';
+            isSolved = false;
+            statusLabel = 'ROTA';
+          }
 
-        <button
-          onClick={() => handleTabChange('hava_kilidi')}
-          className={`py-1.5 rounded-xl text-[10px] font-bold font-mono uppercase flex flex-col items-center justify-center transition-all cursor-pointer border ${
-            activeTab === 'hava_kilidi'
-              ? 'bg-purple-500/25 border-purple-400 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
-              : 'bg-[#151329] border-white/5 text-slate-400 hover:text-white'
-          }`}
-          type="button"
-        >
-          <span className="text-xs">🚪</span>
-          <span>Kilid</span>
-          <span className={`text-[8px] font-normal ${adv.subsystems.hava_kilidi.isSealed ? 'text-emerald-400' : 'text-slate-500'}`}>
-            {adv.subsystems.hava_kilidi.isSealed ? 'MÜHÜRLÜ' : 'AÇIK'}
-          </span>
-        </button>
+          const activeBorderClass = 
+            tab === 'reaktor' ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]' :
+            tab === 'sinyal' ? 'bg-cyan-500/25 border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,238,252,0.3)]' :
+            tab === 'hava_kilidi' ? 'bg-purple-500/25 border-purple-400 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)]' :
+            tab === 'kablo' ? 'bg-sky-500/25 border-sky-400 text-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.3)]' :
+            tab === 'radar' ? 'bg-indigo-500/25 border-indigo-400 text-indigo-300 shadow-[0_0_10px_rgba(99,102,241,0.3)]' :
+            tab === 'guc_matrisi' ? 'bg-emerald-500/25 border-emerald-400 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]' :
+            'bg-rose-500/25 border-rose-400 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.3)]';
 
-        <button
-          onClick={() => handleTabChange('guc_matrisi')}
-          className={`py-1.5 rounded-xl text-[10px] font-bold font-mono uppercase flex flex-col items-center justify-center transition-all cursor-pointer border ${
-            activeTab === 'guc_matrisi'
-              ? 'bg-emerald-500/25 border-emerald-400 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
-              : 'bg-[#151329] border-white/5 text-slate-400 hover:text-white'
-          }`}
-          type="button"
-        >
-          <span className="text-xs">🔋</span>
-          <span>Güç</span>
-          <span className="text-[8px] font-normal text-emerald-400">{adv.powerGrid.totalBudget} MW</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('tahliye')}
-          className={`py-1.5 rounded-xl text-[10px] font-bold font-mono uppercase flex flex-col items-center justify-center transition-all cursor-pointer border ${
-            activeTab === 'tahliye'
-              ? 'bg-rose-500/25 border-rose-400 text-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.3)]'
-              : 'bg-[#151329] border-white/5 text-slate-400 hover:text-white'
-          }`}
-          type="button"
-        >
-          <span className="text-xs">🛸</span>
-          <span>Tahliye</span>
-          <span className="text-[8px] font-normal text-rose-300">ROTA</span>
-        </button>
+          return (
+            <button
+              key={tab}
+              onClick={() => handleTabChange(tab)}
+              className={`py-1.5 rounded-xl text-[10px] font-bold font-mono uppercase flex flex-col items-center justify-center transition-all cursor-pointer border ${
+                isAct ? activeBorderClass : 'bg-[#151329] border-white/5 text-slate-400 hover:text-white'
+              }`}
+              type="button"
+            >
+              <span className="text-xs">{icon}</span>
+              <span className="truncate max-w-full px-0.5">{label}</span>
+              <span className={`text-[7.5px] font-normal leading-tight ${isSolved ? 'text-emerald-400' : 'text-slate-500'}`}>
+                {statusLabel}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
       {/* 4. Active Subsystem Workspace */}
       <main className="relative z-10 flex-1 flex flex-col space-y-2 overflow-y-auto max-h-[560px] pr-0.5">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col space-y-2"
+          >
 
         {/* ================================================================= */}
         {/* TAB 1: REAKTÖR ÇEKİRDEĞİ                                          */}
@@ -820,6 +912,205 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
         )}
 
         {/* ================================================================= */}
+        {/* TAB: KABLO BAĞLANTISI (VERİ HATLARI)                              */}
+        {/* ================================================================= */}
+        {activeTab === 'kablo' && (
+          <div className="flex-1 flex flex-col space-y-3">
+            {/* Status card */}
+            <div className="bg-[#141228] border border-white/10 rounded-2xl p-3 shadow-lg">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-sky-300 font-mono uppercase flex items-center gap-1.5">
+                  🔌 {isDerinBasinc ? 'Abisal Veri Hatları' : 'Veri Kablosu Ağı'}
+                </span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                  adv.subsystems.kablo?.isRepaired
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                }`}>
+                  {adv.subsystems.kablo?.isRepaired ? 'ONARILDI & KİLİTLİ' : 'HATLAR KOPUK'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                Kaptan frekans kılavuzunu iletir; Mühendis veri kablolarını doğru terminallere bağlar.
+              </p>
+            </div>
+
+            {isCaptain ? (
+              <div className="bg-[#171433] border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
+                <h4 className="text-xs font-bold font-sora text-amber-200 uppercase tracking-wide flex items-center gap-2">
+                  <span>📜</span>
+                  <span>Kaptan Terminal Kılavuzu &amp; Frekans Tablosu</span>
+                </h4>
+                <div className="space-y-2">
+                  {state.cable.ports.map((p) => {
+                    const reqCable = state.cable.cables.find(c => c.id === p.requiredCableId);
+                    return (
+                      <div key={p.id} className="p-2.5 rounded-xl bg-[#0f0e20] border border-white/5 flex items-center justify-between">
+                        <div>
+                          <span className="text-[11px] font-mono font-bold text-white block">{p.label}</span>
+                          <span className="text-[9px] text-slate-400">{p.functionLabel}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-cyan-300 font-bold">
+                            Hedef: {reqCable?.label || p.requiredCableId}
+                          </span>
+                          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: reqCable?.dotColor || '#38bdf8' }}></span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#171433] border border-cyan-500/30 rounded-2xl p-3.5 space-y-3">
+                <h4 className="text-xs font-bold font-sora text-cyan-200 uppercase tracking-wide flex items-center gap-2">
+                  <span>⚙️</span>
+                  <span>Mühendis Terminal Bağlantı Paneli</span>
+                </h4>
+                <div className="space-y-2">
+                  {state.cable.ports.map((p) => {
+                    const currentAssignment = adv.subsystems.kablo?.portAssignments[p.id] || null;
+                    return (
+                      <div key={p.id} className="p-2.5 rounded-xl bg-[#0f0e20] border border-white/5 flex items-center justify-between">
+                        <div>
+                          <span className="text-[11px] font-mono font-bold text-cyan-300 block">{p.label}</span>
+                          <span className="text-[9px] text-slate-400">{p.functionLabel}</span>
+                        </div>
+                        <select
+                          value={currentAssignment || ''}
+                          disabled={adv.subsystems.kablo?.isRepaired}
+                          onChange={(e) => onAction('advanced_cable_assign', { portId: p.id, cableId: e.target.value || null })}
+                          className="bg-[#1e1b38] text-white text-[11px] font-mono py-1 px-2 rounded-lg border border-white/10"
+                        >
+                          <option value="">-- Kablo Seçin --</option>
+                          {state.cable.cables.map(c => (
+                            <option key={c.id} value={c.id}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => onAction('advanced_cable_test', {})}
+                  disabled={adv.subsystems.kablo?.isRepaired}
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow cursor-pointer transition-all ${
+                    adv.subsystems.kablo?.isRepaired
+                      ? 'bg-emerald-600/50 text-emerald-200 border border-emerald-400/30 cursor-default'
+                      : 'bg-gradient-to-r from-sky-600 to-cyan-500 hover:brightness-110 active:scale-98 text-white'
+                  }`}
+                  type="button"
+                >
+                  {adv.subsystems.kablo?.isRepaired ? '✓ VERİ HATTI ONARILDI' : 'VERİ HATTINI TEST ET & KİLİTLE'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================================================================= */}
+        {/* TAB: RADAR VE YÖNLENDİRME                                         */}
+        {/* ================================================================= */}
+        {activeTab === 'radar' && (
+          <div className="flex-1 flex flex-col space-y-3">
+            {/* Status card */}
+            <div className="bg-[#141228] border border-white/10 rounded-2xl p-3 shadow-lg">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-indigo-300 font-mono uppercase flex items-center gap-1.5">
+                  🧭 {isDerinBasinc ? 'Derin Deniz Radarı & Sonar' : 'Radar ve Yönlendirme'}
+                </span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                  adv.subsystems.radar?.isAligned
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 animate-pulse'
+                }`}>
+                  {adv.subsystems.radar?.isAligned ? 'HİZALANDI & KİLİTLİ' : 'KOORDİNAT SAPMASI'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                Kaptan hedef kılavuz açı ve menzilini okur; Mühendis radarı hizalayıp koordinatı kilitler.
+              </p>
+            </div>
+
+            {isCaptain ? (
+              <div className="bg-[#171433] border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
+                <h4 className="text-xs font-bold font-sora text-amber-200 uppercase tracking-wide flex items-center gap-2">
+                  <span>📜</span>
+                  <span>Kaptan Navigasyon &amp; Koordinat Kılavuzu</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="p-3 bg-[#0f0e20] rounded-xl border border-white/5">
+                    <span className="text-[10px] font-mono text-slate-400 block uppercase">HEDEF AZİMUT (AÇI)</span>
+                    <span className="text-xl font-mono font-black text-amber-300">
+                      {state.radar.targetAzimuth}°
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#0f0e20] rounded-xl border border-white/5">
+                    <span className="text-[10px] font-mono text-slate-400 block uppercase">HEDEF İRTİFA</span>
+                    <span className="text-xl font-mono font-black text-cyan-300">
+                      {state.radar.targetElevation}°
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#171433] border border-indigo-500/30 rounded-2xl p-3.5 space-y-3">
+                <h4 className="text-xs font-bold font-sora text-indigo-200 uppercase tracking-wide flex items-center gap-2">
+                  <span>⚙️</span>
+                  <span>Mühendis Radar Kalibrasyon Konsolu</span>
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-[11px] font-mono mb-1">
+                      <span className="text-slate-300">Azimut Açısı:</span>
+                      <span className="font-bold text-amber-300">{adv.subsystems.radar?.currentAzimuth ?? 0}°</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="360" 
+                      step="5"
+                      disabled={adv.subsystems.radar?.isAligned}
+                      value={adv.subsystems.radar?.currentAzimuth ?? 0}
+                      onChange={(e) => onAction('advanced_radar_params', { azimuth: Number(e.target.value) })}
+                      className="w-full accent-amber-400 cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] font-mono mb-1">
+                      <span className="text-slate-300">İrtifa Açısı:</span>
+                      <span className="font-bold text-cyan-300">{adv.subsystems.radar?.currentElevation ?? 10}°</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="90" 
+                      step="2"
+                      disabled={adv.subsystems.radar?.isAligned}
+                      value={adv.subsystems.radar?.currentElevation ?? 10}
+                      onChange={(e) => onAction('advanced_radar_params', { elevation: Number(e.target.value) })}
+                      className="w-full accent-cyan-400 cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => onAction('advanced_radar_lock', {})}
+                  disabled={adv.subsystems.radar?.isAligned}
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow cursor-pointer transition-all ${
+                    adv.subsystems.radar?.isAligned
+                      ? 'bg-emerald-600/50 text-emerald-200 border border-emerald-400/30 cursor-default'
+                      : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 active:scale-98 text-white'
+                  }`}
+                  type="button"
+                >
+                  {adv.subsystems.radar?.isAligned ? '✓ RADAR KOORDİNATLARI KİLİTLİ' : 'RADARI HİZALA & KİLİTLE'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ================================================================= */}
         {/* TAB 4: YARDIMCI GÜÇ MATRİSİ (10 MW)                                */}
         {/* ================================================================= */}
         {activeTab === 'guc_matrisi' && (
@@ -971,16 +1262,18 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <span>🛡️ Gövde: -%5</span>
                 </div>
                 <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
-                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR (3/3):</span>
-                  <div className="grid grid-cols-3 gap-1">
+                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR (TAM OPERASYONEL):</span>
+                  <div className="grid grid-cols-2 gap-1">
+                    {state.selectedMiniGames?.map((g) => (
+                      <span key={g} className={getSubsystemSolved(g) ? 'text-emerald-400 font-bold' : 'text-red-400'}>
+                        {getSubsystemSolved(g) ? `✓ ${getMiniGameLabel(g, isDerinBasinc)}` : `✗ ${getMiniGameLabel(g, isDerinBasinc)}`}
+                      </span>
+                    ))}
                     <span className={adv.subsystems.reaktor.isStabilized ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör' : '✗ Reaktör'}
+                      {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör/Balast' : '✗ Reaktör/Balast'}
                     </span>
                     <span className={adv.subsystems.sinyal.isLocked ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.sinyal.isLocked ? '✓ Sinyal' : '✗ Sinyal'}
-                    </span>
-                    <span className={adv.subsystems.hava_kilidi.isSealed ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.hava_kilidi.isSealed ? '✓ Hava Kilidi' : '✗ Hava Kilidi'}
+                      {adv.subsystems.sinyal.isLocked ? '✓ Sinyal/Sonar' : '✗ Sinyal/Sonar'}
                     </span>
                   </div>
                 </div>
@@ -1007,7 +1300,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <span>🛡️ Gövde: -%5</span>
                 </div>
                 <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
-                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR (2/2):</span>
+                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR:</span>
                   <div className="grid grid-cols-2 gap-1">
                     <span className={adv.subsystems.reaktor.isStabilized ? 'text-emerald-400 font-bold' : 'text-red-400'}>
                       {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör Dengeli' : '✗ Reaktör Gerekli'}
@@ -1082,6 +1375,8 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
           </div>
         )}
 
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* 5. Mission Evacuation Log Footer */}

@@ -1,9 +1,10 @@
 import { Client, Room } from 'colyseus.js';
-import { MissionState, Role, EnvironmentType, GameMode } from '../types/game';
+import { MissionState, Role, EnvironmentType, GameMode, OperationTheme } from '../types/game';
 
 type StateCallback = (state: MissionState) => void;
 type ErrorCallback = (error: string) => void;
 type ConnectionCallback = (status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting') => void;
+type RadioCallback = (transmission: any) => void;
 
 class ColyseusClientService {
   private client: Client | null = null;
@@ -11,6 +12,7 @@ class ColyseusClientService {
   private stateCallbacks: Set<StateCallback> = new Set();
   private errorCallbacks: Set<ErrorCallback> = new Set();
   private connectionCallbacks: Set<ConnectionCallback> = new Set();
+  private radioCallbacks: Set<RadioCallback> = new Set();
   private actionCounter: number = 0;
   private intentionalLeave: boolean = false;
 
@@ -19,12 +21,24 @@ class ColyseusClientService {
   }
 
   private getServerUrl(): string {
-    if (import.meta.env.VITE_COLYSEUS_URL) {
-      return import.meta.env.VITE_COLYSEUS_URL;
-    }
     if (typeof window !== 'undefined') {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      return `${protocol}//${window.location.host}`;
+      const hostname = window.location.hostname;
+      const protocol = window.location.protocol;
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+      
+      // If running inside a standalone mobile APK wrapper (Capacitor/Cordova/file://)
+      const isNativeAppWrapper = 
+        protocol === 'file:' || 
+        protocol === 'capacitor:' || 
+        protocol === 'ionic:' ||
+        (isLocalhost && window.location.port !== '3000');
+
+      if (isNativeAppWrapper) {
+        return 'wss://ais-pre-7auzhp5svziwyjbxp35hez-984295935198.europe-west2.run.app';
+      }
+
+      const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${wsProtocol}//${window.location.host}`;
     }
     return 'ws://localhost:3000';
   }
@@ -60,14 +74,24 @@ class ColyseusClientService {
     roomCode: string,
     playerName: string,
     role: Role = 'kaptan',
-    environment: EnvironmentType = 'kayip_sinyal'
+    environment: EnvironmentType = 'kayip_sinyal',
+    operationTheme?: OperationTheme
   ): Promise<void> {
     if (!this.client) this.initClient();
     this.intentionalLeave = false;
     this.notifyConnection('connecting');
 
     const clean = roomCode.toUpperCase().trim();
-    const normalizedCode = clean.startsWith('KYP-') ? clean : `KYP-${clean}`;
+    const isPrefixed = clean.startsWith('KR') || clean.startsWith('SHDW') || clean.startsWith('DP') || clean.startsWith('KYP');
+    const normalizedCode = isPrefixed ? clean : `KYP-${clean}`;
+
+    let theme = operationTheme;
+    if (!theme) {
+      if (normalizedCode.startsWith('KR')) theme = 'karantina_2088';
+      else if (normalizedCode.startsWith('SHDW')) theme = 'golge_protokolu';
+      else if (normalizedCode.startsWith('DP')) theme = 'derin_basinc';
+      else theme = 'kayip_sinyal';
+    }
 
     try {
       this.room = await this.client!.create('lost_signal', {
@@ -75,6 +99,7 @@ class ColyseusClientService {
         playerName,
         role,
         environment,
+        operationTheme: theme,
       });
 
       this.setupRoomHandlers();
@@ -102,7 +127,8 @@ class ColyseusClientService {
     this.notifyConnection('connecting');
 
     const clean = roomCode.toUpperCase().trim();
-    const normalizedCode = clean.startsWith('KYP-') ? clean : `KYP-${clean}`;
+    const isPrefixed = clean.startsWith('KR') || clean.startsWith('SHDW') || clean.startsWith('DP') || clean.startsWith('KYP');
+    const normalizedCode = isPrefixed ? clean : `KYP-${clean}`;
 
     try {
       this.room = await this.client!.join('lost_signal', {
@@ -163,9 +189,20 @@ class ColyseusClientService {
       this.notifyError(msg);
     });
 
+    this.room.onMessage('radio_transmission', (transmission: any) => {
+      this.notifyRadio(transmission);
+    });
+
     this.room.onError((code, message) => {
       this.notifyError(`Sunucu hatası [${code}]: ${message}`);
     });
+
+    // Request authoritative state from server immediately
+    try {
+      this.room.send('request_state');
+    } catch (e) {
+      // ignore if room closed
+    }
 
     this.room.onLeave((code) => {
       console.warn(`[Colyseus] Left room with code: ${code}`);
@@ -280,9 +317,30 @@ class ColyseusClientService {
     return () => this.errorCallbacks.delete(cb);
   }
 
+  public sendRadio(transmission: any) {
+    if (this.room) {
+      this.room.send('radio_transmission', transmission);
+    }
+  }
+
+  public onRadio(cb: RadioCallback): () => void {
+    this.radioCallbacks.add(cb);
+    return () => this.radioCallbacks.delete(cb);
+  }
+
   public onConnection(cb: ConnectionCallback): () => void {
     this.connectionCallbacks.add(cb);
     return () => this.connectionCallbacks.delete(cb);
+  }
+
+  private notifyRadio(transmission: any) {
+    this.radioCallbacks.forEach((cb) => {
+      try {
+        cb(transmission);
+      } catch (e) {
+        console.error('Radio callback error:', e);
+      }
+    });
   }
 
   private notifyState(state: MissionState) {
