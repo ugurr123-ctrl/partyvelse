@@ -1,25 +1,39 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../types/game';
+import { SafeAssetImage } from '../SafeAssetImage';
 
 interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase }) => {
+export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdvancePhase, onAction }) => {
   const { signal } = state;
   const [feedbackText, setFeedbackText] = useState('');
 
   const handleTransmit = () => {
-    setFeedbackText(`DÖNÜŞÜM KURALI MÜHENDİSE AKTARILDI: "${signal.ruleDescription}"`);
-    onUpdate((prev) => ({
-      ...prev,
-      signal: {
-        ...prev.signal,
-        isLocked: false,
-      },
-    }));
+    setFeedbackText(
+      isDerinBasinc
+        ? 'Fırlatma verileri makiniste telsizden aktarıldı!'
+        : `DÖNÜŞÜM KURALI MÜHENDİSE AKTARILDI: "${signal.ruleDescription}"`
+    );
+    if (onAction) {
+      onAction('captain_signal_ready', {
+        message: isDerinBasinc
+          ? 'Dümenci sonar fırlatma verilerini aktardı.'
+          : 'Kaptan sinyal dönüşüm kuralını telsizden paylaştı.',
+      });
+    } else {
+      onUpdate((prev) => ({
+        ...prev,
+        signal: {
+          ...prev.signal,
+          isLocked: false,
+        },
+      }));
+    }
 
     setTimeout(() => {
       setFeedbackText('');
@@ -30,29 +44,40 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
 
   // Gölge Protokolü Phase 2 (Ajan: Lazer İntikali) state
-  const [golgePrismAngle, setGolgePrismAngle] = useState(45);
+  const [golgePrismAngle, setGolgePrismAngle] = useState(0);
   const [golgeDashMode, setGolgeDashMode] = useState<'surunme' | 'hamle' | 'atilma'>('hamle');
-  const [golgeBarrierProgress, setGolgeBarrierProgress] = useState<number>(2); // 1 = reached barrier 1, 2 = barrier 2, 3 = all clear
+  const [golgeBarrierProgress, setGolgeBarrierProgress] = useState<number>(1); // 1 = reached barrier 1, 2 = barrier 2, 3 = all clear
   const [golgeNoiseLevel, setGolgeNoiseLevel] = useState<number>(12);
+
+  const effectiveBarrierProgress = state.signal.isSolved || state.signal.frequencyMatched ? 3 : golgeBarrierProgress;
 
   const rotatePrism = (delta: number) => {
     setGolgePrismAngle(prev => (prev + delta + 360) % 360);
   };
 
   const handleGolgeLaserTrigger = () => {
-    // If prism angle is 45° or 45/225 (diagonal refraction)
     const isAngleAligned = golgePrismAngle === 45 || golgePrismAngle === 225;
-    if (isAngleAligned || golgeBarrierProgress >= 2) {
+    if (onAction) {
+      if (!isAngleAligned) {
+        setGolgeNoiseLevel(prev => Math.min(100, prev + 25));
+      }
+      setFeedbackText('');
+      onAction('theme_signal_solve', { freq: '740 THz', prismAngle: golgePrismAngle });
+      return;
+    }
+
+    if (isAngleAligned) {
       setGolgeBarrierProgress(3);
+      setFeedbackText('KORİDOR KUSURSUZ GEÇİLDİ! Optik prizma söküldü, lazer ızgarası kapandı.');
       onUpdate((prev) => ({
         ...prev,
         signal: {
           ...prev.signal,
           isLocked: true,
           frequencyMatched: true,
+          isSolved: true,
         },
       }));
-      setFeedbackText('KORİDOR KUSURSUZ GEÇİLDİ! Optik prizma söküldü, lazer ızgarası kapandı.');
     } else {
       setGolgeNoiseLevel(prev => Math.min(100, prev + 25));
       onUpdate((prev) => ({
@@ -60,7 +85,7 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
         stealthLevel: Math.max(0, (prev.stealthLevel ?? 100) - 10),
         timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 10),
       }));
-      setFeedbackText('LAZER SENSÖRÜ UYARISI! Prizma mandalını 045° açısına getirin.');
+      setFeedbackText('LAZER SENSÖRÜ UYARISI! Prizma mandalını Hackerın bildirdiği doğru açıya getirin.');
     }
   };
 
@@ -117,10 +142,12 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
 
         {/* Optical Laser Corridor Visual Card */}
         <div className="relative w-full h-44 rounded-xl overflow-hidden shadow-xl bg-[#0f0c1e] flex items-center justify-center border border-white/5">
-          <img 
+          <SafeAssetImage 
             className="w-full h-full object-cover opacity-60" 
             alt="Lazer Koridoru" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRRpj5KP0GDoTkLrLcBLaHphhuJPJaTnItESb-AOI3gX8idfITOA7xcYiB3D9F8mbTCzRz1kbmdFoMxR6qUnimvwCCn_D4XefRk_xK4U5qFtdZCf2grWmR81oYIOGCFB0N8OyHgVBpELLDGiidPtztmnwVzgDi2Jaehbe2JNgHfJktb2hkOPESGX9TLyk92vn1KEirjqwhxInmvI2rFHdBsig22VQpdaE92RoCICM"
+            fallbackIcon="sensors"
+            fallbackLabel="LAZER KORİDORU"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c1e] via-transparent to-[#0f0c1e]/60"></div>
           {/* Top Telemetry Inside Viewfinder */}
@@ -154,7 +181,7 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
               </div>
               <div className="flex flex-col">
                 <span className="font-mono text-[10px] text-[#00eefc] font-bold uppercase">
-                  {state.engineerName || 'HACKER MERT'} // CH-01
+                  {state.players.muhendis.name || 'HACKER MERT'} // CH-01
                 </span>
                 <span className="font-mono text-[9px] text-[#9e8f78]">KRİPTO TELSİZ BAĞLANTISI</span>
               </div>
@@ -169,7 +196,7 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
           <div className="p-2.5 rounded-lg bg-[#0f0c1e] flex items-start gap-2 border border-white/5">
             <span className="material-symbols-outlined text-[#ffb703] text-[16px] shrink-0 mt-0.5">graphic_eq</span>
             <p className="font-manrope text-xs text-white font-medium leading-relaxed">
-              “Bekle... Kırmızı ışın sönecek... 3.. 2.. 1.. <span className="text-[#ffb703] uppercase font-bold tracking-wide">ŞİMDİ SAĞA ADIM AT!</span>”
+              “Hacker telsizden lazer penceresi ve prizma açısını aktardığında hamleni yap...”
             </p>
           </div>
         </div>
@@ -214,7 +241,7 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
             </div>
             {/* Bariyer 2 */}
             <div className={`flex flex-col gap-1 p-2 rounded-lg border ${
-              golgeBarrierProgress >= 3
+              effectiveBarrierProgress >= 3
                 ? 'bg-[#2b273b] border-[#00eefc]/30 text-[#00eefc]'
                 : 'bg-[#2b273b] border-[#ffb703]/50 shadow-[0_0_10px_rgba(255,183,3,0.15)]'
             }`}>
@@ -224,24 +251,24 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
               </div>
               <span className="font-sora text-xs text-white font-semibold truncate">Bariyer 2</span>
               <span className="font-mono text-[9px] text-[#ffba27] uppercase font-bold">
-                {golgeBarrierProgress >= 3 ? 'Aşıldı' : 'Önünde'}
+                {effectiveBarrierProgress >= 3 ? 'Aşıldı' : 'Önünde'}
               </span>
             </div>
             {/* Bariyer 3 */}
             <div className={`flex flex-col gap-1 p-2 rounded-lg border ${
-              golgeBarrierProgress >= 3
+              effectiveBarrierProgress >= 3
                 ? 'bg-[#2b273b] border-emerald-500/50 text-emerald-300'
                 : 'bg-[#1c192c] border-white/5 opacity-60'
             }`}>
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[9px] font-bold">03</span>
                 <span className="material-symbols-outlined text-[14px]">
-                  {golgeBarrierProgress >= 3 ? 'check_circle' : 'lock'}
+                  {effectiveBarrierProgress >= 3 ? 'check_circle' : 'lock'}
                 </span>
               </div>
               <span className="font-sora text-xs text-white font-semibold truncate">Bariyer 3</span>
               <span className="font-mono text-[9px] uppercase">
-                {golgeBarrierProgress >= 3 ? 'Aşıldı' : 'Kilitli'}
+                {effectiveBarrierProgress >= 3 ? 'Aşıldı' : 'Kilitli'}
               </span>
             </div>
           </div>
@@ -341,18 +368,32 @@ export const Screen07SignalCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
         </div>
 
         {/* Feedback message */}
-        {feedbackText && (
-          <div className="p-3 rounded-xl bg-[#0f0c1e] border border-[#ffb703]/40 text-[#ffdba0] text-xs font-mono flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-[#ffb703]">info</span>
-            <span>{feedbackText}</span>
+        {(state.feedbackMessage || feedbackText) && (
+          <div className={`p-3 rounded-xl bg-[#0f0c1e] border text-xs font-mono flex items-center gap-2 ${
+            state.feedbackState === 'success'
+              ? 'border-emerald-500/50 text-emerald-300'
+              : state.feedbackState === 'error'
+              ? 'border-red-500/50 text-red-300'
+              : 'border-[#ffb703]/40 text-[#ffdba0]'
+          }`}>
+            <span className={`material-symbols-outlined text-[18px] ${
+              state.feedbackState === 'success'
+                ? 'text-emerald-400'
+                : state.feedbackState === 'error'
+                ? 'text-red-400'
+                : 'text-[#ffb703]'
+            }`}>
+              {state.feedbackState === 'success' ? 'check_circle' : state.feedbackState === 'error' ? 'error' : 'info'}
+            </span>
+            <span>{state.feedbackMessage || feedbackText}</span>
           </div>
         )}
 
         {/* Bottom Action Button */}
         <div className="pt-1 flex flex-col gap-1.5">
-          {state.signal.frequencyMatched ? (
+          {state.signal.isSolved || state.signal.frequencyMatched ? (
             <button
-              onClick={() => onAdvancePhase({ roundId: state.currentRoundId || 'round1', expectedPhaseIndex: 1 })}
+              onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
               className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all"
               type="button"
             >

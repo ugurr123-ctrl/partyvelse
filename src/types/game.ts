@@ -3,9 +3,16 @@
  * Game Types, State Definitions & Constants
  */
 
-export type Role = 'kaptan' | 'muhendis';
+export type Role = 'kaptan' | 'muhendis' | 'kriptolog' | 'guvenlik';
 
-export type OperationTheme = 'kayip_sinyal' | 'derin_basinc' | 'golge_protokolu' | 'karantina_2088';
+export type TeamOperationTheme = 'omega_ekip' | 'titan_maden' | 'siber_kale' | 'buzul_ussu';
+
+export type OperationTheme =
+  | 'kayip_sinyal'
+  | 'derin_basinc'
+  | 'golge_protokolu'
+  | 'karantina_2088'
+  | TeamOperationTheme;
 
 export interface KarantinaData {
   // Phase 1: Hücresel Analiz & UV İzolasyonu
@@ -355,11 +362,167 @@ export interface AdvancedScenarioData {
   evacuationLog: string[];
 }
 
+export interface OmegaSectorTelemetry {
+  id: 'S1' | 'S2' | 'S3' | 'S4' | 'S5';
+  label: string;
+  temp: number;
+  pressure: number;
+  rad: number;
+  vibration: number;
+  glyphTag: [string, string, string, string];
+}
+
+export interface OmegaTeamData {
+  themeId: TeamOperationTheme;
+  playerCount: 3 | 4;
+  activeStage: 1 | 2 | 3 | 4 | 5;
+
+  // Stage 1: 5-Sektör Anomali Teşhisi & Offsetli 4-Glif Şifreleme + Çift Alt Kanal Kilidi
+  stage1: {
+    sectors: OmegaSectorTelemetry[];
+    faultySectorId: 'S1' | 'S2' | 'S3' | 'S4' | 'S5';
+    ruleDescription: string;
+    glyphCipherTable: Record<string, number>;
+    cipherRuleType: 'swap_first_two' | 'reverse_last_two' | 'shift_plus_one';
+    cipherRuleDescription: string;
+    targetPin: string; // 4-digit transformed PIN
+    targetValveAngle: 45 | 90 | 135 | 180;
+    targetPumpTier: 1 | 2 | 3 | 4 | 5;
+    targetPolarity: 'ALFA' | 'BETA' | 'GAMA';
+    targetSubChannel: 'X1' | 'X2' | 'X3';
+
+    captainSelectedSector: 'S1' | 'S2' | 'S3' | 'S4' | 'S5' | null;
+    kriptologSubmittedPin: string;
+    muhendisValveAngle: 45 | 90 | 135 | 180;
+    muhendisPumpTier: 1 | 2 | 3 | 4 | 5;
+    muhendisPurgeReady: boolean;
+    shieldPolarity: 'ALFA' | 'BETA' | 'GAMA' | null;
+    shieldSubChannel: 'X1' | 'X2' | 'X3' | null;
+    shieldSafetyUnlocked: boolean;
+    solved: boolean;
+  };
+
+  // Stage 2: Harmonik Frekans Kalibrasyonu & Çapraz Parazit İzolasyonu
+  stage2: {
+    targetBandMode: 'DAR' | 'GENIS' | 'DARBE';
+    targetBandKey: 'K1' | 'K2' | 'K3';
+    bandKeyMap: Record<'DAR' | 'GENIS' | 'DARBE', 'K1' | 'K2' | 'K3'>;
+    targetOscA: number; // 2..9
+    targetOscB: number; // 1..8
+    measuredNoiseDb: 18 | 24 | 30 | 36;
+    resonanceDrift: 2 | 4 | 6;
+    keyBaseFreqMap: Record<'K1' | 'K2' | 'K3', number>;
+    targetFreqCode: string; // 3-digit base + noise + drift
+    targetPulseMode: 'P-1' | 'P-2' | 'P-3';
+    requiredFilterRelay: 'F1' | 'F2' | 'F3';
+    interferenceSource: 'IC_HAT' | 'DIS_HAT' | 'CAPRAZ_HAT';
+
+    captainWaveConfirmed: boolean;
+    muhendisOscA: number;
+    muhendisOscB: number;
+    muhendisTuned: boolean;
+    kriptologFreqCode: string;
+    kriptologPulseMode: 'P-1' | 'P-2' | 'P-3' | null;
+    kriptologSynced: boolean;
+    defenseSource: 'IC_HAT' | 'DIS_HAT' | 'CAPRAZ_HAT' | null;
+    defenseFilterRelay: 'F1' | 'F2' | 'F3' | null;
+    defenseIsolated: boolean;
+    solved: boolean;
+  };
+
+  // Stage 3: 12 MW Dinamik 4-Baralı Güç Matrisi, Ağırlıklı Sağlama & Çift Doğrulamalı Savunma
+  stage3: {
+    totalBudgetMw: number; // 12 MW
+    targetItki: number;
+    targetKalkan: number;
+    targetYasam: number;
+    targetSogutma: number;
+    priorityOrderText: string;
+    carrierBand: 'HF-1' | 'HF-2' | 'HF-3' | 'HF-4';
+    checksumMultiplier: number;
+    targetChecksum: string; // 3-digit weighted checksum
+    threatQuadrant: 'KUZEY' | 'DOGU' | 'GUNEY' | 'BATI';
+    requiredFirewallLevel: 1 | 2 | 3 | 4;
+    secondaryCipherTag: 'A' | 'B' | 'C' | 'D';
+
+    captainOrderConfirmed: boolean;
+    muhendisItki: number;
+    muhendisKalkan: number;
+    muhendisYasam: number;
+    muhendisSogutma: number;
+    muhendisLocked: boolean;
+    kriptologChecksum: string;
+    kriptologBand: 'HF-1' | 'HF-2' | 'HF-3' | 'HF-4' | null;
+    kriptologLocked: boolean;
+    defenseQuadrant: 'KUZEY' | 'DOGU' | 'GUNEY' | 'BATI' | null;
+    defenseFirewallLevel: 1 | 2 | 3 | 4;
+    defenseCipherTag: 'A' | 'B' | 'C' | 'D' | null;
+    defenseLocked: boolean;
+    solved: boolean;
+  };
+
+  // Stage 4: Acil Kriz Müdahalesi & Sıralı Şalter Zinciri
+  stage4: {
+    crisisTitle: string;
+    protocolCode: 'DELTA-3' | 'SIGMA-7' | 'OMEGA-9';
+    targetEmergencyPsi: 60 | 80 | 100 | 120;
+    protocolRelayBook: Record<'DELTA-3' | 'SIGMA-7' | 'OMEGA-9', { seq: ['R1' | 'R2' | 'R3', 'R1' | 'R2' | 'R3', 'R1' | 'R2' | 'R3']; token: string }>;
+    targetRelaySeq: ['R1' | 'R2' | 'R3', 'R1' | 'R2' | 'R3', 'R1' | 'R2' | 'R3'];
+    targetBreachToken: string;
+    breachedBulkhead: 'B1' | 'B2' | 'B3' | 'B4';
+
+    captainAuthorized: boolean;
+    muhendisRelaySeq: Array<'R1' | 'R2' | 'R3'>;
+    muhendisEmergencyPsi: number;
+    muhendisStabilized: boolean;
+    kriptologBreachToken: string;
+    kriptologOverridden: boolean;
+    defenseBulkhead: 'B1' | 'B2' | 'B3' | 'B4' | null;
+    defenseTokenInput: string;
+    defenseContained: boolean;
+    solved: boolean;
+  };
+
+  // Stage 5: Çift Kilitli Tahliye, Yardımcı İtki & Fırlatma Sekansı
+  stage5: {
+    recommendedRoute: 'ALFA' | 'BETA' | 'GAMA';
+    routeSummary: string;
+    targetFuelPct: number; // 65 | 80 | 95
+    targetAuxPower: number; // 20 | 30 | 40
+    targetLatchCode: 'M1' | 'M2' | 'M3';
+    routeLaunchCodes: Record<'ALFA' | 'BETA' | 'GAMA', string>;
+    obstructedHatch: 'H1' | 'H2' | 'H3' | 'H4';
+    hatchPin: string; // 2-digit pin read by Mühendis
+    targetLaunchCode: string; // e.g. "7-A-5-48"
+
+    captainSelectedRoute: 'ALFA' | 'BETA' | 'GAMA' | null;
+    captainFinalLocked: boolean;
+    muhendisFuelPct: number;
+    muhendisAuxPower: number;
+    muhendisThrusterArmed: boolean;
+    kriptologLaunchCode: string;
+    kriptologBeaconSent: boolean;
+    defenseClearedHatch: 'H1' | 'H2' | 'H3' | 'H4' | null;
+    defenseLatchCode: 'M1' | 'M2' | 'M3' | null;
+    defenseFinalSealed: boolean;
+    solved: boolean;
+  };
+
+  teamStats: {
+    mistakesCount: number;
+    captainOps: number;
+    muhendisOps: number;
+    kriptologOps: number;
+    guvenlikOps: number;
+  };
+}
+
 export interface MissionState {
   roomCode: string;
   roundId: string; // Unique identifier regenerated on each new round
   status: GameStatus;
-  operationTheme?: OperationTheme; // 'kayip_sinyal' (Space Station) or 'derin_basinc' (Deep Sea Bathyscaphe)
+  operationTheme?: OperationTheme;
+  targetPlayerCount?: 2 | 3 | 4;
   gameMode?: GameMode; // 'standart' (classic) or 'gelismis' (interdependent tactical)
   activeEnvironment: EnvironmentType;
   selectedMiniGames: [MiniGameType, MiniGameType];
@@ -370,8 +533,11 @@ export interface MissionState {
   players: {
     kaptan: PlayerInfo;
     muhendis: PlayerInfo;
+    kriptolog?: PlayerInfo;
+    guvenlik?: PlayerInfo;
   };
   myRole: Role;
+  hostId?: string;
   isPaused: boolean;
   isDisconnected: boolean;
   feedbackState: FeedbackState;
@@ -396,6 +562,9 @@ export interface MissionState {
   // Karantina 2088 payload
   karantinaData?: KarantinaData;
 
+  // Omega 3 & 4 Player Team Operation payload
+  omegaData?: OmegaTeamData;
+
   // Final stats
   rescuedCrewCount: number;
   completedTasksCount: number;
@@ -406,5 +575,5 @@ export interface MissionState {
     hullBonus: number;
     crewBonus: number;
   };
-  outcomeType: 'tam_basari' | 'kismi_kurtarma' | 'basarisizlik';
+  outcomeType?: 'tam_basari' | 'kismi_kurtarma' | 'basarisizlik';
 }

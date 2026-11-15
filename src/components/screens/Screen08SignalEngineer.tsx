@@ -80,7 +80,7 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
 
   // Gölge Protokolü Phase 2 (Hacker: Lazer Körleme) state
-  const [golgeEmpFreq, setGolgeEmpFreq] = useState<number>(740);
+  const [golgeEmpFreq, setGolgeEmpFreq] = useState<number>(650);
   const [golgePulseActive, setGolgePulseActive] = useState<boolean>(false);
   const [golgeDamperReady, setGolgeDamperReady] = useState<boolean>(true);
 
@@ -94,9 +94,30 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
   };
 
   const handleGolgeLaserTriggerAction = () => {
+    const empAligned = golgeEmpFreq === 740;
     if (onAction) {
-      onAction('signal_engineer_tune', { freq: '740 THz' });
+      setFeedback({ type: 'idle', msg: '' });
+      onAction('theme_signal_solve', { freq: '740 THz', empFreq: golgeEmpFreq });
+      return;
     }
+
+    if (!empAligned) {
+      setFeedback({
+        type: 'error',
+        msg: 'EMP DAMPER HATALI! Hedef rezonansı 740 THz seviyesine sabitleyin.',
+      });
+      onUpdate((prev) => ({
+        ...prev,
+        stealthLevel: Math.max(0, (prev.stealthLevel ?? 100) - 10),
+        timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 10),
+      }));
+      return;
+    }
+
+    setFeedback({
+      type: 'success',
+      msg: 'KÖR NOKTA KORİDORU AÇILDI! 3.2 saniyelik güvenli geçiş penceresi ajana iletildi.',
+    });
     onUpdate((prev) => ({
       ...prev,
       signal: {
@@ -107,10 +128,6 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         isSolved: true,
       },
     }));
-    setFeedback({
-      type: 'success',
-      msg: 'KÖR NOKTA KORİDORU AÇILDI! 3.2 saniyelik güvenli geçiş penceresi ajana iletildi.',
-    });
   };
 
   // Gölge Protokolü (Hacker - Lazer Körleme) UI (Lines 730-1007 of template)
@@ -357,24 +374,28 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         </div>
 
         {/* Feedback text */}
-        {feedback.msg && (
-          <div className={`p-3 rounded-xl border flex items-center gap-2 ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' 
-              : 'bg-red-950/40 border-red-500/50 text-red-300'
-          }`}>
-            <span className="material-symbols-outlined text-[18px]">
-              {feedback.type === 'success' ? 'check_circle' : 'error'}
-            </span>
-            <span className="text-xs font-semibold leading-tight">{feedback.msg}</span>
-          </div>
-        )}
+        {(state.feedbackMessage || feedback.msg) && (() => {
+          const mode = state.feedbackMessage ? state.feedbackState : feedback.type;
+          const bannerClass =
+            mode === 'success'
+              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+              : mode === 'idle'
+              ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+              : 'bg-red-950/40 border-red-500/50 text-red-300';
+          const icon = mode === 'success' ? 'check_circle' : mode === 'idle' ? 'hourglass_top' : 'error';
+          return (
+            <div className={`p-3 rounded-xl border flex items-center gap-2 ${bannerClass}`}>
+              <span className="material-symbols-outlined text-[18px]">{icon}</span>
+              <span className="text-xs font-semibold leading-tight">{state.feedbackMessage || feedback.msg}</span>
+            </div>
+          );
+        })()}
 
         {/* Action Button */}
         <div className="pt-1">
-          {signal.frequencyMatched ? (
+          {signal.isSolved || signal.frequencyMatched ? (
             <button
-              onClick={() => onAdvancePhase({ roundId: state.currentRoundId || 'round1', expectedPhaseIndex: 1 })}
+              onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
               className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all"
               type="button"
             >
@@ -397,23 +418,32 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
   }
 
   // Derin Basınç Manyetik Torpido State
-  const [derinTorpFreq, setDerinTorpFreq] = useState(433.8);
-  const [selectedTube, setSelectedTube] = useState<number>(2);
+  const [derinTorpFreq, setDerinTorpFreq] = useState(430.0);
+  const [selectedTube, setSelectedTube] = useState<number>(1);
+  const [derinFeedback, setDerinFeedback] = useState<string>('');
 
   const adjustFreq = (delta: number) => {
     if (signal.isSolved) return;
+    setDerinFeedback('');
     setDerinTorpFreq(prev => Math.round((prev + delta) * 10) / 10);
   };
 
   const handleLaunchTorpedo = () => {
-    // Kovan 2 and 433.8 MHz
     const tubeOk = selectedTube === 2;
     const freqOk = Math.abs(derinTorpFreq - 433.8) < 0.05;
 
+    if (onAction) {
+      setDerinFeedback('');
+      onAction('theme_signal_solve', {
+        freq: `${derinTorpFreq.toFixed(1)} MHz`,
+        tube: selectedTube,
+        torpFreq: derinTorpFreq,
+      });
+      return;
+    }
+
     if (tubeOk && freqOk) {
-      if (onAction) {
-        onAction('signal_engineer_tune', { freq: signal.correctFrequency });
-      }
+      setDerinFeedback('');
       onUpdate((prev) => ({
         ...prev,
         signal: {
@@ -424,6 +454,7 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         },
       }));
     } else {
+      setDerinFeedback('Hatalı kovan veya frekans! Dümencinin sonarına danış. Bütünlük -%10, Süre -15 sn!');
       onUpdate((prev) => ({
         ...prev,
         hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
@@ -470,7 +501,7 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
               Karşı Tedbir Torpidosunu Ateşle
             </h2>
             <p className="text-xs text-[#d5c4ac] leading-relaxed">
-              Dümencinin telsizle ilettiği kovan (KVN-2) ve 433.8 MHz frekansına göre kovanı hazırla ve ateşle.
+              Dümencinin telsizle ilettiği kovan numarasına ve frekans değerine göre kovanı hazırla ve ateşle.
             </p>
           </div>
         </div>
@@ -510,10 +541,10 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
                   </div>
                   <div className="flex items-center justify-between py-0.5">
                     <span className="material-symbols-outlined text-[18px] text-[#00eefc]">
-                      {tubeNum === 2 ? 'waves' : 'lock'}
+                      sensors
                     </span>
                     <span className="font-mono text-[8px] text-[#00eefc] font-bold">
-                      {tubeNum === 2 ? 'SU ALMA TAMAM' : '0.0 BAR'}
+                      HAZIR
                     </span>
                   </div>
                   <div className="w-full bg-[#363246] h-1 rounded-full overflow-hidden mt-1">
@@ -533,7 +564,7 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
               <span className="font-mono text-[9px] text-[#00eefc] uppercase tracking-wider font-bold">MANYETİK AKORT KADRANI</span>
             </div>
             <span className="font-mono text-[8px] text-[#ffba27] bg-[#ffb703]/20 px-1.5 py-0.5 rounded font-bold">
-              {Math.abs(derinTorpFreq - 433.8) < 0.05 ? 'KİLİTLENDİ' : 'AYARLANIYOR'}
+              AKORT AKTİF
             </span>
           </div>
 
@@ -541,14 +572,16 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
             <div className="flex flex-col">
               <span className="font-mono text-[8px] text-[#d5c4ac] uppercase">HEDEF FREKANS</span>
               <div className="flex items-baseline gap-1">
-                <span className={`font-sora text-2xl font-extrabold ${Math.abs(derinTorpFreq - 433.8) < 0.05 ? 'text-[#ffba27]' : 'text-white'}`}>
+                <span className="font-sora text-2xl font-extrabold text-white">
                   {derinTorpFreq.toFixed(1)}
                 </span>
                 <span className="font-mono text-[10px] text-[#00eefc]">MHz</span>
               </div>
             </div>
             <div className="flex flex-col items-end gap-0.5">
-              <span className="font-mono text-[8px] text-[#00eefc]">MANYETİK REZONANS: %99.2</span>
+              <span className="font-mono text-[8px] text-[#00eefc]">
+                MANYETİK REZONANS: %{Math.max(0, Math.min(100, 100 - Math.abs(derinTorpFreq - 433.8) * 10)).toFixed(1)}
+              </span>
             </div>
           </div>
 
@@ -568,20 +601,51 @@ export const Screen08SignalEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         </div>
 
         {/* 3. Pnömatik Güç Çubuğu */}
-        <div className="flex flex-col gap-1 p-2.5 rounded-xl bg-[#1c192c] shadow-md border border-white/5">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[8px] text-[#ffdba0] uppercase font-bold">PNÖMATİK PİSTON GÜCÜ</span>
-            <span className="font-mono text-[9px] text-[#00eefc] font-bold">%100 HAZIR</span>
-          </div>
-          <div className="grid grid-cols-6 gap-1 py-0.5">
-            <div className="h-2 rounded-sm bg-[#ffba27]"></div>
-            <div className="h-2 rounded-sm bg-[#ffba27]"></div>
-            <div className="h-2 rounded-sm bg-[#ffba27]"></div>
-            <div className="h-2 rounded-sm bg-[#ffba27]"></div>
-            <div className="h-2 rounded-sm bg-[#ffba27]"></div>
-            <div className="h-2 rounded-sm bg-[#00eefc] animate-pulse"></div>
-          </div>
-        </div>
+        {(() => {
+          const freqMatched = Math.abs(derinTorpFreq - 433.8) < 0.05;
+          const lockedReady = selectedTube === 2 && freqMatched;
+          const filledBars = lockedReady ? 6 : freqMatched ? 5 : selectedTube === 2 ? 4 : 3;
+          return (
+            <div className="flex flex-col gap-1 p-2.5 rounded-xl bg-[#1c192c] shadow-md border border-white/5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[8px] text-[#ffdba0] uppercase font-bold">PNÖMATİK PİSTON GÜCÜ</span>
+                <span className={`font-mono text-[9px] font-bold ${lockedReady ? 'text-emerald-400' : 'text-[#00eefc]'}`}>
+                  {lockedReady ? '%100 KİLİTLİ' : 'KALİBRASYONDA'}
+                </span>
+              </div>
+              <div className="grid grid-cols-6 gap-1 py-0.5">
+                {[0, 1, 2, 3, 4, 5].map((barIdx) => (
+                  <div
+                    key={barIdx}
+                    className={`h-2 rounded-sm ${
+                      barIdx < filledBars
+                        ? barIdx === 5
+                          ? 'bg-[#00eefc] animate-pulse'
+                          : 'bg-[#ffba27]'
+                        : 'bg-[#363246]'
+                    }`}
+                  ></div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
+        {(state.feedbackMessage || derinFeedback) && (() => {
+          const isSuccess = state.feedbackMessage ? state.feedbackState === 'success' : false;
+          const isIdle = state.feedbackMessage ? state.feedbackState === 'idle' : false;
+          return (
+            <div className={`p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
+              isSuccess
+                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                : isIdle
+                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
+                : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+            }`}>
+              {state.feedbackMessage || derinFeedback}
+            </div>
+          );
+        })()}
 
         {/* 4. Ateşleme Butonu */}
         {!signal.isSolved ? (

@@ -39,8 +39,8 @@ export const ScreenKarantinaPhase1Bio: React.FC<Props> = ({
     baranValves: 3,
   };
 
-  const [spectralNm, setSpectralNm] = useState<number>(kData.spectralFilterNm || 415);
-  const [selectedBaseKey, setSelectedBaseKey] = useState<string>(kData.selectedBase || 'sitozin-9');
+  const [spectralNm, setSpectralNm] = useState<number>(kData.spectralFilterNm ?? 520);
+  const [selectedBaseKey, setSelectedBaseKey] = useState<string>(kData.selectedBase || 'adenin-x');
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,7 +77,7 @@ export const ScreenKarantinaPhase1Bio: React.FC<Props> = ({
         </div>
 
         <div className="w-9 h-9 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-[#ffdba0]">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">science</span>
         </div>
       </header>
 
@@ -331,6 +331,32 @@ export const ScreenKarantinaPhase1Bio: React.FC<Props> = ({
             </p>
           </div>
         </div>
+
+        {/* Feedback Banner */}
+        {state.feedbackMessage && (
+          <div
+            className={`rounded-xl p-2.5 flex items-center gap-2 text-xs shadow-md border ${
+              state.feedbackState === 'success'
+                ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
+                : state.feedbackState === 'error'
+                ? 'bg-red-950/70 border-red-500/50 text-red-200'
+                : 'bg-cyan-950/70 border-cyan-500/50 text-cyan-200'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[18px] shrink-0 ${
+                state.feedbackState === 'success'
+                  ? 'text-emerald-400'
+                  : state.feedbackState === 'error'
+                  ? 'text-red-400'
+                  : 'text-cyan-400'
+              }`}
+            >
+              {state.feedbackState === 'success' ? 'check_circle' : state.feedbackState === 'error' ? 'error' : 'info'}
+            </span>
+            <span>{state.feedbackMessage}</span>
+          </div>
+        )}
 
         {/* Transmit Button */}
         <button

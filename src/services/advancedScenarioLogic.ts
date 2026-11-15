@@ -3,9 +3,9 @@ import {
   Role, 
   AdvancedScenarioData,
   AdvancedSubsystemId,
-  RescueRoute
+  MiniGameType
 } from '../types/game';
-import { calculateFinalScore, RESCUE_ROUTES } from './gameFactory';
+import { calculateFinalScore } from './gameFactory';
 
 export interface ActionResult {
   nextState: MissionState;
@@ -479,6 +479,10 @@ export function applyAdvancedAction(
       return { nextState: state, error: 'Yalnızca Mühendis hava kilidini mühürleyebilir.' };
     }
 
+    if (adv.subsystems.hava_kilidi.isSealed) {
+      return { nextState: state };
+    }
+
     if (adv.subsystems.hava_kilidi.compressorPower < 3) {
       return {
         nextState: state,
@@ -556,18 +560,17 @@ export function applyAdvancedAction(
 
   // 9. Rescue Selection & Dual Confirmation
   if (actionType === 'advanced_rescue_select') {
-    if (data.routeId) {
-      state.rescue.selectedRouteId = data.routeId;
-      state.rescue.captainApproved = false;
-      state.rescue.engineerApproved = false;
-      adv.evacuationLog.push(`[Tahliye Planı] Rota ${data.routeId.toUpperCase()} seçildi. Her iki rolün onayı bekleniyor.`);
+    const routeId = data?.routeId;
+    if (!routeId) {
+      return { nextState: state };
     }
+    adv.evacuationLog.push(`[Tahliye Planı] Rota ${String(routeId).toUpperCase()} seçildi. Her iki rolün onayı bekleniyor.`);
     return {
       nextState: {
         ...state,
         rescue: {
           ...state.rescue,
-          selectedRouteId: data.routeId,
+          selectedRouteId: routeId,
           captainApproved: false,
           engineerApproved: false,
           validationError: null,
@@ -588,21 +591,53 @@ export function applyAdvancedAction(
       engineerApproved: nextEng,
     };
 
-    adv.evacuationLog.push(`[Tahliye Onayı] ${isCaptain ? 'Kaptan' : 'Mühendis'} ${nextRescue.selectedRouteId.toUpperCase()} rotasını ${isCaptain ? nextCap : nextEng ? 'onayladı' : 'geri çekti'}.`);
+    const actionWord = (isCaptain ? nextCap : nextEng) ? 'onayladı' : 'geri çekti';
+    adv.evacuationLog.push(`[Tahliye Onayı] ${isCaptain ? 'Kaptan' : 'Mühendis'} ${nextRescue.selectedRouteId.toUpperCase()} rotasını ${actionWord}.`);
 
-    // When both approve, validate prerequisites and compute outcome
+    // When both approve, validate prerequisites dynamically against active mini-games and compute outcome
     if (nextCap && nextEng) {
       const routeId = nextRescue.selectedRouteId;
+      const activeGames: MiniGameType[] = state.selectedMiniGames && state.selectedMiniGames.length > 0
+        ? state.selectedMiniGames
+        : ['ariza_teshisi', 'sinyal_cozumu'];
 
-      // 1. Strict Prerequisite Validations
+      const isSubsystemDone = (game: MiniGameType): boolean => {
+        switch (game) {
+          case 'ariza_teshisi':
+            return Boolean(adv.subsystems.reaktor.isStabilized);
+          case 'sinyal_cozumu':
+            return Boolean(adv.subsystems.sinyal.isLocked);
+          case 'hava_kilidi':
+            return Boolean(adv.subsystems.hava_kilidi.isSealed);
+          case 'kablo_baglantisi':
+            return Boolean(adv.subsystems.kablo?.isRepaired);
+          case 'radar_yonlendirme':
+            return Boolean(adv.subsystems.radar?.isAligned);
+          default:
+            return false;
+        }
+      };
+
+      const subsystemLabel = (game: MiniGameType): string => {
+        switch (game) {
+          case 'ariza_teshisi':
+            return 'Reaktör';
+          case 'sinyal_cozumu':
+            return 'Sinyal';
+          case 'hava_kilidi':
+            return 'Hava Kilidi';
+          case 'kablo_baglantisi':
+            return 'Kablo';
+          case 'radar_yonlendirme':
+            return 'Radar';
+        }
+      };
+
+      // 1. Dynamic Prerequisite Validations
       if (routeId === 'alfa') {
-        const missing: string[] = [];
-        if (!adv.subsystems.reaktor.isStabilized) missing.push('Reaktör');
-        if (!adv.subsystems.sinyal.isLocked) missing.push('Sinyal');
-        if (!adv.subsystems.hava_kilidi.isSealed) missing.push('Hava Kilidi');
-
+        const missing = activeGames.filter((g) => !isSubsystemDone(g)).map(subsystemLabel);
         if (missing.length > 0) {
-          const err = `Rota Alfa (Tam Tahliye) için tüm sistemler (Reaktör, Sinyal ve Hava Kilidi) tamamlanmalıdır! Eksikler: ${missing.join(', ')}`;
+          const err = `Rota Alfa (Tam Tahliye) için aktif görev sistemlerinin tamamı çözülmelidir! Eksikler: ${missing.join(', ')}`;
           nextRescue.captainApproved = false;
           nextRescue.engineerApproved = false;
           nextRescue.validationError = err;
@@ -619,16 +654,14 @@ export function applyAdvancedAction(
           };
         }
       } else if (routeId === 'beta') {
-        const missing: string[] = [];
-        if (!adv.subsystems.reaktor.isStabilized) missing.push('Reaktör');
-        if (!adv.subsystems.sinyal.isLocked) missing.push('Sinyal');
-
-        if (missing.length > 0) {
-          const err = `Rota Beta (Lagrange Koridoru) için Reaktör dengelenmiş ve Sinyal kilitlenmiş olmalıdır! Eksikler: ${missing.join(', ')}`;
+        const solvedActiveCount = activeGames.filter((g) => isSubsystemDone(g)).length;
+        const minBetaRequired = Math.min(2, activeGames.length);
+        if (solvedActiveCount < minBetaRequired) {
+          const err = `Rota Beta (Lagrange Koridoru) için en az ${minBetaRequired} aktif sistemin dengelenmiş olması gerekir!`;
           nextRescue.captainApproved = false;
           nextRescue.engineerApproved = false;
           nextRescue.validationError = err;
-          adv.evacuationLog.push(`[Reddedildi] Rota Beta önkoşulları eksik: ${missing.join(', ')}`);
+          adv.evacuationLog.push(`[Reddedildi] Rota Beta önkoşulu eksik: En az ${minBetaRequired} aktif sistem tamamlanmalıdır.`);
           return {
             nextState: {
               ...state,
@@ -641,13 +674,13 @@ export function applyAdvancedAction(
           };
         }
       } else if (routeId === 'gama') {
-        const hasAtLeastOne = adv.subsystems.reaktor.isStabilized || adv.subsystems.sinyal.isLocked;
-        if (!hasAtLeastOne) {
-          const err = 'Rota Gama (Acil Kaçış Podu) için en az bir sistemin (Reaktör veya Sinyal) çalışır durumda olması gerekir. Sıfır hazırlıkla fırlatma yapılamaz!';
+        const solvedActiveCount = activeGames.filter((g) => isSubsystemDone(g)).length;
+        if (solvedActiveCount < 1) {
+          const err = 'Rota Gama (Acil Kaçış Podu) için en az 1 aktif sistemin dengelenmiş olması gerekir!';
           nextRescue.captainApproved = false;
           nextRescue.engineerApproved = false;
           nextRescue.validationError = err;
-          adv.evacuationLog.push('[Reddedildi] Rota Gama önkoşulu eksik: En az Reaktör veya Sinyal hazırlanmalıdır.');
+          adv.evacuationLog.push('[Reddedildi] Rota Gama önkoşulu eksik: En az 1 aktif sistem tamamlanmalıdır.');
           return {
             nextState: {
               ...state,
@@ -665,10 +698,12 @@ export function applyAdvancedAction(
       const travelTime = routeId === 'alfa' ? 75 : routeId === 'beta' ? 50 : 30;
       const travelHullStress = routeId === 'gama' ? 10 : 5;
 
-      const tasksCompleted = 
+      const tasksCompleted =
         (adv.subsystems.reaktor.isStabilized ? 1 : 0) +
         (adv.subsystems.sinyal.isLocked ? 1 : 0) +
-        (adv.subsystems.hava_kilidi.isSealed ? 1 : 0);
+        (adv.subsystems.hava_kilidi.isSealed ? 1 : 0) +
+        (adv.subsystems.kablo?.isRepaired ? 1 : 0) +
+        (adv.subsystems.radar?.isAligned ? 1 : 0);
 
       // Check Time Constraint
       if (timeLeft < travelTime) {
@@ -736,16 +771,15 @@ export function applyAdvancedAction(
         crewSaved = 8;
         outcome = 'tam_basari';
         adv.evacuationLog.push('🚀 [Tahliye Başarılı] Lagrange otonom mekiğiyle 8 mürettebat sıfır riskle kurtarıldı.');
-      } else if (routeId === 'gama') {
+      } else {
         crewSaved = 6;
         outcome = 'kismi_kurtarma';
         adv.evacuationLog.push('🚀 [Acil Tahliye] Acil kaçış poduyla 6 personel güvenli bölgeye ulaştırıldı.');
       }
 
       const scoreData = calculateFinalScore(tasksCompleted, timeLeft, hull, crewSaved);
-      const signalBonus = adv.subsystems.sinyal.isLocked ? 200 : 0;
-      const reactorBonus = adv.subsystems.reaktor.isStabilized ? 200 : 0;
-      const totalScore = scoreData.total + signalBonus + reactorBonus;
+      const shieldBonus = adv.event.chosenReaction === 'kalkan' ? 200 : 0;
+      const totalScore = scoreData.total + shieldBonus;
 
       return {
         nextState: {
@@ -758,7 +792,7 @@ export function applyAdvancedAction(
           finalScore: totalScore,
           scoreBreakdown: {
             ...scoreData.breakdown,
-            tasksScore: scoreData.breakdown.tasksScore + signalBonus + reactorBonus,
+            tasksScore: scoreData.breakdown.tasksScore + shieldBonus,
           },
           outcomeType: outcome,
           feedbackState: 'success',
@@ -805,6 +839,9 @@ export function applyAdvancedAction(
     if (!adv.subsystems.kablo) {
       adv.subsystems.kablo = { isRepaired: false, cables: state.cable.cables, ports: state.cable.ports, portAssignments: {} };
     }
+    if (adv.subsystems.kablo.isRepaired) {
+      return { nextState: state };
+    }
     const { ports, portAssignments } = adv.subsystems.kablo;
     let allCorrect = true;
     for (const port of ports) {
@@ -813,8 +850,10 @@ export function applyAdvancedAction(
         break;
       }
     }
+    let deltaTasks = 0;
     if (allCorrect) {
       adv.subsystems.kablo.isRepaired = true;
+      deltaTasks = 1;
       feedbackState = 'success';
       feedbackMessage = 'Tüm veri hatları doğru frekans terminallerine bağlandı ve onarıldı!';
       adv.evacuationLog.push('⚡ [Kablo] Veri hatları frekans eşleşmesi doğrulandı ve onarıldı.');
@@ -826,6 +865,7 @@ export function applyAdvancedAction(
         ...state,
         hullIntegrity: hull,
         timeLeftSeconds: timeLeft,
+        completedTasksCount: (state.completedTasksCount || 0) + deltaTasks,
         feedbackState,
         feedbackMessage,
         advancedScenario: adv,
@@ -859,12 +899,17 @@ export function applyAdvancedAction(
     if (!adv.subsystems.radar) {
       adv.subsystems.radar = { isAligned: false, targetAzimuth: state.radar.targetAzimuth, targetElevation: state.radar.targetElevation, currentAzimuth: 0, currentElevation: 10 };
     }
+    if (adv.subsystems.radar.isAligned) {
+      return { nextState: state };
+    }
     const { currentAzimuth, targetAzimuth, currentElevation, targetElevation } = adv.subsystems.radar;
     const azDiff = Math.abs(currentAzimuth - targetAzimuth);
     const elDiff = Math.abs(currentElevation - targetElevation);
     const isMatched = azDiff <= 15 && elDiff <= 8;
+    let deltaTasks = 0;
     if (isMatched) {
       adv.subsystems.radar.isAligned = true;
+      deltaTasks = 1;
       feedbackState = 'success';
       feedbackMessage = 'Radar işaretçisi hedef kerterizine kilitlendi!';
       adv.evacuationLog.push(`📡 [Radar] Koordinat hizalaması başarılı: ${currentAzimuth}° Azimut / ${currentElevation}° İrtifa.`);
@@ -876,6 +921,7 @@ export function applyAdvancedAction(
         ...state,
         hullIntegrity: hull,
         timeLeftSeconds: timeLeft,
+        completedTasksCount: (state.completedTasksCount || 0) + deltaTasks,
         feedbackState,
         feedbackMessage,
         advancedScenario: adv,

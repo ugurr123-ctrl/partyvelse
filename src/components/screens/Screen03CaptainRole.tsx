@@ -1,5 +1,6 @@
 import React from 'react';
 import { MissionState } from '../../types/game';
+import { SafeAssetImage } from '../SafeAssetImage';
 import { ScreenKarantinaBioRole } from './karantina/ScreenKarantinaBioRole';
 
 interface Props {
@@ -11,6 +12,10 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
   const isKarantina = state.operationTheme === 'karantina_2088';
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
+  const myConfirmed = Boolean(state.players.kaptan?.roleConfirmed);
+  const partner = state.players.muhendis;
+  const partnerConnected = Boolean(partner?.connected);
+  const partnerConfirmed = Boolean(partner?.roleConfirmed);
 
   if (isKarantina) {
     return <ScreenKarantinaBioRole state={state} onConfirmRole={onConfirmRole} />;
@@ -47,8 +52,11 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
                 <span className="w-2 h-2 rounded-full bg-[#00eefc] animate-pulse"></span>
                 <span className="font-mono text-[9px] text-[#00eefc] uppercase font-bold">SESLİ HAT</span>
               </div>
-              <div className="w-7 h-7 rounded-full bg-[#ffdba0] text-[#422c00] flex items-center justify-center font-bold text-xs">
-                <span className="material-symbols-outlined text-[16px]">person</span>
+              <div
+                className="w-8 h-8 rounded-full bg-[#ffdba0] text-[#422c00] flex items-center justify-center font-sora font-bold text-xs shadow-sm"
+                title={state.players.kaptan?.name || 'Sahadaki Ajan'}
+              >
+                <span className="material-symbols-outlined text-[16px]">verified_user</span>
               </div>
             </div>
           </div>
@@ -72,10 +80,12 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
           {/* Hero Operative Card */}
           <div className="relative w-full rounded-2xl overflow-hidden bg-[#1c192c] shadow-xl border border-white/10">
             <div className="relative w-full h-64 bg-[#0f0c1e]">
-              <img
+              <SafeAssetImage
                 className="w-full h-full object-cover object-top"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAynh6heEml4rYm16GpBr-kb75gSGp1Svxj_u-RJkrycbcwxtRmn9aCMGXl0PL-yxVK-lzT7n9JJzkpUDDqkR3fOmBw7Fu_Myf0TvrjQgE6hpI8Ff6OCeZRz4gY9McJwUJgVO2Zd5jwZv5b1cQLTvPWpy7ALDywl_hnwQRNcQ9Tx9iHY-bRLZQ11MBbOpvxfHBWy0oDQRIp3_xnzNWNaOoXKZuUx9bzP9cZYUNzT7Q"
                 alt="Sahadaki Ajan Sızma Uzmanı"
+                fallbackIcon="person_search"
+                fallbackLabel="SAHADAKİ AJAN"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1c192c] via-[#1c192c]/40 to-transparent"></div>
               
@@ -111,20 +121,30 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="relative w-10 h-10 rounded-xl bg-[#2b273b] flex items-center justify-center shrink-0 border border-white/10">
                 <span className="material-symbols-outlined text-[#00eefc] text-[20px]">terminal</span>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#00eefc]"></span>
+                <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${partnerConnected ? 'bg-[#00eefc]' : 'bg-amber-400 animate-pulse'}`}></span>
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1">
                   <span className="font-mono text-[9px] text-[#00eefc] uppercase">OPERASYONEL ORTAK</span>
-                  <span className="font-mono text-[8px] px-1 py-0.2 rounded bg-[#363246] text-[#7df4ff]">TELSİZ AÇIK</span>
+                  <span className="font-mono text-[8px] px-1 py-0.2 rounded bg-[#363246] text-[#7df4ff]">
+                    {partnerConnected ? 'BAĞLI' : 'BEKLİYOR'}
+                  </span>
                 </div>
-                <span className="font-sora text-xs font-bold text-white truncate">Gölge Hacker (Mert)</span>
-                <span className="text-[10px] text-[#00eefc]/80 truncate">Şifreli Konsolda Hazır • Bağlantı Stabil</span>
+                <span className="font-sora text-xs font-bold text-white truncate">{partner?.name || 'Gölge Hacker (Mert)'}</span>
+                <span className="text-[10px] text-[#00eefc]/80 truncate">
+                  {partnerConfirmed
+                    ? 'Brifing Onaylı • Hazır'
+                    : partnerConnected
+                    ? 'Şifreli Konsolda Brifingi Okuyor...'
+                    : 'Oyuncu Bağlantısı Bekleniyor...'}
+                </span>
               </div>
             </div>
             <div className="flex flex-col items-end shrink-0 pl-2">
-              <span className="font-mono text-[8px] text-[#ffb703]">GECİKME</span>
-              <span className="font-mono text-xs font-bold text-white">18ms</span>
+              <span className="font-mono text-[8px] text-[#ffb703]">SENKRON</span>
+              <span className={`font-mono text-xs font-bold ${partnerConfirmed ? 'text-emerald-400' : 'text-white'}`}>
+                {partnerConfirmed ? 'ONAYLI' : partnerConnected ? 'BAĞLI' : 'BEKLİYOR'}
+              </span>
             </div>
           </div>
 
@@ -208,11 +228,16 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
           <div className="pt-2 flex flex-col gap-1.5">
             <button
               onClick={onConfirmRole}
-              className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora text-sm font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(255,183,3,0.35)] active:translate-y-1 transition-all cursor-pointer"
+              disabled={myConfirmed}
+              className={`w-full py-4 px-4 rounded-2xl font-sora text-sm font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                myConfirmed
+                  ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 cursor-default'
+                  : 'bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] shadow-[0_8px_20px_rgba(255,183,3,0.35)] active:translate-y-1 cursor-pointer'
+              }`}
               type="button"
             >
-              <span>ROLÜMÜ ANLADIM & SAHAYA İN</span>
-              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              <span>{myConfirmed ? 'ONAYLANDI · HACKER BEKLENİYOR' : 'ROLÜMÜ ANLADIM & SAHAYA İN'}</span>
+              <span className="material-symbols-outlined text-[20px]">{myConfirmed ? 'check_circle' : 'chevron_right'}</span>
             </button>
             <div className="flex items-center justify-center gap-1 text-[#9e8f78]">
               <span className="material-symbols-outlined text-[13px]">lock</span>
@@ -241,7 +266,7 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
               <div className="flex flex-col">
                 <div className="flex items-center gap-1">
                   <span className="font-mono text-[10px] text-[#00eefc] uppercase tracking-wider font-bold">
-                    DERİN DALIP // PROTOKOL
+                    DERİN DALIŞ // PROTOKOL
                   </span>
                 </div>
                 <h1 className="font-sora text-sm text-white font-bold tracking-tight truncate max-w-[170px]">
@@ -257,8 +282,11 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
                   {formatTime(state.timeLeftSeconds)}
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#ffdba0] text-[#422c00] flex items-center justify-center font-bold text-xs shadow-md">
-                <span className="material-symbols-outlined text-[18px]">person</span>
+              <div
+                className="w-8 h-8 rounded-full bg-[#ffdba0] text-[#422c00] flex items-center justify-center font-bold text-xs shadow-md"
+                title={state.players.kaptan?.name || 'Dümenci'}
+              >
+                <span className="material-symbols-outlined text-[18px]">explore</span>
               </div>
             </div>
           </div>
@@ -408,16 +436,20 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="relative w-10 h-10 rounded-lg bg-[#363246] flex items-center justify-center shrink-0 border border-white/10">
                     <span className="material-symbols-outlined text-[#ffba27] text-[22px]">engineering</span>
-                    <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-[#00eefc] flex items-center justify-center shadow-md">
+                    <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center shadow-md ${partnerConnected ? 'bg-[#00eefc]' : 'bg-amber-400 animate-pulse'}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-[#141123]"></span>
                     </span>
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="font-mono text-[9px] text-[#00eefc] tracking-wider uppercase font-bold">
-                      MÜRETTEBAT EŞLEŞMESİ
+                      MÜRETTEBAT EŞLEŞMESİ · {partner?.name || 'Makinist'}
                     </span>
                     <p className="font-manrope text-xs text-white font-medium truncate">
-                      Makinist basınç odasında hazır bekliyor
+                      {partnerConfirmed
+                        ? 'Makinist konsolu onayladı • Hazır'
+                        : partnerConnected
+                        ? 'Makinist basınç odasında brifingi okuyor...'
+                        : 'Makinist bağlantısı bekleniyor...'}
                     </p>
                   </div>
                 </div>
@@ -428,14 +460,16 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
 
               {/* Signal Integrity Segment Gauge */}
               <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2">
-                <span className="font-mono text-[9px] text-[#9e8f78] uppercase">FREKANS GÜCÜ:</span>
+                <span className="font-mono text-[9px] text-[#9e8f78] uppercase">HAT DURUMU:</span>
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-1.5 rounded-xs bg-[#00eefc]"></span>
-                  <span className="w-3.5 h-1.5 rounded-xs bg-[#00eefc]"></span>
-                  <span className="w-3.5 h-1.5 rounded-xs bg-[#00eefc]"></span>
-                  <span className="w-3.5 h-1.5 rounded-xs bg-[#00eefc]/30"></span>
+                  <span className={`w-3.5 h-1.5 rounded-xs ${partnerConnected ? 'bg-[#00eefc]' : 'bg-[#00eefc]/25'}`}></span>
+                  <span className={`w-3.5 h-1.5 rounded-xs ${partnerConnected ? 'bg-[#00eefc]' : 'bg-[#00eefc]/25'}`}></span>
+                  <span className={`w-3.5 h-1.5 rounded-xs ${partnerConfirmed ? 'bg-[#00eefc]' : 'bg-[#00eefc]/25'}`}></span>
+                  <span className={`w-3.5 h-1.5 rounded-xs ${partnerConfirmed ? 'bg-[#00eefc]' : 'bg-[#00eefc]/25'}`}></span>
                 </div>
-                <span className="font-mono text-[10px] text-[#00eefc] font-bold ml-auto">98.4 kHz</span>
+                <span className={`font-mono text-[10px] font-bold ml-auto ${partnerConfirmed ? 'text-emerald-400' : 'text-[#00eefc]'}`}>
+                  {partnerConfirmed ? 'ONAYLI' : partnerConnected ? 'BAĞLI' : 'BEKLENİYOR'}
+                </span>
               </div>
             </div>
           </div>
@@ -443,13 +477,19 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
           {/* Primary Arcade Action Button */}
           <button
             onClick={onConfirmRole}
-            className="w-full relative group cursor-pointer select-none rounded-2xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#f59e0b] p-4 text-[#271900] font-sora text-sm font-extrabold tracking-wide uppercase transition-all duration-150 active:translate-y-1 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.35)] active:shadow-[0_2px_0_#6b4b00,0_4px_12px_rgba(255,183,3,0.2)] flex items-center justify-center gap-2 overflow-hidden"
+            disabled={myConfirmed}
+            className={`w-full relative group select-none rounded-2xl p-4 font-sora text-sm font-extrabold tracking-wide uppercase transition-all duration-150 flex items-center justify-center gap-2 overflow-hidden ${
+              myConfirmed
+                ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 cursor-default'
+                : 'cursor-pointer bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#f59e0b] text-[#271900] active:translate-y-1 shadow-[0_6px_0_#6b4b00,0_12px_24px_rgba(255,183,3,0.35)] active:shadow-[0_2px_0_#6b4b00,0_4px_12px_rgba(255,183,3,0.2)]'
+            }`}
             type="button"
           >
-            <span className="absolute inset-x-0 top-0 h-1/2 bg-white/20 pointer-events-none rounded-t-xl"></span>
-            <span className="material-symbols-outlined text-[22px] text-[#271900] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>radio</span>
-            <span className="truncate">ROLÜMÜ ANLADIM & TELSİZE BAĞLAN</span>
-            <span className="material-symbols-outlined text-[18px] text-[#271900] group-hover:translate-x-1 transition-transform shrink-0">chevron_right</span>
+            <span className="material-symbols-outlined text-[22px] shrink-0">
+              {myConfirmed ? 'check_circle' : 'radio'}
+            </span>
+            <span className="truncate">{myConfirmed ? 'ONAYLANDI · MAKİNİST BEKLENİYOR' : 'ROLÜMÜ ANLADIM & TELSİZE BAĞLAN'}</span>
+            {!myConfirmed && <span className="material-symbols-outlined text-[18px] text-[#271900] group-hover:translate-x-1 transition-transform shrink-0">chevron_right</span>}
           </button>
 
         </div>
@@ -472,10 +512,13 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
         {/* Hero Character Portlet */}
         <div className="absolute top-10 inset-x-0 h-[360px] flex flex-col justify-start items-center opacity-95 pointer-events-none">
           <div className="relative w-48 h-48 sm:w-56 sm:h-56 mt-2 rounded-full p-1 bg-gradient-to-b from-amber-400 via-amber-600/40 to-transparent shadow-[0_0_25px_rgba(245,158,11,0.45)] border-amber-300/80 border">
-            <img 
+            <SafeAssetImage 
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLbCVA7kytNnSKo-gaPE6NKFjpPbQRs2t25Ai3LLzN9z6Rs1jEhpygEPnnSIHuuVKNygcTWw7VWm1YfzXqvbYdp_OiQgaVWlkvpQM_u5T136mUlSKgIyXW-cLODBk_uj5ROs4BYSAYZfWN01cu1lH-RjGhCz3Cb6kqMKU1dNETrWmg4gKa3ED9YpA3HwDUSxH7gHneqXsRfTAXrkkKQI1k8ooNGS7rglu29_COf2U" 
               alt="Kaptan Portresi" 
               className="w-full h-full object-cover rounded-full shadow-inner"
+              fallbackClassName="rounded-full"
+              fallbackIcon="military_tech"
+              fallbackLabel="KAPTAN"
             />
             <div className="absolute inset-0 rounded-full border border-amber-300/40 pointer-events-none"></div>
           </div>
@@ -499,8 +542,8 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
             </span>
           </div>
 
-          <div className="w-10 h-10 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-md flex items-center justify-center text-slate-300">
-            <span className="material-symbols-outlined text-[20px]">tune</span>
+          <div className="px-3 py-1 rounded-xl bg-slate-900/60 border border-slate-700/60 backdrop-blur-md flex items-center text-xs text-amber-300 font-mono">
+            <span>🛰 AURORA-7</span>
           </div>
         </header>
 
@@ -560,34 +603,46 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
         <footer className="mt-2 space-y-3">
           <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-[#0C101D] border border-slate-800/90 shadow-inner">
             <div className="relative w-12 h-12 rounded-full bg-slate-900 border border-slate-700/80 flex flex-col items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[26px] text-slate-400">person</span>
+              <span className="material-symbols-outlined text-[24px] text-cyan-400">engineering</span>
               <div className="absolute -bottom-1 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" style={{ animationDelay: '200ms' }}></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+                <span className={`w-1.5 h-1.5 rounded-full ${partnerConnected ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`}></span>
+                <span className={`w-1.5 h-1.5 rounded-full ${partnerConfirmed ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
               </div>
             </div>
 
             <div className="flex-1 text-left">
               <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 font-sora">
-                <span>Mühendisin hazırlanıyor.</span>
+                <span>
+                  {partnerConfirmed
+                    ? `${partner?.name || 'Mühendis'} hazırlandı.`
+                    : partnerConnected
+                    ? `${partner?.name || 'Mühendis'} hazırlanıyor.`
+                    : 'Mühendis bağlantısı bekleniyor.'}
+                </span>
               </div>
               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                Kısa süre içinde görevi birlikte başlatacaksınız.
+                {partnerConfirmed
+                  ? 'Eşlikçin rolünü onayladı; sen de onayladığında görev başlar.'
+                  : 'Her iki operatör brifingi onayladığında görev başlayacaktır.'}
               </p>
             </div>
           </div>
 
           <button
             onClick={onConfirmRole}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-b from-[#FFDD55] via-[#FFB020] to-[#EA580C] shadow-[0_6px_0_#9A3412,0_10px_25px_rgba(249,115,22,0.45)] text-slate-950 active:translate-y-1 flex items-center justify-center gap-2 cursor-pointer transition-all"
+            disabled={myConfirmed}
+            className={`w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-2 transition-all ${
+              myConfirmed
+                ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 cursor-default'
+                : 'bg-gradient-to-b from-[#FFDD55] via-[#FFB020] to-[#EA580C] shadow-[0_6px_0_#9A3412,0_10px_25px_rgba(249,115,22,0.45)] text-slate-950 active:translate-y-1 cursor-pointer'
+            }`}
             type="button"
           >
             <span className="font-black tracking-wide text-base sm:text-lg uppercase font-sora">
-              Rolümü anladım
+              {myConfirmed ? 'Onaylandı • Mühendis bekleniyor' : 'Rolümü anladım'}
             </span>
             <span className="material-symbols-outlined text-[22px] font-black">
-              arrow_forward
+              {myConfirmed ? 'check_circle' : 'arrow_forward'}
             </span>
           </button>
         </footer>

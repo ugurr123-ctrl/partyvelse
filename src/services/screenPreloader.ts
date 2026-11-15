@@ -1,5 +1,6 @@
 import React, { lazy, ComponentType } from 'react';
 import { MissionState, Role, MiniGameType, OperationTheme } from '../types/game';
+import { isTeamOperationTheme } from './omegaGameEngine';
 
 export type PreloadableComponent<T extends ComponentType<any>> = React.LazyExoticComponent<T> & {
   preload: () => Promise<any>;
@@ -165,6 +166,18 @@ export const Screens = {
     () => import('../components/screens/karantina/ScreenKarantinaResult'),
     'ScreenKarantinaResult'
   ),
+  ScreenOmegaRoleIntro: lazyWithPreload(
+    () => import('../components/screens/omega/ScreenOmegaRoleIntro'),
+    'ScreenOmegaRoleIntro'
+  ),
+  ScreenOmegaPlay: lazyWithPreload(
+    () => import('../components/screens/omega/ScreenOmegaPlay'),
+    'ScreenOmegaPlay'
+  ),
+  ScreenOmegaResult: lazyWithPreload(
+    () => import('../components/screens/omega/ScreenOmegaResult'),
+    'ScreenOmegaResult'
+  ),
 };
 
 export type ScreenKey = keyof typeof Screens;
@@ -188,6 +201,7 @@ export function preloadUpcomingScreens(state: Partial<MissionState>) {
   const status = state.status || 'opening';
   const theme = state.operationTheme || 'derin_basinc';
   const isKarantina = theme === 'karantina_2088';
+  const isOmega = isTeamOperationTheme(theme);
   const isAdvanced = state.gameMode === 'gelismis';
 
   // 1. Initial State: Opening & Entry
@@ -202,35 +216,49 @@ export function preloadUpcomingScreens(state: Partial<MissionState>) {
   // 2. Entry Screen
   if (status === 'entry') {
     Screens.Screen02Lobby.preload();
-    Screens.Screen03CaptainRole.preload();
-    Screens.Screen04EngineerRole.preload();
-    if (isKarantina) {
-      Screens.ScreenKarantinaPhase1Bio.preload();
-      Screens.ScreenKarantinaPhase1Sec.preload();
+    if (isOmega) {
+      Screens.ScreenOmegaRoleIntro.preload();
+      Screens.ScreenOmegaPlay.preload();
+    } else {
+      Screens.Screen03CaptainRole.preload();
+      Screens.Screen04EngineerRole.preload();
+      if (isKarantina) {
+        Screens.ScreenKarantinaPhase1Bio.preload();
+        Screens.ScreenKarantinaPhase1Sec.preload();
+      }
     }
     return;
   }
 
   // 3. Lobby Screen: Prepare Role Introductions & First Phase
   if (status === 'lobby') {
-    Screens.Screen03CaptainRole.preload();
-    Screens.Screen04EngineerRole.preload();
-    if (isKarantina) {
-      Screens.ScreenKarantinaPhase1Bio.preload();
-      Screens.ScreenKarantinaPhase1Sec.preload();
-      Screens.ScreenKarantinaPhase2Bio.preload();
-      Screens.ScreenKarantinaPhase2Sec.preload();
-    } else if (isAdvanced) {
-      Screens.ScreenAdvancedMission.preload();
+    if (isOmega) {
+      Screens.ScreenOmegaRoleIntro.preload();
+      Screens.ScreenOmegaPlay.preload();
+      Screens.ScreenOmegaResult.preload();
     } else {
-      preloadMiniGameScreens(state.selectedMiniGames?.[0] || 'ariza_teshisi');
+      Screens.Screen03CaptainRole.preload();
+      Screens.Screen04EngineerRole.preload();
+      if (isKarantina) {
+        Screens.ScreenKarantinaPhase1Bio.preload();
+        Screens.ScreenKarantinaPhase1Sec.preload();
+        Screens.ScreenKarantinaPhase2Bio.preload();
+        Screens.ScreenKarantinaPhase2Sec.preload();
+      } else if (isAdvanced) {
+        Screens.ScreenAdvancedMission.preload();
+      } else {
+        preloadMiniGameScreens(state.selectedMiniGames?.[0] || 'ariza_teshisi');
+      }
     }
     return;
   }
 
   // 4. Role Introduction Screen: Prepare Active Phase Puzzles
   if (status === 'role_intro') {
-    if (isKarantina) {
+    if (isOmega) {
+      Screens.ScreenOmegaPlay.preload();
+      Screens.ScreenOmegaResult.preload();
+    } else if (isKarantina) {
       Screens.ScreenKarantinaPhase1Bio.preload();
       Screens.ScreenKarantinaPhase1Sec.preload();
     } else if (isAdvanced) {
@@ -243,7 +271,10 @@ export function preloadUpcomingScreens(state: Partial<MissionState>) {
 
   // 5. In-Game Puzzle Phases: Preload next mini-games, energy, and rescue
   if (status === 'phase_game') {
-    if (isKarantina) {
+    if (isOmega) {
+      Screens.ScreenOmegaPlay.preload();
+      Screens.ScreenOmegaResult.preload();
+    } else if (isKarantina) {
       if (state.currentPhaseIndex === 0) {
         Screens.ScreenKarantinaPhase2Bio.preload();
         Screens.ScreenKarantinaPhase2Sec.preload();
@@ -275,9 +306,12 @@ export function preloadUpcomingScreens(state: Partial<MissionState>) {
 
   // 7. Rescue Decision Phase: Preload Final Result screens
   if (status === 'phase_rescue') {
-    Screens.Screen17BResult.preload();
-    if (isKarantina) {
+    if (isOmega) {
+      Screens.ScreenOmegaResult.preload();
+    } else if (isKarantina) {
       Screens.ScreenKarantinaResult.preload();
+    } else {
+      Screens.Screen17BResult.preload();
     }
     return;
   }

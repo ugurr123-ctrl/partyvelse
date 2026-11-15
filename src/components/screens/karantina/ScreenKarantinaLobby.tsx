@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../../types/game';
+import { InviteQRCode } from '../../InviteQRCode';
+import { SafeAssetImage } from '../../SafeAssetImage';
 
 interface Props {
   state: MissionState;
   onUpdate: ((updater: (prev: MissionState) => MissionState) => void) | React.Dispatch<React.SetStateAction<MissionState>>;
   onStartGame: () => void;
+  onLeaveToEntry?: () => void;
   isOnline?: boolean;
   isHost?: boolean;
   onToggleMyReady?: () => void;
@@ -14,6 +17,9 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
   state,
   onUpdate,
   onStartGame,
+  onLeaveToEntry,
+  isOnline = false,
+  isHost = true,
   onToggleMyReady,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -23,15 +29,80 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
   const selinAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJxWZpXXTG3IVNha6Wp1S6HKkQeGKihQ-74RmrOmNT0qeJC5mB9zZj665TPHJPzyY-JpvmNMhw-Nr1ZJyzAgBoi7CA-lMBcFlO0y2EDvhZ8HVfVIlRPAm8tlq-NUUsqcL1PJk1eqyuc-b2nNeh-sYoomuQyY-RDh7L8OMLdFof-l0Xdie3jemYRygUV7iR3Nif6b9pm8F5azyt8EMqifc5EOPlRZYhSL4BAg12eHc';
   const baranAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDIAgwGSA-euuAp5TlOVoIAlpkrP-8CfhQkPNmR5b-S1bVBlWoWTz7bFFjAYm4WDEXg3McTOJhtmTK041sz_P1US2DB_7t4GdZAUEZSHuWDAylIuW66pjcvyEnF1UOa-PI00PnoVvDzPO7Sb2XLddGTzXpqq_jVVL7wTaiuHBibx0eQtXJerTOjekkVS8gMuFec7tuQdFip_tujXIvrve0f1pPKs2tNOScV_Kwa8Pg';
 
+  const getInviteUrl = () => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('room', state.roomCode);
+      return url.toString();
+    }
+    return '';
+  };
+
   const copyCode = () => {
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(state.roomCode);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2200);
     }
   };
 
+  const copyInviteLink = () => {
+    const inviteUrl = getInviteUrl();
+    if (navigator?.clipboard && inviteUrl) {
+      navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } else {
+      copyCode();
+    }
+  };
+
+  const shareToWhatsApp = () => {
+    const inviteUrl = getInviteUrl();
+    const message = `🚨 ACİL DURUM: Karantina 2088 / Sektör-04 alarmı verildi!\n\nBiyolojik patojen yayılmadan derhal telsize bağlan ve vanaları mühürle!\n\n🔑 Oda Kodu: ${state.roomCode}\n👉 Hızlı Katılma Bağlantısı:\n${inviteUrl}\n\n(Birbirimizin ekranına bakmak yasak, sadece sesle oynuyoruz!)`;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    if (typeof document !== 'undefined') {
+      const link = document.createElement('a');
+      link.href = waUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.click();
+    }
+  };
+
+  const shareNative = async () => {
+    const inviteUrl = getInviteUrl();
+    const text = `🚨 Karantina 2088 Co-Op Görevi! Oda Kodu: ${state.roomCode}. Linke tıkla ve derhal telsize bağlan:`;
+    if (navigator?.share) {
+      try {
+        await navigator.share({
+          title: 'PARTYVERSE — Karantina 2088',
+          text,
+          url: inviteUrl,
+        });
+        return;
+      } catch {
+        // user cancelled, fallback to copy
+      }
+    }
+    copyInviteLink();
+  };
+
+  const isPlayer2Joined = isOnline
+    ? ((Boolean(state.players?.kaptan?.connected) && Boolean(state.players?.muhendis?.connected)) ||
+      (Boolean(state.players?.kaptan?.id) &&
+        state.players?.kaptan?.id !== 'player_kaptan' &&
+        state.players?.kaptan?.id !== '' &&
+        Boolean(state.players?.muhendis?.id) &&
+        state.players?.muhendis?.id !== 'player_muhendis' &&
+        state.players?.muhendis?.id !== ''))
+    : true;
+  const isKaptanReady = Boolean(state.players?.kaptan?.ready);
+  const isMuhendisReady = Boolean(state.players?.muhendis?.ready);
+  const isBothReady = isPlayer2Joined && isKaptanReady && isMuhendisReady;
+
   const handleStart = () => {
+    if (isOnline && !isHost) return;
     onStartGame();
   };
 
@@ -42,8 +113,8 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => onUpdate((prev) => ({ ...prev, status: 'entry' }))}
-            className="w-10 h-10 rounded-xl bg-[#201d30] border border-white/10 flex items-center justify-center text-cyan-400 hover:text-white transition-colors"
+            onClick={() => (onLeaveToEntry ? onLeaveToEntry() : onUpdate((prev) => ({ ...prev, status: 'entry' })))}
+            className="w-10 h-10 rounded-xl bg-[#201d30] border border-white/10 flex items-center justify-center text-cyan-400 hover:text-white transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">arrow_back</span>
           </button>
@@ -59,7 +130,7 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
         </div>
 
         <div className="w-9 h-9 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-[#ffdba0]">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">biotech</span>
         </div>
       </header>
 
@@ -171,14 +242,16 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
         <div className="bg-[#1c192c] border border-white/5 rounded-xl p-3 flex flex-col gap-2 shadow-md">
           <div className="flex items-center justify-between text-xs font-mono font-bold">
             <span className="text-white uppercase">GÖREVLİ EKİP BİRİMİ</span>
-            <span className="text-cyan-400">2/2 KADRO DOLU</span>
+            <span className={isBothReady ? 'text-emerald-400' : 'text-cyan-400'}>
+              {isBothReady ? '● 2/2 TAM HAZIR' : (state.players?.muhendis?.connected ? '● 2/2 BAĞLANDI' : '● 1/2 EŞLİKÇİ BEKLENİYOR')}
+            </span>
           </div>
 
           {/* Selin (LİDER / BİYOLOG) */}
           <div className="bg-[#201d30] border border-white/5 rounded-xl p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-cyan-400/40">
-                <img src={selinAvatar} alt="Selin" className="w-full h-full object-cover" />
+                <SafeAssetImage src={selinAvatar} alt="Selin" className="w-full h-full object-cover" fallbackIcon="biotech" />
                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-cyan-400 border border-black"></span>
               </div>
               <div>
@@ -218,7 +291,9 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
                   ● {state.players?.kaptan?.ready ? 'HAZIR' : 'BEKLİYOR'}
                 </span>
               )}
-              <span className="text-[8px] font-mono text-[#9e8f78] mt-1">GECİKME: 12ms</span>
+              <span className="text-[8px] font-mono text-[#9e8f78] mt-1">
+                {state.players?.kaptan?.connected ? 'BAĞLI • SENKRON' : 'BEKLENİYOR'}
+              </span>
             </div>
           </div>
 
@@ -226,7 +301,7 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
           <div className="bg-[#201d30] border border-white/5 rounded-xl p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-amber-400/40">
-                <img src={baranAvatar} alt="Baran" className="w-full h-full object-cover" />
+                <SafeAssetImage src={baranAvatar} alt="Baran" className="w-full h-full object-cover" fallbackIcon="shield" />
                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#ffb703] border border-black"></span>
               </div>
               <div>
@@ -266,7 +341,9 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
                   ● {state.players?.muhendis?.ready ? 'HAZIR' : 'BEKLİYOR'}
                 </span>
               )}
-              <span className="text-[8px] font-mono text-[#9e8f78] mt-1">GECİKME: 19ms</span>
+              <span className="text-[8px] font-mono text-[#9e8f78] mt-1">
+                {state.players?.muhendis?.connected ? 'BAĞLI • SENKRON' : 'BEKLENİYOR'}
+              </span>
             </div>
           </div>
         </div>
@@ -276,22 +353,98 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
           {/* Primary Button */}
           <button
             type="button"
-            onClick={handleStart}
-            className="w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] bg-[repeating-linear-gradient(45deg,#ffb703,#ffb703_12px,#ffa000_12px,#ffa000_24px)] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110"
+            disabled={isOnline && isBothReady && !isHost}
+            onClick={() => {
+              if (isBothReady) {
+                handleStart();
+              } else if (!isOnline) {
+                const myReady = !!state.players?.[state.myRole]?.ready;
+                const partnerRole = state.myRole === 'kaptan' ? 'muhendis' : 'kaptan';
+                const partnerReady = !!state.players?.[partnerRole]?.ready;
+                if (!myReady && onToggleMyReady) {
+                  onToggleMyReady();
+                } else if (!partnerReady) {
+                  onUpdate((prev) => ({
+                    ...prev,
+                    players: {
+                      ...prev.players,
+                      [partnerRole]: {
+                        ...prev.players[partnerRole],
+                        ready: true,
+                      },
+                    },
+                  }));
+                } else {
+                  handleStart();
+                }
+              } else if (onToggleMyReady) {
+                onToggleMyReady();
+              } else {
+                handleStart();
+              }
+            }}
+            className={`w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] ${
+              isBothReady && (!isOnline || isHost)
+                ? 'bg-[repeating-linear-gradient(45deg,#ffb703,#ffb703_12px,#ffa000_12px,#ffa000_24px)] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110 animate-pulse cursor-pointer'
+                : isOnline && isBothReady && !isHost
+                ? 'bg-[#201d30] border border-white/10 text-[#9e8f78] cursor-not-allowed opacity-75'
+                : 'bg-[#201d30] border border-amber-400/40 text-amber-300 hover:bg-[#28243c] cursor-pointer'
+            }`}
           >
-            <span className="material-symbols-outlined text-[20px]">lock_open</span>
-            <span>PROTOKOLÜ BAŞLAT &gt;</span>
+            <span className="material-symbols-outlined text-[20px]">
+              {isBothReady && (!isOnline || isHost) ? 'lock_open' : 'radio_button_checked'}
+            </span>
+            <span>
+              {isBothReady
+                ? (isOnline && !isHost ? 'ODA LİDERİ BEKLENİYOR...' : 'PROTOKOLÜ BAŞLAT >')
+                : !state.players?.[state.myRole]?.ready
+                ? 'ÖNCE HAZIR OL (DOKUN)'
+                : isOnline
+                ? (!isPlayer2Joined ? 'GÜVENLİK ŞEFİ BEKLENİYOR (1/2)' : 'DİĞER OPERATÖRÜ BEKLİYOR (%50)')
+                : 'EŞLİKÇİYİ HAZIRLA & DEVAM (%50)'}
+            </span>
           </button>
 
-          {/* Invite Friend */}
+          {/* Viral WhatsApp One-Click Invite Button */}
           <button
             type="button"
-            onClick={copyCode}
-            className="w-full py-3 px-4 rounded-xl font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-[#1c192c] border border-white/10 hover:border-white/20 text-[#e6dff9] active:scale-[0.98]"
+            onClick={shareToWhatsApp}
+            className="w-full py-3.5 px-4 rounded-xl font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-[0_4px_16px_rgba(16,185,129,0.35)] active:scale-[0.98] cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px]">person_add</span>
-            <span>Arkadaşını Davet Et / Yedek Operatör</span>
+            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+              <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.29-1.93 1.37-.5.08-1.14.12-3.69-.93-3.26-1.34-5.35-4.66-5.51-4.88-.16-.22-1.31-1.74-1.31-3.32 0-1.58.83-2.36 1.13-2.68.29-.32.64-.4 1.01-.4.12 0 .23.01.33.02.29.01.44.03.63.49.24.58.82 2 .89 2.15.07.16.12.35.02.55-.1.2-.16.32-.32.51-.16.19-.34.42-.48.56-.16.16-.33.33-.14.66.19.32.84 1.38 1.8 2.24 1.24 1.1 2.29 1.45 2.62 1.61.32.16.51.14.7-.08.19-.22.82-.96 1.04-1.29.22-.32.44-.27.75-.16.32.11 2.01.95 2.36 1.12.35.17.58.26.66.4.08.14.08.82-.16 1.49z"/>
+            </svg>
+            <span>WhatsApp ile Arkadaşını Çağır</span>
           </button>
+
+          {/* Copy Link / Native Share Bar */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={copyInviteLink}
+              className="py-2.5 px-3 rounded-xl font-sora font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all bg-[#1c192c] border border-white/10 hover:border-white/20 text-[#e6dff9] active:scale-[0.98] cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px] text-cyan-400">
+                {copied ? 'check_circle' : 'link'}
+              </span>
+              <span>{copied ? 'Kopyalandı!' : 'Linki Kopyala'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              className="py-2.5 px-3 rounded-xl font-sora font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all bg-[#1c192c] border border-white/10 hover:border-white/20 text-[#e6dff9] active:scale-[0.98] cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#ffb703]">qr_code_2</span>
+              <span>QR Kod Göster</span>
+            </button>
+          </div>
+
+          {/* Quick Join Assurance Pill */}
+          <div className="py-1 px-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Hızlı Katılım • Arkadaşın oda koduyla veya davetle anında bağlanır</span>
+          </div>
         </div>
 
         {/* Footer Radio Frequency */}
@@ -323,16 +476,11 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
               <h3 className="text-base font-bold text-white uppercase">Operasyon Bağlantı Kodu</h3>
               <p className="text-xs text-[#9e8f78] mt-1">2. Oyuncunun bu kodla katılması yeterlidir.</p>
             </div>
-            <div className="p-3 bg-white rounded-xl">
-              <div className="w-36 h-36 border-4 border-black flex flex-col items-center justify-center text-black font-mono font-black text-xl">
-                <span>{state.roomCode}</span>
-                <span className="text-[10px] text-slate-600 mt-1">SEC-04</span>
-              </div>
-            </div>
+            <InviteQRCode roomCode={state.roomCode} />
             <button
               type="button"
               onClick={() => setShowShareModal(false)}
-              className="w-full py-2.5 rounded-xl bg-[#201d30] border border-white/10 text-white font-mono text-xs font-bold"
+              className="w-full py-2.5 rounded-xl bg-[#201d30] border border-white/10 text-white font-mono text-xs font-bold cursor-pointer"
             >
               Kapat
             </button>

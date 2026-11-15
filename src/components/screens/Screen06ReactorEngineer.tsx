@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../types/game';
+import { SafeAssetImage } from '../SafeAssetImage';
 
 interface Props {
   state: MissionState;
@@ -135,11 +136,11 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
   const [derinTanks, setDerinTanks] = useState<Record<number, boolean>>({
     1: false,
-    2: true,
+    2: false,
     3: false,
-    4: true,
+    4: false,
   });
-  const [derinPressure, setDerinPressure] = useState<number>(48);
+  const [derinPressure, setDerinPressure] = useState<number>(32);
 
   const toggleTank = (tankNum: number) => {
     if (diagnostic.isSolved) return;
@@ -147,18 +148,17 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   };
 
   const handleActivateValves = () => {
-    // Both Tank-2 and Tank-4 must be active, Tank-1 and Tank-3 inactive, pressure must be 48 Bar
     const tanksCorrect = !derinTanks[1] && derinTanks[2] && !derinTanks[3] && derinTanks[4];
     const pressureCorrect = derinPressure === 48;
 
+    if (onAction) {
+      setFeedback({ type: 'idle', msg: '' });
+      onAction('theme_diagnostic_solve', { tanks: derinTanks, pressure: derinPressure });
+      return;
+    }
+
     if (tanksCorrect && pressureCorrect) {
-      if (onAction) {
-        onAction('diagnostic_engineer_purge', {
-          line: diagnostic.faultyLine,
-          valveAngle: diagnostic.targetValveAngle,
-          throttleActive: true,
-        });
-      }
+      setFeedback({ type: 'success', msg: 'Balast tankları ve basınç dengelendi!' });
       onUpdate((prev) => ({
         ...prev,
         diagnostic: {
@@ -171,6 +171,10 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
         },
       }));
     } else {
+      setFeedback({
+        type: 'error',
+        msg: 'Hatalı tank seçimi veya basınç değeri! Dümenciden telsizle doğrula. Bütünlük -%10, Süre -15 sn!',
+      });
       onUpdate((prev) => ({
         ...prev,
         hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
@@ -180,32 +184,45 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   };
 
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
-  const [golgeBypassSync, setGolgeBypassSync] = useState(false);
   const [activeNode, setActiveNode] = useState<'ALPHA' | 'BETA' | 'GAMMA' | 'DELTA'>('BETA');
 
   const handleGolgeBypassSubmit = () => {
-    setGolgeBypassSync(true);
+    const validNode = activeNode === 'BETA' || activeNode === 'DELTA';
     if (onAction) {
-      onAction('diagnostic_engineer_purge', {
-        line: 'sogutucu',
-        valveAngle: 45,
-        throttleActive: true,
-      });
+      setFeedback({ type: 'idle', msg: '' });
+      onAction('theme_diagnostic_solve', { activeNode });
+      return;
     }
+
+    if (!validNode) {
+      setFeedback({
+        type: 'error',
+        msg: 'HATALI DÜĞÜM SEÇİMİ! Node-Beta veya Node-Delta köprüsünü seçmelisin.',
+      });
+      onUpdate((prev) => ({
+        ...prev,
+        stealthLevel: Math.max(0, (prev.stealthLevel ?? 100) - 5),
+        timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 10),
+      }));
+      return;
+    }
+
+    const agentLocked = diagnostic.captainSelectedBreaker === diagnostic.correctBreaker;
+    setFeedback({
+      type: agentLocked ? 'success' : 'idle',
+      msg: agentLocked
+        ? 'KÖPRÜ BAŞARIYLA KURULDU! Güvenlik duvarı senkronize edildi.'
+        : 'KÖPRÜ SENKRONİZE EDİLDİ! Ajanın Port-Delta (Sarı) ve 24.5V panelini kilitlemesi bekleniyor.',
+    });
     onUpdate((prev) => ({
       ...prev,
       diagnostic: {
         ...prev.diagnostic,
         engineerActionTaken: true,
-        engineerSuggestedLine: 'sogutucu',
-        unlockedBreaker: 'K2',
-        isSolved: true,
+        engineerSuggestedLine: prev.diagnostic.faultyLine,
+        isSolved: prev.diagnostic.captainSelectedBreaker === prev.diagnostic.correctBreaker,
       },
     }));
-    setFeedback({
-      type: 'success',
-      msg: 'KÖPRÜ BAŞARIYLA KURULDU! Node-Beta ve Delta frekansı ajanın paneline senkronize edildi.',
-    });
   };
 
   // Gölge Protokolü (Hacker - Güvenlik Duvarı Bypass) UI (Lines 1206-1475 of template)
@@ -262,10 +279,12 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
 
         {/* Visual Asset: Cyber Warfare Operations Grid */}
         <div className="w-full h-28 rounded-xl overflow-hidden relative shadow-md bg-[#0f0c1e] border border-white/5">
-          <img 
+          <SafeAssetImage 
             className="w-full h-full object-cover opacity-60" 
             alt="Cyber Warfare Grid" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1AwQbef81uM9LVMqePGBnAojMwSpsWdkZhDAFf1CwsppQWrjCmxA5FvRaU0bs1Yq_kxbSfUxqq1_je1q0r7lptjCSSgmAk9fuFC_XZ68b6s_Uthfwdl94lnC-iBrlFStXdf_SazPZP4_KVeM7S_b-HcKrQIFl508k4dYC7g3JUm3cSmVcNboB3gM2ikL9lgKnzevfHo7ucK3hIB7lmDIokpk7l9J4CsEnYiF_Dbg"
+            fallbackIcon="hub"
+            fallbackLabel="SİBER AĞ TOPOLOJİSİ"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c1e] via-[#0f0c1e]/40 to-transparent p-2.5 flex flex-col justify-end">
             <div className="flex items-center justify-between">
@@ -416,30 +435,39 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
         </div>
 
         {/* Feedback Display */}
-        {feedback.msg && (
-          <div className={`p-3 rounded-xl border flex items-center gap-2 ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' 
-              : 'bg-red-950/40 border-red-500/50 text-red-300'
-          }`}>
-            <span className="material-symbols-outlined text-[18px]">
-              {feedback.type === 'success' ? 'check_circle' : 'error'}
-            </span>
-            <span className="text-xs font-semibold leading-tight">{feedback.msg}</span>
-          </div>
-        )}
+        {(state.feedbackMessage || feedback.msg) && (() => {
+          const mode = state.feedbackMessage ? state.feedbackState : feedback.type;
+          const bannerClass =
+            mode === 'success'
+              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+              : mode === 'idle'
+              ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+              : 'bg-red-950/40 border-red-500/50 text-red-300';
+          const icon = mode === 'success' ? 'check_circle' : mode === 'idle' ? 'hourglass_top' : 'error';
+          return (
+            <div className={`p-3 rounded-xl border flex items-center gap-2 ${bannerClass}`}>
+              <span className="material-symbols-outlined text-[18px]">{icon}</span>
+              <span className="text-xs font-semibold leading-tight">{state.feedbackMessage || feedback.msg}</span>
+            </div>
+          );
+        })()}
 
         {/* Action Button */}
         <div className="pt-1">
           {diagnostic.isSolved ? (
             <button
-              onClick={() => onAdvancePhase({ roundId: state.currentRoundId || 'round1', expectedPhaseIndex: 0 })}
-              className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all"
+              onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
+              className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all cursor-pointer"
               type="button"
             >
               <span className="material-symbols-outlined text-[22px]">arrow_forward</span>
               <span>FAZ 01 BYPASS BAŞARILI // AŞAMA 2'YE İLERLE</span>
             </button>
+          ) : diagnostic.engineerActionTaken ? (
+            <div className="w-full py-4 px-4 rounded-xl bg-cyan-950/50 border border-cyan-400/50 text-cyan-200 font-sora text-xs font-extrabold flex items-center justify-center gap-2">
+              <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+              <span className="truncate">SUBNET KÖPRÜSÜ SENKRON · AJAN PANELİ BEKLENİYOR</span>
+            </div>
           ) : (
             <button
               onClick={handleGolgeBypassSubmit}
@@ -499,7 +527,7 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
           </div>
           <h2 className="font-sora text-xl font-bold text-white">Balastı Dengele &amp; Vanaları Kilitle</h2>
           <p className="text-xs text-[#d5c4ac] leading-relaxed">
-            Dümencinin telsizden aktardığı 042° kerteriz ve 48 Bar basınç değerine göre balast tanklarını devreye al.
+            Dümencinin telsizden aktardığı kerteriz ve basınç değerine göre balast tanklarını devreye al.
           </p>
         </div>
 
@@ -515,7 +543,6 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
           <div className="grid grid-cols-2 gap-2">
             {[1, 2, 3, 4].map(tankId => {
               const active = derinTanks[tankId];
-              const pct = tankId === 1 ? 12 : tankId === 2 ? 78 : tankId === 3 ? 25 : 82;
               return (
                 <button
                   key={tankId}
@@ -540,12 +567,11 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-[#0f0c1e] mt-2 overflow-hidden">
                     <div
-                      className={`h-full ${active ? 'bg-[#00eefc] animate-pulse' : 'bg-zinc-600'}`}
-                      style={{ width: `${pct}%` }}
+                      className={`h-full transition-all duration-300 ${active ? 'bg-[#00eefc] animate-pulse w-full' : 'bg-zinc-700 w-1/4'}`}
                     ></div>
                   </div>
                   <span className={`font-mono text-[9px] mt-1 ${active ? 'text-[#00eefc] font-bold' : 'text-zinc-400'}`}>
-                    %{pct} {active ? 'DOLU [SEÇİLİ]' : 'BALAST'}
+                    {active ? 'VANA AÇIK • SEÇİLİ' : 'KAPALI • BALAST'}
                   </span>
                 </button>
               );
@@ -561,7 +587,7 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
               <span className="font-mono text-[10px] uppercase text-white font-bold">ANA HİDROLİK MANOMETRE</span>
             </div>
             <div className="px-2 py-0.5 rounded bg-[#ffb703]/20 border border-[#ffb703]/30">
-              <span className="font-mono text-[10px] text-[#ffdba0] font-bold">HEDEF: 48 BAR</span>
+              <span className="font-mono text-[10px] text-[#ffdba0] font-bold">MANUEL AYAR</span>
             </div>
           </div>
 
@@ -576,7 +602,7 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
                   cy="50"
                   fill="none"
                   r="42"
-                  stroke={derinPressure === 48 ? '#00eefc' : '#ffba27'}
+                  stroke="#ffba27"
                   strokeDasharray={`${Math.round(((derinPressure - 30) / 40) * 197)} 197`}
                   strokeLinecap="round"
                   strokeWidth="8"
@@ -584,7 +610,7 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
               </svg>
               {/* Dial Center */}
               <div className="absolute flex flex-col items-center">
-                <span className={`font-sora text-2xl font-extrabold leading-none ${derinPressure === 48 ? 'text-[#00eefc]' : 'text-[#ffba27]'}`}>
+                <span className="font-sora text-2xl font-extrabold leading-none text-[#ffba27]">
                   {derinPressure}
                 </span>
                 <span className="font-mono text-[9px] uppercase text-[#d5c4ac] mt-1">BAR BASINÇ</span>
@@ -592,9 +618,9 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             </div>
 
             <div className="flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-[#2b273b] border border-white/5">
-              <span className={`w-2 h-2 rounded-full ${derinPressure === 48 ? 'bg-[#00eefc] animate-ping' : 'bg-[#ffba27]'}`}></span>
-              <span className={`font-mono text-[10px] font-bold ${derinPressure === 48 ? 'text-[#00eefc]' : 'text-[#ffba27]'}`}>
-                {derinPressure === 48 ? '48 BAR KİLİTLİ • DEĞER STABİL' : `${derinPressure} BAR • HEDEFE AYARLA`}
+              <span className="w-2 h-2 rounded-full bg-[#ffba27]"></span>
+              <span className="font-mono text-[10px] font-bold text-[#ffba27]">
+                {derinPressure} BAR • MANUEL KONTROL
               </span>
             </div>
           </div>
@@ -628,12 +654,20 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             </div>
             <div className="flex flex-col">
               <span className="font-mono text-[9px] uppercase text-[#d5c4ac]">HİDROLİK AÇI DÜMENİ</span>
-              <h3 className="font-sora text-sm text-[#00eefc] font-bold">042° Kerteriz</h3>
-              <span className="text-[10px] text-[#d5c4ac]">Dümenci rotasıyla kilitlendi</span>
+              <h3 className={`font-sora text-sm font-bold ${diagnostic.unlockedBreaker ? 'text-[#00eefc]' : 'text-[#ffdba0]'}`}>
+                {diagnostic.unlockedBreaker ? '042° Kerteriz' : 'Kerteriz Bekleniyor'}
+              </h3>
+              <span className="text-[10px] text-[#d5c4ac]">
+                {diagnostic.unlockedBreaker ? 'Dümenci rotasıyla kilitlendi' : 'Dümenci sonar aktarımı bekleniyor'}
+              </span>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded-lg bg-[#00eefc]/20 text-[#00eefc] font-mono text-[10px] font-bold border border-[#00eefc]/30">
-            SENKRON
+          <span className={`px-2 py-0.5 rounded-lg font-mono text-[10px] font-bold border ${
+            diagnostic.unlockedBreaker
+              ? 'bg-[#00eefc]/20 text-[#00eefc] border-[#00eefc]/30'
+              : 'bg-amber-500/15 text-[#ffdba0] border-amber-500/30'
+          }`}>
+            {diagnostic.unlockedBreaker ? 'SENKRON' : 'BEKLEMEDE'}
           </span>
         </div>
 
@@ -641,9 +675,24 @@ export const Screen06ReactorEngineer: React.FC<Props> = ({ state, onUpdate, onAd
         <div className="flex items-start gap-2 p-2.5 rounded-xl bg-[#201d30] border border-white/5">
           <span className="material-symbols-outlined text-[#ffba27] text-[18px] mt-0.5 shrink-0">info</span>
           <p className="text-[11px] text-[#d5c4ac] leading-tight">
-            Dümenci sadece sonar görür, basınç vanalarını sen yönetirsin! Tank-2 ve Tank-4 seçilmeli, basınç 48 Bar olmalıdır.
+            Dümenci sadece sonar görür, basınç ve tank vanalarını sen yönetirsin! Doğru tank ve basınç değerini telsizle öğren.
           </p>
         </div>
+
+        {(state.feedbackMessage || feedback.msg) && (() => {
+          const mode = state.feedbackMessage ? state.feedbackState : feedback.type;
+          const bannerClass =
+            mode === 'success'
+              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+              : mode === 'idle'
+              ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
+              : 'bg-rose-500/15 border-rose-500/40 text-rose-300';
+          return (
+            <div className={`p-3 rounded-xl border text-xs leading-relaxed animate-fadeIn ${bannerClass}`}>
+              {state.feedbackMessage || feedback.msg}
+            </div>
+          );
+        })()}
 
         {/* Big Action Push Button */}
         {!diagnostic.isSolved ? (

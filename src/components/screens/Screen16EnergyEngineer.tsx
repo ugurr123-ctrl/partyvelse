@@ -19,12 +19,16 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
   // Derin Basınç interactive state
   const [k02Position, setK02Position] = useState(90);
   const [valve1Open, setValve1Open] = useState(false);
-  const [currentPressure, setCurrentPressure] = useState(28);
+  const [currentPressure, setCurrentPressure] = useState(20);
   const [isSealed, setIsSealed] = useState(isLocked);
 
   React.useEffect(() => {
     setAllocation(engineerAllocation);
   }, [engineerAllocation]);
+
+  React.useEffect(() => {
+    setIsSealed(isLocked);
+  }, [isLocked]);
 
   const totalUsed = allocation.yasamDestegi + allocation.itki + allocation.kalkan;
   const remainingBudget = totalBudget - totalUsed;
@@ -95,33 +99,32 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
 
   // Derin Basınç Seal & Activate handler
   const handleSealReactor = () => {
-    setIsSealed(true);
+    const rodOk = k02Position <= 20;
+    const valveOk = valve1Open === true;
+    const pressureOk = currentPressure === 28;
+
     if (onAction) {
       onAction('derin_basinc_seal_reactor', {
         k02Position,
         valve1Open,
         currentPressure,
       });
+      if (rodOk && valveOk && pressureOk) {
+        setIsSealed(true);
+        setFeedbackMsg('Reaktör kapağı mühürlendi ve soğutma pompası devreye alındı!');
+      } else {
+        setFeedbackMsg('HATA: Çubuk konumu, soğutma vanası veya manometre basıncı hatalı! Dümenciden telsizle doğrula.');
+      }
+      return;
     }
 
-    onUpdate((prev) => ({
-      ...prev,
-      energy: {
-        ...prev.energy,
-        isLocked: true,
-      },
-    }));
-  };
-
-  const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
-  const [golgeRingRotation, setGolgeRingRotation] = useState<number>(0);
-  const [golgeDecrypted, setGolgeDecrypted] = useState<boolean>(isLocked);
-
-  const handleGolgeDecryptVault = () => {
-    setGolgeDecrypted(true);
-    if (onAction) {
-      onAction('energy_lock', {});
+    if (!rodOk || !valveOk || !pressureOk) {
+      setFeedbackMsg('HATA: Çubuk konumu, soğutma vanası veya manometre basıncı hatalı! Dümenciden telsizle doğrula.');
+      return;
     }
+
+    setIsSealed(true);
+    setFeedbackMsg('Reaktör kapağı mühürlendi ve soğutma pompası devreye alındı!');
     onUpdate((prev) => ({
       ...prev,
       energy: {
@@ -130,7 +133,25 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         isLocked: true,
       },
     }));
-    setFeedbackMsg('KASA ŞİFRESİ ÇÖZÜLDÜ! 8-4-2-9 anahtarı üretildi ve telsizden ajana iletildi.');
+  };
+
+  const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
+  const [golgeRingRotation, setGolgeRingRotation] = useState<number>(0);
+
+  const handleGolgeDecryptVault = () => {
+    setFeedbackMsg("KASA ŞİFRESİ ÇÖZÜLDÜ (8-4-2-9)! Ajanın terminalde PIN'i doğrulaması bekleniyor.");
+    if (onAction) {
+      onAction('golge_energy_solve', {});
+      return;
+    }
+    onUpdate((prev) => ({
+      ...prev,
+      energy: {
+        ...prev.energy,
+        isDraftShared: true,
+        isLocked: false,
+      },
+    }));
   };
 
   // ================= GÖLGE PROTOKOLÜ — KASA ŞİFRE KIRMA (HACKER) =================
@@ -306,10 +327,18 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         </div>
 
         {/* Feedback message if any */}
-        {feedbackMsg && (
-          <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 text-xs font-mono flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">check_circle</span>
-            <span>{feedbackMsg}</span>
+        {(state.feedbackMessage || feedbackMsg) && (
+          <div className={`p-3 rounded-xl border text-xs font-mono flex items-center gap-2 ${
+            state.feedbackState === 'error'
+              ? 'bg-rose-950/40 border-rose-500/50 text-rose-300'
+              : state.feedbackState === 'success'
+              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+              : 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+          }`}>
+            <span className="material-symbols-outlined text-[18px]">
+              {state.feedbackState === 'error' ? 'error' : state.feedbackState === 'success' ? 'check_circle' : 'info'}
+            </span>
+            <span>{state.feedbackMessage || feedbackMsg}</span>
           </div>
         )}
 
@@ -317,7 +346,7 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
         <div className="pt-1">
           {state.energy.isLocked ? (
             <button
-              onClick={() => onAdvancePhase({ roundId: state.currentRoundId || 'round1', expectedPhaseIndex: 2 })}
+              onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
               className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all"
               type="button"
             >
@@ -327,11 +356,21 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
           ) : (
             <button
               onClick={handleGolgeDecryptVault}
-              className="w-full py-4 px-3 rounded-xl bg-gradient-to-r from-[#FFB703] to-[#FF8C00] shadow-[0_4px_0_#B26A00] active:translate-y-[2px] transition-all flex items-center justify-center gap-2 text-[#271900] font-sora text-xs font-black uppercase tracking-tight cursor-pointer select-none"
+              className={`w-full py-4 px-3 rounded-xl transition-all flex items-center justify-center gap-2 font-sora text-xs font-black uppercase tracking-tight cursor-pointer select-none ${
+                isDraftShared
+                  ? 'bg-[#00eefc] text-[#002022] shadow-[0_4px_0_#00686f]'
+                  : 'bg-gradient-to-r from-[#FFB703] to-[#FF8C00] shadow-[0_4px_0_#B26A00] active:translate-y-[2px] text-[#271900]'
+              }`}
               type="button"
             >
-              <span className="material-symbols-outlined text-[20px]">lock_open</span>
-              <span className="truncate">ŞİFREYİ AJANA AKTAR (8429) & KASAYI AÇ ›</span>
+              <span className="material-symbols-outlined text-[20px]">
+                {isDraftShared ? 'hourglass_top' : 'lock_open'}
+              </span>
+              <span className="truncate">
+                {isDraftShared
+                  ? 'PIN (8429) İLETİLDİ • AJAN DOĞRULAMASI BEKLENİYOR'
+                  : 'ŞİFREYİ AJANA AKTAR (8429) & KASAYI AÇ ›'}
+              </span>
             </button>
           )}
         </div>
@@ -374,7 +413,7 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
                 <span className="font-mono text-[10px] text-[#9e8f78]">TELSİZ SESİ [CH-02]</span>
               </div>
               <p className="text-[12px] text-[#e6dff9] truncate italic">
-                “Makinist! K-02 aşırı ısınıyor! Önce Boru-1 valfini aç, sonra K-02'yi %20'ye bastır!”
+                “Makinist! Dümencinin aktardığı kontrol çubuğu, soğutma valfi ve manometre değerini uygula!”
               </p>
             </div>
           </div>
@@ -600,8 +639,8 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
             <div className="flex items-center space-x-space-xs">
               <span className="material-symbols-outlined text-[#ffb703] text-[20px]">speed</span>
               <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-[#d5c4ac]">MANOMETRE HEDEF BASINÇ</span>
-                <span className="font-mono text-[11px] text-[#e6dff9] font-bold">KİLİTLİ HEDEF: 28 BAR</span>
+                <span className="font-mono text-[10px] text-[#d5c4ac]">MANOMETRE BASINÇ AYARI</span>
+                <span className="font-mono text-[11px] text-[#e6dff9] font-bold">HEDEF: DÜMENCİ MANOMETRE DEĞERİ</span>
               </div>
             </div>
             {/* Increment / Decrement Gauge Controls */}
@@ -630,7 +669,25 @@ export const Screen16EnergyEngineer: React.FC<Props> = ({ state, onUpdate, onAdv
 
         {/* Primary Action Button */}
         <div className="flex flex-col pt-space-xs space-y-space-xs">
-          {!isSealed ? (
+          {(feedbackMsg || state.feedbackMessage) && (
+            <div className={`p-3 rounded-xl border text-xs font-mono flex items-center gap-2 ${
+              state.feedbackState === 'error' || (feedbackMsg && feedbackMsg.startsWith('HATA'))
+                ? 'bg-rose-950/50 border-rose-500/50 text-rose-300'
+                : state.feedbackState === 'success'
+                ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+                : 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+            }`}>
+              <span className="material-symbols-outlined text-[18px]">
+                {state.feedbackState === 'error' || (feedbackMsg && feedbackMsg.startsWith('HATA'))
+                  ? 'error'
+                  : state.feedbackState === 'success'
+                  ? 'check_circle'
+                  : 'info'}
+              </span>
+              <span>{feedbackMsg || state.feedbackMessage}</span>
+            </div>
+          )}
+          {!isSealed && !isLocked ? (
             <button
               onClick={handleSealReactor}
               className="w-full bg-[#ffb703] text-[#422c00] font-sora font-extrabold text-[14px] py-space-md px-space-md rounded-xl shadow-[0_8px_0_#6b4b00] active:shadow-[0_2px_0_#6b4b00] active:translate-y-1.5 transition-all flex items-center justify-center space-x-space-xs text-center select-none cursor-pointer"

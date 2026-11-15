@@ -4,12 +4,17 @@ import {
   EnvironmentType, 
   ENVIRONMENTS,
   MiniGameType,
-  GameMode
+  GameMode,
+  Role
 } from '../../types/game';
 import { colyseusClient } from '../../services/colyseusClient';
 import { getRandomMiniGames } from '../../services/gameFactory';
 import { ScreenKarantinaLobby } from './karantina/ScreenKarantinaLobby';
+import { ScreenOmegaLobby } from './omega/ScreenOmegaLobby';
+import { isTeamOperationTheme } from '../../services/omegaGameEngine';
 import { soundManager } from '../../services/soundEffects';
+import { InviteQRCode } from '../InviteQRCode';
+import { SafeAssetImage } from '../SafeAssetImage';
 
 export const getMiniGameIcon = (game: MiniGameType): string => {
   switch (game) {
@@ -57,23 +62,32 @@ interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onStartGame: () => void;
+  onLeaveToEntry?: () => void;
   isOnline?: boolean;
   isHost?: boolean;
   onToggleMyReady?: () => void;
+  onSelectRole?: (role: Role) => void;
 }
 
 export const Screen02Lobby: React.FC<Props> = ({ 
   state, 
   onUpdate, 
   onStartGame,
+  onLeaveToEntry,
   isOnline = false,
   isHost = true,
   onToggleMyReady,
+  onSelectRole,
 }) => {
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
   const [copied, setCopied] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [radioTesting, setRadioTesting] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => soundManager.isMuted());
+
+  React.useEffect(() => {
+    return soundManager.subscribeMute((muted) => setIsMuted(muted));
+  }, []);
 
   const handleTestRadio = () => {
     setRadioTesting(true);
@@ -91,14 +105,30 @@ export const Screen02Lobby: React.FC<Props> = ({
 
   const copyInviteLink = () => {
     if (typeof window !== 'undefined' && navigator?.clipboard) {
-      const cleanCode = state.roomCode.replace(/^(KYP|DP)-?/i, '');
       const url = new URL(window.location.href);
-      url.searchParams.set('room', cleanCode);
+      url.searchParams.set('room', state.roomCode);
       navigator.clipboard.writeText(url.toString());
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } else {
       copyCode();
+    }
+  };
+
+  const shareToWhatsApp = () => {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('room', state.roomCode);
+      const isGolge = state.operationTheme === 'golge_protokolu';
+      const isDerin = state.operationTheme === 'derin_basinc';
+      const themeTitle = isGolge ? 'Gölge Protokolü (Siber Sızma)' : isDerin ? 'Derin Basınç (Abisal Hendek)' : 'Kayıp Sinyal (Uzay İstasyonu)';
+      const message = `🚨 ACİL ÇAĞRI: ${themeTitle} görevi başladı!\n\nSistemi kurtarmak için derhal ikinci operatör olarak bağlan!\n\n🔑 Oda Kodu: ${state.roomCode}\n👉 Hızlı Katılma Bağlantısı:\n${url.toString()}\n\n(Birbirimizin ekranına bakmak yasak, sadece sesle koordinasyon!)`;
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+      const link = document.createElement('a');
+      link.href = waUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.click();
     }
   };
 
@@ -108,21 +138,29 @@ export const Screen02Lobby: React.FC<Props> = ({
       return;
     }
     const currentRole = state.myRole;
-    onUpdate((prev) => ({
-      ...prev,
-      players: {
-        ...prev.players,
-        [currentRole]: {
-          ...prev.players[currentRole],
-          ready: !prev.players[currentRole].ready,
+    onUpdate((prev) => {
+      const existing = prev.players[currentRole];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        players: {
+          ...prev.players,
+          [currentRole]: {
+            ...existing,
+            ready: !existing.ready,
+          },
         },
-      },
-    }));
+      };
+    });
   };
+
+  const [partnerReadyToast, setPartnerReadyToast] = useState(false);
 
   const togglePartnerReady = () => {
     if (isOnline) {
-      alert('Gerçek çevrimiçi odada partneriniz kendi cihazından hazır olmalıdır.');
+      soundManager.playError();
+      setPartnerReadyToast(true);
+      setTimeout(() => setPartnerReadyToast(false), 3000);
       return;
     }
     const otherRole = state.myRole === 'kaptan' ? 'muhendis' : 'kaptan';
@@ -139,6 +177,12 @@ export const Screen02Lobby: React.FC<Props> = ({
   };
 
   const handleRerollTasks = () => {
+    if (isOnline) {
+      if (isHost) {
+        colyseusClient.rerollTasks();
+      }
+      return;
+    }
     const newGames = getRandomMiniGames(state.selectedMiniGames);
     onUpdate((prev) => ({
       ...prev,
@@ -155,14 +199,43 @@ export const Screen02Lobby: React.FC<Props> = ({
     }));
   };
 
-  // Check if player 2 is really connected in online mode
+  // Check if both players are really connected in online mode (works regardless of which role host chose)
   const isPlayer2Joined = isOnline 
-    ? (state.players.muhendis.connected ?? (Boolean(state.players.muhendis.id) && state.players.muhendis.id !== 'player_muhendis' && state.players.muhendis.id !== ''))
+    ? ((Boolean(state.players.kaptan.connected) && Boolean(state.players.muhendis.connected)) ||
+       (Boolean(state.players.kaptan.id) && state.players.kaptan.id !== 'player_kaptan' && state.players.kaptan.id !== '' &&
+        Boolean(state.players.muhendis.id) && state.players.muhendis.id !== 'player_muhendis' && state.players.muhendis.id !== ''))
     : true;
 
   const isBothReady = isPlayer2Joined && state.players.kaptan.ready && state.players.muhendis.ready;
   const isKarantina = state.operationTheme === 'karantina_2088';
+  const isOmega = isTeamOperationTheme(state.operationTheme);
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
+
+  const handleLeaveLobby = () => {
+    if (onLeaveToEntry) {
+      onLeaveToEntry();
+    } else {
+      onUpdate((prev) => ({ ...prev, status: 'entry' }));
+    }
+  };
+
+  if (isOmega) {
+    return (
+      <ScreenOmegaLobby
+        state={state}
+        onUpdate={onUpdate}
+        onStartGame={onStartGame}
+        onLeaveToEntry={onLeaveToEntry}
+        isOnline={isOnline}
+        isHost={isHost}
+        onToggleMyReady={onToggleMyReady}
+        onSelectRole={onSelectRole}
+      />
+    );
+  }
+
+  const twoPlayerRole: 'kaptan' | 'muhendis' = state.myRole === 'muhendis' ? 'muhendis' : 'kaptan';
+  const isMyReady = Boolean(state.players[twoPlayerRole].ready);
 
   if (isKarantina) {
     return (
@@ -170,6 +243,7 @@ export const Screen02Lobby: React.FC<Props> = ({
         state={state}
         onUpdate={onUpdate}
         onStartGame={onStartGame}
+        onLeaveToEntry={onLeaveToEntry}
         isOnline={isOnline}
         isHost={isHost}
         onToggleMyReady={onToggleMyReady}
@@ -186,8 +260,8 @@ export const Screen02Lobby: React.FC<Props> = ({
             <div className="flex items-center gap-2">
               <button
                 aria-label="Operasyondan Ayrıl"
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#2b273b]/60 text-[#d3fbff] hover:text-white transition-colors"
-                onClick={() => onUpdate((prev) => ({ ...prev, status: 'entry' }))}
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#2b273b]/60 text-[#d3fbff] hover:text-white transition-colors cursor-pointer"
+                onClick={handleLeaveLobby}
                 type="button"
               >
                 <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -206,9 +280,16 @@ export const Screen02Lobby: React.FC<Props> = ({
                 <span className="w-2 h-2 rounded-full bg-[#00eefc] animate-pulse"></span>
                 <span className="font-mono text-[9px] text-[#00eefc] uppercase font-bold">SESLİ HAT: ŞİFRELİ</span>
               </div>
-              <div className="w-7 h-7 rounded-full bg-[#ffdba0] text-[#422c00] flex items-center justify-center font-bold text-xs">
-                <span className="material-symbols-outlined text-[16px]">person</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsMuted(soundManager.toggleMute())}
+                className="w-8 h-8 rounded-lg bg-[#2b273b]/80 border border-white/10 text-[#ffdba0] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                title={isMuted ? 'Sesi Aç' : 'Sesi Kapat'}
+              >
+                <span className="material-symbols-outlined text-[16px]">
+                  {isMuted ? 'volume_off' : 'volume_up'}
+                </span>
+              </button>
             </div>
           </div>
         </header>
@@ -243,7 +324,9 @@ export const Screen02Lobby: React.FC<Props> = ({
               </div>
               <div className="bg-[#201d30] rounded-lg px-3 py-1.5 flex items-center justify-between border border-white/5">
                 <span className="font-mono text-[9px] text-[#9e8f78] truncate">UYDU: SENKRON</span>
-                <span className="font-mono text-[9px] text-[#00eefc] font-bold">99.8% GÜVENLİ</span>
+                <span className="font-mono text-[9px] text-[#00eefc] font-bold">
+                  {isOnline ? (colyseusClient.isConnected() ? 'AKTİF // SENKRON' : 'BAĞLANIYOR') : 'YEREL MOD'}
+                </span>
               </div>
             </div>
           </section>
@@ -307,10 +390,11 @@ export const Screen02Lobby: React.FC<Props> = ({
               <div className="bg-[#201d30] rounded-xl p-3 shadow-md flex items-center justify-between border border-white/5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative w-12 h-12 rounded-xl bg-[#2b273b] overflow-hidden shrink-0 border border-white/10 shadow-inner">
-                    <img
+                    <SafeAssetImage
                       className="w-full h-full object-cover"
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuDevmRBoJeZ2DYXEp2G2b1briE0qACLxBmTGpfKLMs4jV89J-ZbNX3TOR7npP6zq1R3uPURa4u1vh0bWsAh0Evl4zA12AJ8YqaESnkp4cXT5bMjDABYTetN6fqgAfR4wUuCEkBGlnItT5JfoqKmcWC-ctA-9h9iQsZNXCupcPa3EzFy1VnEjED9tJQc5UP8qJpr_hDBrc8bMQEnTlO8MvBlJBMxa2IxJVuEVvvT_gA"
                       alt="Sahadaki Ajan Ece"
+                      fallbackIcon="person_pin"
                     />
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#00eefc] rounded-full shadow-[0_0_6px_#00eefc]"></span>
                   </div>
@@ -342,7 +426,9 @@ export const Screen02Lobby: React.FC<Props> = ({
                     </span>
                     <span>{state.players.kaptan.ready ? 'HAZIR' : 'BEKLİYOR'}</span>
                   </button>
-                  <span className="font-mono text-[9px] text-[#9e8f78] mt-1">PİNG: 14ms</span>
+                  <span className="font-mono text-[9px] text-[#9e8f78] mt-1">
+                    {state.players.kaptan.connected ? 'BAĞLI // CANLI' : 'BEKLENİYOR'}
+                  </span>
                 </div>
               </div>
 
@@ -350,10 +436,11 @@ export const Screen02Lobby: React.FC<Props> = ({
               <div className="bg-[#201d30] rounded-xl p-3 shadow-md flex items-center justify-between border border-white/5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative w-12 h-12 rounded-xl bg-[#2b273b] overflow-hidden shrink-0 border border-white/10 shadow-inner">
-                    <img
+                    <SafeAssetImage
                       className="w-full h-full object-cover"
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9XvOIZt_5zEYmEnY25S1b0pghOqOmJzlPqqMab2oVJD0ioifXRVDRZS7zbaTpAF5LItCTJ5kkwrIwBY25Z87b8EWm8eWRJ1N9knqXZVdq6_SfJUsqshfzGt2mGlzm7UNCXg5I-5WSAICQ4iYAmeVzl9fYFod9ysqOt9UmehGDIlnw_QZjYbO0Xi-hFUkU2R5hO7Tb1_DnxBL_tpe27gE83s_BEBMiQFww8RwFYiw"
                       alt="Gölge Hacker Mert"
+                      fallbackIcon="terminal"
                     />
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#00eefc] rounded-full shadow-[0_0_6px_#00eefc]"></span>
                   </div>
@@ -385,10 +472,23 @@ export const Screen02Lobby: React.FC<Props> = ({
                     </span>
                     <span>{state.players.muhendis.ready ? 'HAZIR' : 'BEKLİYOR'}</span>
                   </button>
-                  <span className="font-mono text-[9px] text-[#9e8f78] mt-1">PİNG: 19ms</span>
+                  <span className="font-mono text-[9px] text-[#9e8f78] mt-1">
+                    {state.players.muhendis.connected ? 'BAĞLI // CANLI' : 'BEKLENİYOR'}
+                  </span>
                 </div>
               </div>
             </div>
+
+            {onSelectRole && (
+              <button
+                type="button"
+                onClick={() => onSelectRole(twoPlayerRole === 'kaptan' ? 'muhendis' : 'kaptan')}
+                className="w-full py-2 px-3 rounded-xl bg-[#201d30] hover:bg-[#2b273b] border border-[#00eefc]/30 text-[#00eefc] font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
+                <span>Rol Değiştir ({twoPlayerRole === 'kaptan' ? 'Ajan ➔ Hacker' : 'Hacker ➔ Ajan'})</span>
+              </button>
+            )}
           </section>
 
           {/* Mission Parameters Telemetry Grid */}
@@ -439,6 +539,70 @@ export const Screen02Lobby: React.FC<Props> = ({
                   <span className="font-sora text-xs font-semibold text-white block">%100 Gizlilik</span>
                   <span className="font-mono text-[9px] text-[#ffb703]">SIFIR TESPİT</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Game Mode Selection Card (Standart vs Gelişmiş) */}
+            <div className="rounded-xl p-2.5 bg-[#1c192c] border border-white/10">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] tracking-widest font-semibold uppercase text-[#00eefc] font-mono">
+                  GÖREV SENARYO MODU
+                </span>
+                <span className="text-[9px] font-mono text-[#9e8f78] uppercase">
+                  {(state.gameMode || 'standart') === 'gelismis' ? 'EŞZAMANLI SİSTEMLER' : 'SIRALI AŞAMALAR'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  disabled={isOnline && !isHost}
+                  onClick={() => {
+                    if (isOnline) {
+                      if (!isHost) return;
+                      colyseusClient.setGameMode('standart');
+                      return;
+                    }
+                    onUpdate((prev) => ({ ...prev, gameMode: 'standart' }));
+                  }}
+                  className={`p-2 rounded-xl border text-left transition-all ${
+                    isOnline && !isHost ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                  } ${
+                    (state.gameMode || 'standart') === 'standart'
+                      ? 'bg-amber-500/20 border-[#ffb703] text-white'
+                      : 'bg-[#141123] border-white/5 text-slate-400 hover:text-white'
+                  }`}
+                  type="button"
+                >
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-xs">🌟</span>
+                    <span className="text-[11px] font-bold font-sora">Standart Mod</span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 leading-tight">4 aşamalı sıralı sızma.</p>
+                </button>
+                <button
+                  disabled={isOnline && !isHost}
+                  onClick={() => {
+                    if (isOnline) {
+                      if (!isHost) return;
+                      colyseusClient.setGameMode('gelismis');
+                      return;
+                    }
+                    onUpdate((prev) => ({ ...prev, gameMode: 'gelismis' }));
+                  }}
+                  className={`p-2 rounded-xl border text-left transition-all ${
+                    isOnline && !isHost ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+                  } ${
+                    state.gameMode === 'gelismis'
+                      ? 'bg-cyan-500/20 border-[#00eefc] text-white'
+                      : 'bg-[#141123] border-white/5 text-slate-400 hover:text-white'
+                  }`}
+                  type="button"
+                >
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-xs">⚡</span>
+                    <span className="text-[11px] font-bold font-sora text-cyan-300">Gelişmiş Taktik</span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 leading-tight">Rastgele 2 sistem & 7 MW.</p>
+                </button>
               </div>
             </div>
           </section>
@@ -515,7 +679,9 @@ export const Screen02Lobby: React.FC<Props> = ({
                   SESLİ HAT FREKANSI // 44.1 KHZ
                 </span>
               </div>
-              <span className="font-mono text-[9px] text-[#00eefc] font-bold">SİNYAL: %98</span>
+              <span className="font-mono text-[9px] text-[#00eefc] font-bold">
+                {isOnline ? (colyseusClient.isConnected() ? 'HAT: CANLI' : 'HAT: BEKLEMEDE') : 'HAT: YEREL'}
+              </span>
             </div>
             <div className="grid grid-cols-12 gap-1 h-2">
               {[...Array(10)].map((_, i) => (
@@ -529,13 +695,51 @@ export const Screen02Lobby: React.FC<Props> = ({
           {/* Mission Dispatch Action Pod */}
           <section className="pt-2 flex flex-col gap-2">
             <button
-              onClick={onStartGame}
-              className="w-full relative overflow-hidden bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] py-3.5 px-4 rounded-xl font-sora text-sm font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(255,183,3,0.35)] active:scale-[0.98] transition-all cursor-pointer"
+              onClick={() => {
+                if (isOnline) {
+                  if (isBothReady) {
+                    if (isHost) onStartGame();
+                  } else {
+                    toggleMyReady();
+                  }
+                } else {
+                  if (isBothReady) {
+                    onStartGame();
+                  } else {
+                    const partnerRole = twoPlayerRole === 'kaptan' ? 'muhendis' : 'kaptan';
+                    if (!isMyReady) {
+                      toggleMyReady();
+                    } else if (!state.players[partnerRole].ready) {
+                      togglePartnerReady();
+                    } else {
+                      onStartGame();
+                    }
+                  }
+                }
+              }}
+              disabled={isOnline && isBothReady && !isHost}
+              className={`w-full relative overflow-hidden py-3.5 px-4 rounded-xl font-sora text-sm font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                isBothReady && (!isOnline || isHost)
+                  ? 'bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] shadow-[0_8px_20px_rgba(255,183,3,0.35)] active:scale-[0.98] cursor-pointer'
+                  : isOnline && isBothReady && !isHost
+                  ? 'bg-[#201d30] border border-white/10 text-[#9e8f78] cursor-not-allowed opacity-75'
+                  : 'bg-[#201d30] border border-[#ffb703]/40 text-[#ffb703] hover:bg-[#2b273b] active:scale-[0.98] cursor-pointer'
+              }`}
               type="button"
             >
-              <span className="material-symbols-outlined text-[#271900] text-[22px]">lock_open</span>
-              <span>OPERASYONU BAŞLAT</span>
-              <span className="material-symbols-outlined text-[#271900] text-[20px]">chevron_right</span>
+              <span className="material-symbols-outlined text-[22px]">
+                {isBothReady && (!isOnline || isHost) ? 'lock_open' : 'radio_button_checked'}
+              </span>
+              <span>
+                {isBothReady
+                  ? (isOnline && !isHost ? 'ODA LİDERİ BEKLENİYOR...' : 'OPERASYONU BAŞLAT')
+                  : !isMyReady
+                  ? 'ÖNCE HAZIR OL'
+                  : isOnline
+                  ? (!isPlayer2Joined ? 'EŞLİKÇİ KATILIMI BEKLENİYOR (1/2)' : 'DİĞER OPERATÖRÜ BEKLİYOR')
+                  : 'EŞLİKÇİYİ HAZIRLA & BAŞLAT'}
+              </span>
+              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
             </button>
 
             <button
@@ -548,8 +752,58 @@ export const Screen02Lobby: React.FC<Props> = ({
               </span>
               <span>{radioTesting ? 'KRİPTO-LİNK DOĞRULANIYOR... [OK]' : 'Şifreli Telsiz Bağlantısını Sına (Kripto-Link)'}</span>
             </button>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={shareToWhatsApp}
+                className="py-2 px-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white font-sora font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[15px]">share</span>
+                <span>WhatsApp</span>
+              </button>
+              <button
+                onClick={copyInviteLink}
+                className="py-2 px-2.5 rounded-xl bg-[#201d30] hover:bg-[#2b273b] border border-[#00eefc]/30 text-cyan-200 font-sora font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[15px] text-[#00eefc]">{copied ? 'check' : 'link'}</span>
+                <span>{copied ? 'Kopyalandı' : 'Linki Al'}</span>
+              </button>
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="py-2 px-2.5 rounded-xl bg-[#201d30] hover:bg-[#2b273b] border border-white/10 text-amber-300 font-sora font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[15px]">qr_code_2</span>
+                <span>QR Kod</span>
+              </button>
+            </div>
           </section>
         </main>
+
+        {showQrModal && (
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowQrModal(false);
+            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md cursor-pointer"
+          >
+            <div className="p-6 rounded-2xl bg-[#141123] border border-[#00eefc]/40 flex flex-col items-center gap-3 text-center max-w-xs shadow-2xl">
+              <span className="text-xs font-mono text-[#00eefc] uppercase font-bold">
+                GÖLGE PROTOKOLÜ ODA QR KODU
+              </span>
+              <InviteQRCode roomCode={state.roomCode} />
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold cursor-pointer"
+                type="button"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -561,10 +815,27 @@ export const Screen02Lobby: React.FC<Props> = ({
       <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#00eefc]/10 rounded-full blur-[80px] pointer-events-none"></div>
       <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-[#f59e0b]/15 rounded-full blur-[90px] pointer-events-none"></div>
 
+      {/* Toast Notification */}
+      {partnerReadyToast && (
+        <div className="absolute top-4 left-4 right-4 z-50 p-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-sora text-[11px] font-bold shadow-2xl flex items-center gap-2 animate-bounce border border-amber-300">
+          <span className="material-symbols-outlined text-[16px]">info</span>
+          <span>Çevrimiçi odada partneriniz kendi cihazından hazır olmalıdır!</span>
+        </div>
+      )}
+
       {/* TopBar / Header */}
       <header className="relative z-30 flex items-center justify-between px-5 pt-6 pb-2">
         {/* Brand Logo & Title */}
         <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={handleLeaveLobby}
+            aria-label="Girişe Dön"
+            title="Odadan Ayrıl ve Girişe Dön"
+            className="w-8 h-8 rounded-xl bg-[#1d1b32]/85 border border-white/10 flex items-center justify-center text-cyan-300 hover:text-white active:scale-95 transition-all cursor-pointer mr-1"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          </button>
           {isDerinBasinc ? (
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-[#00eefc]">
@@ -572,7 +843,7 @@ export const Screen02Lobby: React.FC<Props> = ({
               </div>
               <div className="flex flex-col">
                 <span className="font-mono text-[9px] text-cyan-300 uppercase tracking-widest leading-none">
-                  DERİN DALIP // PROTOKOLÜ
+                  DERİN DALIŞ // PROTOKOLÜ
                 </span>
                 <h1 className="font-sora text-xs font-bold text-white tracking-tight leading-tight mt-0.5">
                   HİDRO-04 Dalış Kabini
@@ -599,7 +870,10 @@ export const Screen02Lobby: React.FC<Props> = ({
           {isDerinBasinc && (
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-high/80 border border-white/10">
               <span className="material-symbols-outlined text-amber-400 text-[14px] animate-pulse">timer</span>
-              <span className="font-mono text-[10px] text-[#ffba27] font-bold">04:32</span>
+              <span className="font-mono text-[10px] text-[#ffba27] font-bold">
+                {Math.floor(state.timeLeftSeconds / 60).toString().padStart(2, '0')}:
+                {(state.timeLeftSeconds % 60).toString().padStart(2, '0')}
+              </span>
             </div>
           )}
           {!isOnline && (
@@ -614,12 +888,16 @@ export const Screen02Lobby: React.FC<Props> = ({
               </svg>
             </button>
           )}
-          <div className="w-9 h-9 rounded-xl bg-[#1d1b32]/80 border border-white/10 flex items-center justify-center text-slate-300">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsMuted(soundManager.toggleMute())}
+            title={isMuted ? 'Sesi Aç' : 'Sesi Kapat'}
+            className="w-9 h-9 rounded-xl bg-[#1d1b32]/80 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white active:scale-95 transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {isMuted ? 'volume_off' : 'volume_up'}
+            </span>
+          </button>
         </div>
       </header>
 
@@ -629,7 +907,7 @@ export const Screen02Lobby: React.FC<Props> = ({
         {/* Hero Section */}
         <section className="relative rounded-2xl overflow-hidden border border-white/10 min-h-[260px] flex flex-col justify-end p-4 shadow-xl">
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <img 
+            <SafeAssetImage 
               src={
                 isDerinBasinc
                   ? "https://lh3.googleusercontent.com/aida-public/AB6AXuAaVqfH-Ps6RyTNUmw7Q8HWHtJ5dUrrQp7WMlBNMkfi_jZ4hZ-rFQdcu4gHHX2CKrMJs0Dn2-ABA8FhNKdXoZ6V-Rs5Gmi27TGrmL8upPQjYdZ4AmZjvwQZC3wCHpwNmg5p3RjibcYYt0gAEaT29wcJvTfvUfcQ7lawXjfOTj0e7N-HNAHkunniBrh0u6Ysr4TRu1nTud6WDNZ2IzdOMhk4mHgisqbb9SZmnvUjxvA"
@@ -637,6 +915,7 @@ export const Screen02Lobby: React.FC<Props> = ({
               }
               alt={isDerinBasinc ? "HİDRO-04 Batiskap Abisal Hendek" : "Uzay İstasyonu Hangar ve Reaktör Vitrini"} 
               className="w-full h-full object-cover object-center"
+              fallbackIcon={isDerinBasinc ? 'anchor' : 'rocket_launch'}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0e0d1f] via-[#0e0d1f]/60 to-transparent"></div>
           </div>
@@ -763,13 +1042,18 @@ export const Screen02Lobby: React.FC<Props> = ({
           <div className="grid grid-cols-2 gap-2">
             {/* Standart Mod Button */}
             <button
+              disabled={isOnline && !isHost}
               onClick={() => {
                 if (isOnline) {
+                  if (!isHost) return;
                   colyseusClient.setGameMode('standart');
+                  return;
                 }
                 onUpdate((prev) => ({ ...prev, gameMode: 'standart' }));
               }}
-              className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`p-2 rounded-xl border text-left transition-all ${
+                isOnline && !isHost ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              } ${
                 (state.gameMode || 'standart') === 'standart'
                   ? 'bg-amber-500/20 border-[#ffb703] text-white shadow-[0_0_12px_rgba(255,183,3,0.3)]'
                   : 'bg-[#1a1733] border-white/5 text-slate-400 hover:text-white'
@@ -787,13 +1071,18 @@ export const Screen02Lobby: React.FC<Props> = ({
 
             {/* Gelişmiş Taktik Mod Button */}
             <button
+              disabled={isOnline && !isHost}
               onClick={() => {
                 if (isOnline) {
+                  if (!isHost) return;
                   colyseusClient.setGameMode('gelismis');
+                  return;
                 }
                 onUpdate((prev) => ({ ...prev, gameMode: 'gelismis' }));
               }}
-              className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`p-2 rounded-xl border text-left transition-all ${
+                isOnline && !isHost ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
+              } ${
                 state.gameMode === 'gelismis'
                   ? 'bg-cyan-500/20 border-[#00eefc] text-white shadow-[0_0_12px_rgba(0,238,252,0.3)]'
                   : 'bg-[#1a1733] border-white/5 text-slate-400 hover:text-white'
@@ -805,7 +1094,7 @@ export const Screen02Lobby: React.FC<Props> = ({
                 <span className="text-xs font-bold font-sora text-cyan-300">Gelişmiş Taktik</span>
               </div>
               <p className="text-[9px] text-slate-400 leading-tight">
-                Operasyon Çöküş Eşiği: Eşzamanlı 3 sistem ve güç matrisi.
+                Operasyon Çöküş Eşiği: Rastgele 2 sistem ve 7 MW güç matrisi.
               </p>
             </button>
           </div>
@@ -904,14 +1193,15 @@ export const Screen02Lobby: React.FC<Props> = ({
             </div>
 
             <div className="relative w-full h-32 rounded-xl overflow-hidden bg-slate-900 mb-2">
-              <img 
+              <SafeAssetImage 
                 src={
                   isDerinBasinc
                     ? "https://lh3.googleusercontent.com/aida-public/AB6AXuDoMlRTjls0FI3uCrh9Eq-EL4lzi-28Zte1Q_cn9oFdTpKl6l3HEztU3t-p43t04Eu1ywyUckY_xCraNlEjNsmIEroskTUD_4cIvq5TlMveo6bT4st0RA8McjRvx34qsp5C1UsTgLOgmE0-xActBQ3tAibRiiCVCDzLkcBEylzVfl_J1GTZvXbyJ-TyK3Njsy0K90zUBp1urG093euTDOCDaYTqHnNGA9rAFomdpbo"
                     : "https://lh3.googleusercontent.com/aida-public/AB6AXuCLbCVA7kytNnSKo-gaPE6NKFjpPbQRs2t25Ai3LLzN9z6Rs1jEhpygEPnnSIHuuVKNygcTWw7VWm1YfzXqvbYdp_OiQgaVWlkvpQM_u5T136mUlSKgIyXW-cLODBk_uj5ROs4BYSAYZfWN01cu1lH-RjGhCz3Cb6kqMKU1dNETrWmg4gKa3ED9YpA3HwDUSxH7gHneqXsRfTAXrkkKQI1k8ooNGS7rglu29_COf2U"
                 } 
                 alt="Kaptan / Dümenci Ece" 
-                className="w-full h-full object-cover object-top" 
+                className="w-full h-full object-cover object-top"
+                fallbackIcon="military_tech"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#121124] via-transparent to-transparent"></div>
             </div>
@@ -956,14 +1246,15 @@ export const Screen02Lobby: React.FC<Props> = ({
               )}
 
               <div className="relative w-full h-32 rounded-xl overflow-hidden bg-slate-900 mb-2">
-                <img 
+                <SafeAssetImage 
                   src={
                     isDerinBasinc
                       ? "https://lh3.googleusercontent.com/aida-public/AB6AXuBB7m8E0MiZbKzCB9mU7R1Jc8PPO0AY-6SQ5l-DKWzph5r1wcYsHPGAnTGonk-AeR-Jx2Ehr1taxWU1taKO-LE3u_bvfV8lQ_cH8nJWcmTwBVZHHYtqxGWzFiLuit9BcdfZOHCR2NnmFAVcse7wWgf2ElcEt8vhpBt5qTT-pURbFgj5VKshCdEWjh3syMX1MorWBb32TAJt9Y6bkJClkM0ppNo_JhGKkhdHABEKP1E"
                       : "https://lh3.googleusercontent.com/aida-public/AB6AXuAoeQN2pLWf8Xj8TxKoQJTTjpc9CsSHTF5JxwfmESK0bsLl_Kyh6Iux2FofuEtAWJigxSdB3vVnrkTLj6hpBR59wJ-lzOi-ZYd2q6m5lU7yOlMZ6lvzGFY2r5Tp3yffa2XhDCZ2SykuiFajBooH6M_buYGjfh8bol08jD3Fc0bAjP_jT3sdW2u61qvqBk2uo1DrqLaecld0x7BSi6bHLhJudQW63uoFwue1Te-7sj8"
                   } 
                   alt="Mühendis / Makinist Mert" 
-                  className="w-full h-full object-cover object-top" 
+                  className="w-full h-full object-cover object-top"
+                  fallbackIcon="engineering"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#101021] via-transparent to-transparent"></div>
               </div>
@@ -1022,6 +1313,21 @@ export const Screen02Lobby: React.FC<Props> = ({
           )}
         </section>
 
+        {onSelectRole && (
+          <button
+            type="button"
+            onClick={() => onSelectRole(twoPlayerRole === 'kaptan' ? 'muhendis' : 'kaptan')}
+            className="w-full py-2 px-3 rounded-xl bg-[#191632] hover:bg-[#231e42] border border-[#00eefc]/30 text-[#00eefc] font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
+          >
+            <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
+            <span>
+              Rol Değiştir ({isDerinBasinc
+                ? (twoPlayerRole === 'kaptan' ? 'Dümenci ➔ Makinist' : 'Makinist ➔ Dümenci')
+                : (twoPlayerRole === 'kaptan' ? 'Kaptan ➔ Mühendis' : 'Mühendis ➔ Kaptan')})
+            </span>
+          </button>
+        )}
+
         {/* Quick Facts / Parameter Grid */}
         {isDerinBasinc ? (
           <section className="grid grid-cols-4 gap-1.5">
@@ -1032,7 +1338,9 @@ export const Screen02Lobby: React.FC<Props> = ({
             </div>
             <div className="bg-[#141329]/90 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center shadow-md">
               <span className="font-mono text-[8px] text-[#9e8f78] uppercase font-bold">PROTOKOL</span>
-              <span className="text-[11px] font-bold text-[#ffba27] mt-0.5 leading-tight">8 Aşamalı</span>
+              <span className="text-[11px] font-bold text-[#ffba27] mt-0.5 leading-tight">
+                {state.gameMode === 'gelismis' ? 'Eşzamanlı' : '4 Aşamalı'}
+              </span>
               <span className="text-[8px] text-amber-300/80 font-mono">Derin Dalış</span>
             </div>
             <div className="bg-[#141329]/90 border border-white/5 rounded-xl p-2 flex flex-col items-center text-center shadow-md">
@@ -1150,8 +1458,8 @@ export const Screen02Lobby: React.FC<Props> = ({
                   if (isBothReady) {
                     onStartGame();
                   } else {
-                    const partnerRole = state.myRole === 'kaptan' ? 'muhendis' : 'kaptan';
-                    if (!state.players[state.myRole].ready) {
+                    const partnerRole = twoPlayerRole === 'kaptan' ? 'muhendis' : 'kaptan';
+                    if (!isMyReady) {
                       toggleMyReady();
                     } else if (!state.players[partnerRole].ready) {
                       togglePartnerReady();
@@ -1189,9 +1497,9 @@ export const Screen02Lobby: React.FC<Props> = ({
                 {isBothReady ? (
                   isOnline && !isHost ? <>Lideri<br />Bekliyor</> : (isDerinBasinc ? <>DALIŞI<br />BAŞLAT</> : <>Görevi<br />başlat</>)
                 ) : !isPlayer2Joined ? (
-                  state.players[state.myRole].ready ? <>Hazırsın<br />(Bekleniyor)</> : <>Hazır<br />Ol</>
+                  isMyReady ? <>Hazırsın<br />(Bekleniyor)</> : <>Hazır<br />Ol</>
                 ) : (
-                  state.players[state.myRole].ready ? <>Eşlikçi<br />Hazırla</> : <>Hazır<br />Ol</>
+                  isMyReady ? <>Eşlikçi<br />Hazırla</> : <>Hazır<br />Ol</>
                 )}
               </span>
 
@@ -1200,10 +1508,10 @@ export const Screen02Lobby: React.FC<Props> = ({
                 <span className="text-[8px] font-mono font-bold text-amber-400 mt-0.5 opacity-90">
                   {isOnline ? (
                     !isPlayer2Joined 
-                      ? (state.players[state.myRole].ready ? '(Eşlikçi Bekle)' : '(Tıkla Hazır Ol)')
-                      : (state.players[state.myRole].ready ? '(Eşlikçi Bekleniyor)' : '(Hazır Ol)')
+                      ? (isMyReady ? '(Eşlikçi Bekle)' : '(Tıkla Hazır Ol)')
+                      : (isMyReady ? '(Eşlikçi Bekleniyor)' : '(Hazır Ol)')
                   ) : (
-                    state.players[state.myRole].ready ? '(Eşlikçiyi Hazır Yap)' : '(Tıkla Hazır Ol)'
+                    isMyReady ? '(Eşlikçiyi Hazır Yap)' : '(Tıkla Hazır Ol)'
                   )}
                 </span>
               )}
@@ -1231,26 +1539,55 @@ export const Screen02Lobby: React.FC<Props> = ({
           </button>
         )}
 
-        {/* Secondary Action: Invite Friend ("+ Arkadaşını davet et") with Cyan Neon Glow */}
+        {/* Viral WhatsApp One-Click Invite Button */}
         <button 
-          onClick={copyInviteLink}
-          className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#1c1a35] via-[#242145] to-[#1c1a35] border border-[#00eefc]/30 hover:border-[#00eefc] hover:shadow-[0_0_18px_rgba(0,238,252,0.3)] flex items-center justify-center space-x-2 text-slate-200 hover:text-white transition-all shadow-lg active:scale-[0.98] cursor-pointer" 
+          onClick={shareToWhatsApp}
+          className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-[0_4px_16px_rgba(16,185,129,0.35)] active:scale-[0.98] transition-all cursor-pointer" 
           type="button"
         >
-          <svg className="w-4 h-4 text-[#00eefc] drop-shadow-[0_0_6px_#00eefc]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-            <path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" strokeLinecap="round" strokeLinejoin="round"></path>
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm5.77 14.07c-.24.67-1.39 1.29-1.93 1.37-.5.08-1.14.12-3.69-.93-3.26-1.34-5.35-4.66-5.51-4.88-.16-.22-1.31-1.74-1.31-3.32 0-1.58.83-2.36 1.13-2.68.29-.32.64-.4 1.01-.4.12 0 .23.01.33.02.29.01.44.03.63.49.24.58.82 2 .89 2.15.07.16.12.35.02.55-.1.2-.16.32-.32.51-.16.19-.34.42-.48.56-.16.16-.33.33-.14.66.19.32.84 1.38 1.8 2.24 1.24 1.1 2.29 1.45 2.62 1.61.32.16.51.14.7-.08.19-.22.82-.96 1.04-1.29.22-.32.44-.27.75-.16.32.11 2.01.95 2.36 1.12.35.17.58.26.66.4.08.14.08.82-.16 1.49z"/>
           </svg>
-          <span className="text-[12px] font-bold tracking-wide font-sora">
-            {copied ? '✓ Davet Linki Kopyalandı!' : '+ Arkadaşını Davet Et (Linki Kopyala)'}
-          </span>
+          <span>WhatsApp ile Arkadaşını Çağır</span>
         </button>
+
+        {/* Secondary Action: Invite Friend ("+ Arkadaşını davet et") with Cyan Neon Glow */}
+        <div className="grid grid-cols-2 gap-2">
+          <button 
+            onClick={copyInviteLink}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#1c1a35] via-[#242145] to-[#1c1a35] border border-[#00eefc]/30 hover:border-[#00eefc] flex items-center justify-center space-x-1.5 text-slate-200 hover:text-white transition-all shadow-md active:scale-[0.98] cursor-pointer" 
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[16px] text-[#00eefc]">
+              {copied ? 'check_circle' : 'link'}
+            </span>
+            <span className="text-[11px] font-bold tracking-wide font-sora">
+              {copied ? 'Kopyalandı!' : 'Linki Kopyala'}
+            </span>
+          </button>
+
+          <button 
+            onClick={() => setShowQrModal(true)}
+            className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#1c1a35] via-[#242145] to-[#1c1a35] border border-white/10 hover:border-[#ffb703] flex items-center justify-center space-x-1.5 text-slate-200 hover:text-white transition-all shadow-md active:scale-[0.98] cursor-pointer" 
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[16px] text-[#ffb703]">qr_code_2</span>
+            <span className="text-[11px] font-bold tracking-wide font-sora">QR Kod</span>
+          </button>
+        </div>
+
+        {/* Quick Join Assurance Pill */}
+        <div className="py-1 px-2.5 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center gap-2 text-[10px] font-mono text-slate-300">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Hızlı Katılım • Arkadaşın oda koduyla veya davetle anında bağlanır</span>
+        </div>
 
       </footer>
 
       {/* iOS Home Indicator Pill Bar */}
       <div className="w-32 h-1 bg-white/20 rounded-full mx-auto mt-2 pointer-events-none"></div>
 
-      {/* Simple QR Code Modal Preview */}
+      {/* Scannable QR Code Modal */}
       {showQrModal && (
         <div 
           onClick={(e) => {
@@ -1259,17 +1596,16 @@ export const Screen02Lobby: React.FC<Props> = ({
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md cursor-pointer"
         >
           <div className="p-6 rounded-2xl bg-[#141123] border border-[#00eefc]/40 flex flex-col items-center gap-3 text-center max-w-xs shadow-2xl">
-            <span className="text-xs font-mono text-[#00eefc] uppercase font-bold">KAYIP SİNYAL ODA QR KODU</span>
-            <div className="w-44 h-44 bg-white rounded-xl p-2 flex items-center justify-center shadow-lg">
-              {/* QR matrix mockup representation */}
-              <div className="w-full h-full bg-slate-900 rounded flex flex-col items-center justify-center p-2 text-center text-white">
-                <span className="font-mono font-bold text-lg text-[#ffb703]">{state.roomCode}</span>
-                <span className="text-[9px] text-[#00eefc] mt-1 font-mono">partyverse.app/{state.roomCode}</span>
-              </div>
-            </div>
+            <span className="text-xs font-mono text-[#00eefc] uppercase font-bold">
+              {isDerinBasinc
+                ? 'DERİN BASINÇ ODA QR KODU'
+                : 'KAYIP SİNYAL ODA QR KODU'}
+            </span>
+            <InviteQRCode roomCode={state.roomCode} />
             <button
               onClick={() => setShowQrModal(false)}
-              className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold"
+              className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold cursor-pointer"
+              type="button"
             >
               Kapat
             </button>

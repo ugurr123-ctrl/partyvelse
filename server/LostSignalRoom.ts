@@ -29,6 +29,16 @@ import {
 } from '../src/services/phaseTransition';
 import { applyAdvancedAction } from '../src/services/advancedScenarioLogic';
 import { applyLocalGameAction } from '../src/services/localGameEngine';
+import {
+  applyOmegaAction,
+  filterOmegaStateForRole,
+  generateOmegaData,
+  getOmegaRoleMeta,
+  getOmegaRolesForCount,
+  getTeamOperationMeta,
+  getTeamThemeFromCode,
+  isTeamOperationTheme,
+} from '../src/services/omegaGameEngine';
 
 interface PlayerSession {
   sessionId: string;
@@ -47,12 +57,69 @@ export class LostSignalRoom extends Room {
   public missionState!: MissionState;
   public playerSessions: Map<string, PlayerSession> = new Map();
   public processedActionIds: Set<string> = new Set();
-  public disconnectSecondsLeft: number = 0;
+  private disconnectedPlayers: Map<string, { name: string; secondsLeft: number }> = new Map();
   private tickInterval: any = null;
+
+  private getWaitingSlotName(theme: MissionState['operationTheme'], role: Role, targetCount: 2 | 3 | 4): string {
+    if (isTeamOperationTheme(theme)) {
+      return getOmegaRoleMeta(role, targetCount === 3 ? 3 : 4).waitingName;
+    }
+    if (role === 'kaptan') {
+      if (theme === 'karantina_2088') return 'Baş Biyolog Bekleniyor...';
+      if (theme === 'golge_protokolu') return 'Ajan Bekleniyor...';
+      if (theme === 'derin_basinc') return 'Dümenci Bekleniyor...';
+      return 'Kaptan Bekleniyor...';
+    }
+    if (theme === 'karantina_2088') return 'Güvenlik Şefi Bekleniyor...';
+    if (theme === 'golge_protokolu') return 'Hacker Bekleniyor...';
+    if (theme === 'derin_basinc') return 'Makinist Bekleniyor...';
+    return 'Arkadaşın Bekleniyor...';
+  }
+
+  private syncDisconnectBanner() {
+    if (this.disconnectedPlayers.size === 0) {
+      this.missionState.isDisconnected = false;
+      this.missionState.isPaused = false;
+      return;
+    }
+    let minSeconds = 45;
+    const names: string[] = [];
+    for (const info of this.disconnectedPlayers.values()) {
+      names.push(info.name);
+      if (info.secondsLeft < minSeconds) {
+        minSeconds = info.secondsLeft;
+      }
+    }
+    this.missionState.isDisconnected = true;
+    this.missionState.isPaused = true;
+    this.missionState.feedbackState = 'disconnected';
+    this.missionState.feedbackMessage = `${names.join(', ')} bekleniyor: ${Math.max(0, minSeconds)}s`;
+  }
+
+  private transferHostIfNeeded(leavingSessionId: string) {
+    if (this.hostSessionId !== leavingSessionId) return;
+    const nextHost = Array.from(this.playerSessions.values()).find((p) => p.connected) ||
+      Array.from(this.playerSessions.values())[0];
+    if (nextHost) {
+      this.hostSessionId = nextHost.sessionId;
+      this.missionState.hostId = nextHost.sessionId;
+    } else {
+      this.hostSessionId = '';
+      this.missionState.hostId = '';
+    }
+  }
 
   onCreate(options: any) {
     const rawCode = (options.roomCode || 'KYP-' + Math.random().toString(36).substring(2, 6).toUpperCase()).toUpperCase().trim();
-    const isPrefixed = rawCode.startsWith('KR') || rawCode.startsWith('SHDW') || rawCode.startsWith('DP') || rawCode.startsWith('KYP');
+    const isPrefixed =
+      rawCode.startsWith('KR') ||
+      rawCode.startsWith('SHDW') ||
+      rawCode.startsWith('DP') ||
+      rawCode.startsWith('KYP') ||
+      rawCode.startsWith('OMG') ||
+      rawCode.startsWith('TTN') ||
+      rawCode.startsWith('SBK') ||
+      rawCode.startsWith('BZL');
     this.roomCode = isPrefixed ? rawCode : `KYP-${rawCode}`;
 
     // Prevent duplicate room creation with same code
@@ -63,23 +130,87 @@ export class LostSignalRoom extends Room {
 
     this.setMetadata({ roomCode: this.roomCode });
 
+    const codeTeamTheme = getTeamThemeFromCode(this.roomCode);
+    const resolvedTeamTheme = isTeamOperationTheme(options.operationTheme)
+      ? options.operationTheme
+      : codeTeamTheme;
+    const isTeamTheme = Boolean(resolvedTeamTheme);
+
+    const targetCount: 2 | 3 | 4 = isTeamTheme
+      ? options.targetPlayerCount === 3 || /^(OMG3|TTN3|SBK3|BZL3)/.test(this.roomCode)
+        ? 3
+        : 4
+      : 2;
+    this.maxClients = targetCount;
+
     const env: EnvironmentType = options.environment || 'kayip_sinyal';
-    const hostName: string = options.playerName || 'Kaptan Ece';
+    const allowedRoles = getOmegaRolesForCount(targetCount);
+    const requestedHostRole: Role = options?.role;
+    const hostRole: Role = allowedRoles.includes(requestedHostRole) ? requestedHostRole : 'kaptan';
+    const hostName: string =
+      options.playerName ||
+      (isTeamTheme
+        ? getOmegaRoleMeta(hostRole, targetCount === 3 ? 3 : 4).defaultName
+        : hostRole === 'kaptan'
+        ? 'Kaptan Ece'
+        : 'Mühendis Mert');
+
     this.missionState = createInitialMissionState(this.roomCode, env, hostName);
+    this.missionState.targetPlayerCount = targetCount;
     if (options.selectedMiniGames && Array.isArray(options.selectedMiniGames)) {
       this.missionState.selectedMiniGames = options.selectedMiniGames;
     }
-    if (options.operationTheme) {
+    if (options.gameMode === 'gelismis' || options.gameMode === 'standart') {
+      this.missionState.gameMode = options.gameMode;
+    }
+    if (resolvedTeamTheme) {
+      const teamMeta = getTeamOperationMeta(resolvedTeamTheme);
+      this.missionState.operationTheme = resolvedTeamTheme;
+      this.missionState.timeLeftSeconds = teamMeta.defaultTimeSeconds;
+      this.missionState.omegaData = generateOmegaData(targetCount === 3 ? 3 : 4, resolvedTeamTheme);
+    } else if (options.operationTheme) {
       this.missionState.operationTheme = options.operationTheme;
       if (options.operationTheme === 'karantina_2088') {
         this.missionState.karantinaData = generateKarantinaData();
       }
     }
     this.missionState.status = 'lobby';
-    this.missionState.players.kaptan.connected = false;
-    this.missionState.players.muhendis.connected = false;
-    this.missionState.players.muhendis.name = options.operationTheme === 'karantina_2088' ? 'Güvenlik Şefi Bekleniyor...' : 'Arkadaşın Bekleniyor...';
-    this.missionState.players.muhendis.id = '';
+
+    // Initialize role slots cleanly
+    for (const r of allowedRoles) {
+      const waitingName = isTeamTheme
+        ? getOmegaRoleMeta(r, targetCount === 3 ? 3 : 4).waitingName
+        : r === 'kaptan'
+        ? (options.operationTheme === 'karantina_2088'
+            ? 'Baş Biyolog Bekleniyor...'
+            : options.operationTheme === 'golge_protokolu'
+            ? 'Ajan Bekleniyor...'
+            : options.operationTheme === 'derin_basinc'
+            ? 'Dümenci Bekleniyor...'
+            : 'Kaptan Bekleniyor...')
+        : (options.operationTheme === 'karantina_2088'
+            ? 'Güvenlik Şefi Bekleniyor...'
+            : options.operationTheme === 'golge_protokolu'
+            ? 'Hacker Bekleniyor...'
+            : options.operationTheme === 'derin_basinc'
+            ? 'Makinist Bekleniyor...'
+            : 'Arkadaşın Bekleniyor...');
+
+      this.missionState.players[r] = {
+        id: '',
+        name: r === hostRole ? hostName : waitingName,
+        role: r,
+        ready: false,
+        roleConfirmed: false,
+        connected: false,
+      };
+    }
+    if (targetCount < 4) {
+      delete this.missionState.players.guvenlik;
+    }
+    if (targetCount < 3) {
+      delete this.missionState.players.kriptolog;
+    }
 
     // Set up 1-second authoritative server clock
     this.tickInterval = this.clock.setInterval(() => {
@@ -99,8 +230,12 @@ export class LostSignalRoom extends Room {
       }
     });
 
-    // 0B. Live Tactical Radio Transmission
+    // 0B. Live Tactical Radio Transmission (Text & Push-to-Talk Voice Clips)
     this.onMessage('radio_transmission', (_client, transmission) => {
+      if (!transmission || typeof transmission !== 'object') return;
+      if (typeof transmission.audioDataUrl === 'string' && transmission.audioDataUrl.length > 450000) {
+        return; // Guard against oversized audio payloads (> ~330KB binary)
+      }
       this.broadcast('radio_transmission', transmission);
     });
 
@@ -111,106 +246,160 @@ export class LostSignalRoom extends Room {
       if (this.missionState.status !== 'lobby') return;
 
       player.ready = !player.ready;
-      this.missionState.players[player.role].ready = player.ready;
+      const slot = this.missionState.players[player.role];
+      if (slot) {
+        slot.ready = player.ready;
+      }
       this.broadcastFilteredState();
     });
 
-    // 1B. Game Mode Select in Lobby (Host or either player)
+    // 1B. Game Mode Select in Lobby (Host only)
     this.onMessage('set_game_mode', (client, payload: { mode: GameMode }) => {
       if (this.missionState.status !== 'lobby') return;
+      if (client.sessionId !== this.hostSessionId) {
+        client.send('error_message', 'Yalnızca oda lideri oyun modunu değiştirebilir.');
+        return;
+      }
+      if (payload?.mode !== 'standart' && payload?.mode !== 'gelismis') return;
       this.missionState.gameMode = payload.mode;
       this.broadcastFilteredState();
     });
 
-    // 2. Role Swap / Select in Lobby
+    // 1C. Reroll Random Mini-Games Sequence in Lobby (Host only)
+    this.onMessage('reroll_tasks', (client) => {
+      if (this.missionState.status !== 'lobby') return;
+      if (client.sessionId !== this.hostSessionId) {
+        client.send('error_message', 'Yalnızca oda lideri görev sırasını değiştirebilir.');
+        return;
+      }
+      const newGames = getRandomMiniGames(this.missionState.selectedMiniGames);
+      this.missionState.selectedMiniGames = newGames;
+      if (this.missionState.advancedScenario) {
+        this.missionState.advancedScenario.activeSubsystemTab =
+          newGames[0] === 'ariza_teshisi'
+            ? 'reaktor'
+            : newGames[0] === 'sinyal_cozumu'
+            ? 'sinyal'
+            : newGames[0] === 'hava_kilidi'
+            ? 'hava_kilidi'
+            : newGames[0] === 'kablo_baglantisi'
+            ? 'kablo'
+            : 'radar';
+      }
+      this.broadcastFilteredState();
+    });
+
+    // 2. Role Swap / Select in Lobby (works for 2, 3, or 4 player rooms)
     this.onMessage('select_role', (client, payload: { targetRole: Role }) => {
       const player = this.playerSessions.get(client.sessionId);
       if (!player || this.missionState.status !== 'lobby') return;
 
+      const targetCount = this.missionState.targetPlayerCount || 2;
+      const allowedRoles = getOmegaRolesForCount(targetCount);
       const targetRole = payload.targetRole;
-      if (player.role === targetRole) return;
+      if (!allowedRoles.includes(targetRole) || player.role === targetRole) return;
 
-      // Find the other player
-      let otherPlayer: PlayerSession | null = null;
+      const oldRole = player.role;
+      let occupant: PlayerSession | null = null;
       for (const [sId, p] of this.playerSessions.entries()) {
-        if (sId !== client.sessionId) {
-          otherPlayer = p;
+        if (sId !== client.sessionId && p.role === targetRole) {
+          occupant = p;
           break;
         }
       }
 
-      if (otherPlayer) {
-        // Swap roles
-        otherPlayer.role = player.role;
-        otherPlayer.ready = false;
-        this.missionState.players[otherPlayer.role] = {
-          id: otherPlayer.sessionId,
-          name: otherPlayer.name,
-          role: otherPlayer.role,
+      if (occupant) {
+        occupant.role = oldRole;
+        occupant.ready = false;
+        occupant.roleConfirmed = false;
+        this.missionState.players[oldRole] = {
+          id: occupant.sessionId,
+          name: occupant.name,
+          role: oldRole,
           ready: false,
-          connected: true,
+          roleConfirmed: false,
+          connected: occupant.connected,
+        };
+      } else {
+        const waitingLabel = this.getWaitingSlotName(this.missionState.operationTheme, oldRole, targetCount);
+        this.missionState.players[oldRole] = {
+          id: '',
+          name: waitingLabel,
+          role: oldRole,
+          ready: false,
+          roleConfirmed: false,
+          connected: false,
         };
       }
 
       player.role = targetRole;
       player.ready = false;
+      player.roleConfirmed = false;
       this.missionState.players[targetRole] = {
         id: player.sessionId,
         name: player.name,
         role: targetRole,
         ready: false,
-        connected: true,
+        roleConfirmed: false,
+        connected: player.connected,
       };
 
       this.broadcastFilteredState();
     });
 
-    // 3. Start Game: Only Host can start, and only when both players are connected and ready
+    // 3. Start Game: Only Host can start, and only when all expected players are connected and ready
     this.onMessage('start_game', (client) => {
       if (client.sessionId !== this.hostSessionId) {
         client.send('error_message', 'Yalnızca oda lideri oyunu başlatabilir.');
         return;
       }
 
-      if (this.playerSessions.size < 2) {
-        client.send('error_message', 'Oyunu başlatmak için arkadaşınızın odaya katılması gerekiyor (1/2).');
+      const requiredPlayers = this.missionState.targetPlayerCount || 2;
+      if (this.playerSessions.size < requiredPlayers) {
+        client.send(
+          'error_message',
+          `Oyunu başlatmak için tüm ekip üyelerinin odaya katılması gerekiyor (${this.playerSessions.size}/${requiredPlayers}).`
+        );
         return;
       }
 
-      const bothReady = 
-        this.playerSessions.size === 2 &&
-        Array.from(this.playerSessions.values()).every(p => p.ready);
+      const allReady =
+        this.playerSessions.size === requiredPlayers &&
+        Array.from(this.playerSessions.values()).every((p) => p.ready);
 
-      if (!bothReady) {
-        client.send('error_message', 'Her iki oyuncu da hazır olmadan oyun başlatılamaz.');
+      if (!allReady) {
+        client.send('error_message', 'Tüm oyuncular hazır olmadan oyun başlatılamaz.');
         return;
       }
 
       this.missionState.status = 'role_intro';
       for (const p of this.playerSessions.values()) {
         p.roleConfirmed = false;
-        if (this.missionState.players[p.role]) {
-          this.missionState.players[p.role].roleConfirmed = false;
+        const slot = this.missionState.players[p.role];
+        if (slot) {
+          slot.roleConfirmed = false;
         }
       }
       this.broadcastFilteredState();
     });
 
-    // 4. Confirm Role Intro: moves to Phase 1 ONLY when both connected players have confirmed
+    // 4. Confirm Role Intro: moves to Phase 1 ONLY when all connected players have confirmed
     this.onMessage('confirm_role', (client) => {
       if (this.missionState.status !== 'role_intro') return;
       const player = this.playerSessions.get(client.sessionId);
       if (!player) return;
       player.roleConfirmed = true;
-      if (this.missionState.players[player.role]) {
-        this.missionState.players[player.role].roleConfirmed = true;
+      const slot = this.missionState.players[player.role];
+      if (slot) {
+        slot.roleConfirmed = true;
       }
 
-      const bothConnectedAndConfirmed = 
-        this.playerSessions.size === 2 &&
-        Array.from(this.playerSessions.values()).every(p => p.connected && p.roleConfirmed);
+      const requiredPlayers = this.missionState.targetPlayerCount || 2;
+      const allConnectedAndConfirmed =
+        this.playerSessions.size === requiredPlayers &&
+        Array.from(this.playerSessions.values()).every((p) => p.connected && p.roleConfirmed);
 
-      if (bothConnectedAndConfirmed) {
+      if (allConnectedAndConfirmed) {
         this.missionState.status = 'phase_game';
         this.missionState.currentPhaseIndex = 0;
       }
@@ -266,6 +455,9 @@ export class LostSignalRoom extends Room {
       }
 
       const prevPair = this.missionState.selectedMiniGames;
+      const prevGameMode = this.missionState.gameMode;
+      const prevTheme = this.missionState.operationTheme;
+      const prevCount = this.missionState.targetPlayerCount || 2;
       const newPair = getRandomMiniGames(prevPair);
       const newRoundId = generateRoundId();
 
@@ -278,26 +470,50 @@ export class LostSignalRoom extends Room {
 
       freshState.roundId = newRoundId;
       freshState.selectedMiniGames = newPair;
+      freshState.gameMode = prevGameMode;
       freshState.status = 'lobby';
-      freshState.operationTheme = this.missionState.operationTheme;
-      if (this.missionState.operationTheme === 'karantina_2088') {
+      freshState.operationTheme = prevTheme;
+      freshState.targetPlayerCount = prevCount;
+      freshState.hostId = this.hostSessionId;
+      if (prevTheme === 'karantina_2088') {
         freshState.karantinaData = generateKarantinaData();
+      } else if (isTeamOperationTheme(prevTheme)) {
+        freshState.timeLeftSeconds = getTeamOperationMeta(prevTheme).defaultTimeSeconds;
+        freshState.omegaData = generateOmegaData(prevCount === 3 ? 3 : 4, prevTheme);
       }
 
-      // Preserve player names and roles
-      freshState.players.kaptan.name = this.missionState.players.kaptan.name;
-      freshState.players.kaptan.ready = false;
-      freshState.players.muhendis.name = this.missionState.players.muhendis.name;
-      freshState.players.muhendis.ready = false;
+      // Reset slots cleanly first, then restore active player sessions with real IDs & connected status
+      const allowedRoles = getOmegaRolesForCount(prevCount);
+      for (const r of allowedRoles) {
+        freshState.players[r] = {
+          id: '',
+          name: this.getWaitingSlotName(prevTheme, r, prevCount),
+          role: r,
+          ready: false,
+          roleConfirmed: false,
+          connected: false,
+        };
+      }
+      if (prevCount < 4) delete freshState.players.guvenlik;
+      if (prevCount < 3) delete freshState.players.kriptolog;
 
       for (const p of this.playerSessions.values()) {
         p.ready = false;
         p.roleConfirmed = false;
+        freshState.players[p.role] = {
+          id: p.sessionId,
+          name: p.name,
+          role: p.role,
+          ready: false,
+          roleConfirmed: false,
+          connected: p.connected,
+        };
       }
 
       this.missionState = freshState;
       this.processedActionIds.clear();
-      this.disconnectSecondsLeft = 0;
+      this.disconnectedPlayers.clear();
+      this.syncDisconnectBanner();
 
       this.broadcastFilteredState();
     });
@@ -313,23 +529,29 @@ export class LostSignalRoom extends Room {
     const player = this.playerSessions.get(client.sessionId);
     if (!player) return;
 
-    // 1. Guard against duplicate or stale actions
-    if (!payload.actionId || this.processedActionIds.has(payload.actionId)) {
-      return; // already processed
-    }
-    this.processedActionIds.add(payload.actionId);
-
-    // 2. Round ID check
+    // 1. Round ID check
     if (payload.roundId !== this.missionState.roundId) {
       client.send('error_message', `Geçersiz tur kimliği (${payload.roundId} vs ${this.missionState.roundId})`);
       return;
     }
 
-    // 3. Phase index check
+    // 2. Phase index check
     if (payload.phaseIndex !== this.missionState.currentPhaseIndex) {
       client.send('error_message', `Aşama uyumsuzluğu (${payload.phaseIndex} vs ${this.missionState.currentPhaseIndex})`);
       return;
     }
+
+    // 3. Guard against duplicate or stale actions (bounded LRU eviction at 2000 entries)
+    if (!payload.actionId || this.processedActionIds.has(payload.actionId)) {
+      return; // already processed
+    }
+    if (this.processedActionIds.size >= 2000) {
+      const oldest = this.processedActionIds.values().next().value;
+      if (oldest) {
+        this.processedActionIds.delete(oldest);
+      }
+    }
+    this.processedActionIds.add(payload.actionId);
 
     // 4. Strict Role & Task Authorization
     const { actionType, data } = payload;
@@ -349,14 +571,303 @@ export class LostSignalRoom extends Room {
 
     // Handle Karantina 2088 Actions
     if (actionType.startsWith('karantina_')) {
+      const isBioAction =
+        actionType === 'karantina_set_spectral_filter' ||
+        actionType === 'karantina_phase1_bio_transmit' ||
+        actionType === 'karantina_set_bond_freq' ||
+        actionType === 'karantina_phase2_bio_inject' ||
+        actionType === 'karantina_set_vacuum_flow' ||
+        actionType === 'karantina_phase3_bio_start';
+      const isSecAction =
+        actionType.startsWith('karantina_phase1_sec_') ||
+        actionType.startsWith('karantina_phase2_sec_') ||
+        actionType.startsWith('karantina_phase3_sec_');
+
+      if (isBioAction && player.role !== 'kaptan') {
+        client.send('error_message', 'Yalnızca Baş Biyolog bu işlemi gerçekleştirebilir.');
+        return;
+      }
+      if (isSecAction && player.role !== 'muhendis') {
+        client.send('error_message', 'Yalnızca Güvenlik Şefi bu işlemi gerçekleştirebilir.');
+        return;
+      }
       this.missionState = applyLocalGameAction(this.missionState, actionType, data, player.role);
       this.broadcastFilteredState();
       return;
     }
 
+    // Handle OMEGA-4 (3 & 4 Player Team Operation) Actions
+    if (actionType.startsWith('omega_')) {
+      const result = applyOmegaAction(this.missionState, actionType, data, player.role);
+      if (result.error) {
+        client.send('error_message', result.error);
+        return;
+      }
+      this.missionState = result.nextState;
+      this.broadcastFilteredState();
+      return;
+    }
+
+    const isThemeCustom =
+      this.missionState.operationTheme === 'derin_basinc' ||
+      this.missionState.operationTheme === 'golge_protokolu';
+
     // Handle Phase 0 & 1 Mini-games
     if (currentStatus === 'phase_game') {
       const activeMiniGame = this.missionState.selectedMiniGames[this.missionState.currentPhaseIndex];
+
+      if (actionType === 'captain_signal_ready') {
+        if (player.role !== 'kaptan') return;
+        this.missionState.feedbackState = 'idle';
+        this.missionState.feedbackMessage = data?.message || 'Kaptan kılavuz verilerini operasyona aktardı.';
+        this.broadcastFilteredState();
+        return;
+      }
+
+      // Theme-specific custom puzzle handlers (Derin Basınç & Gölge Protokolü)
+      if (isThemeCustom) {
+        if (actionType === 'theme_apply_penalty') {
+          this.applyPenalty(
+            data?.reason || 'Hatalı müdahale tespit edildi!',
+            {
+              timeLoss: typeof data?.timeLoss === 'number' ? data.timeLoss : 15,
+              hullLoss: typeof data?.hullLoss === 'number' ? data.hullLoss : 10,
+              stealthLoss: typeof data?.stealthLoss === 'number' ? data.stealthLoss : 0,
+            }
+          );
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'theme_diagnostic_captain_sync' && activeMiniGame === 'ariza_teshisi') {
+          if (player.role !== 'kaptan') {
+            client.send('error_message', 'Yalnızca Kaptan/Dümenci/Ajan bu senkronizasyonu başlatabilir.');
+            return;
+          }
+          if (this.missionState.diagnostic.isSolved) return;
+
+          if (this.missionState.operationTheme === 'golge_protokolu') {
+            const isVoltageTarget = typeof data?.voltage === 'number' && Math.abs(data.voltage - 24.5) <= 0.5;
+            const isDeltaReady = data?.deltaCable === 'SARI';
+            if (!isVoltageTarget || !isDeltaReady) {
+              this.applyPenalty(
+                'VOLTAJ YA DA SOKET HATALI! Hackerın telsiz talimatlarını kontrol edip kablo ve voltajı yeniden ayarla.',
+                { timeLoss: 10, hullLoss: 0, stealthLoss: 5 }
+              );
+              this.broadcastFilteredState();
+              return;
+            }
+          }
+
+          const breaker = this.missionState.diagnostic.correctBreaker;
+          this.missionState.diagnostic.captainSelectedBreaker = breaker;
+          this.missionState.diagnostic.unlockedBreaker = breaker;
+
+          const shouldSolveNow = this.missionState.diagnostic.engineerActionTaken;
+
+          if (shouldSolveNow) {
+            this.missionState.diagnostic.engineerActionTaken = true;
+            this.missionState.diagnostic.isSolved = true;
+            this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine] = {
+              ...this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine],
+              temp: 54,
+              press: 50,
+              noise: 36,
+              status: 'stabil',
+            };
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage =
+              this.missionState.operationTheme === 'golge_protokolu'
+                ? 'GÜVENLİK DUVARI AŞILDI! Fiziksel panel bypass tamamlandı, faz kilidi açıldı.'
+                : 'KOORDİNATLAR AKTARILDI VE DEVRE DENGELENDİ! Sonraki aşamaya geçebilirsiniz.';
+          } else {
+            this.missionState.feedbackState = 'idle';
+            this.missionState.feedbackMessage =
+              this.missionState.operationTheme === 'golge_protokolu'
+                ? 'FİZİKSEL PANEL KİLİTLENDİ! Hackerın Subnet Köprüsünü senkronize etmesi bekleniyor.'
+                : 'Güvenlik kilidi açıldı ve koordinatlar makiniste aktarıldı!';
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'theme_diagnostic_solve' && activeMiniGame === 'ariza_teshisi') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Makinist/Hacker bu müdahaleyi tamamlayabilir.');
+            return;
+          }
+          if (this.missionState.diagnostic.isSolved) return;
+
+          if (this.missionState.operationTheme === 'derin_basinc') {
+            const tanksOk =
+              Boolean(data?.tanks) &&
+              !data.tanks[1] &&
+              Boolean(data.tanks[2]) &&
+              !data.tanks[3] &&
+              Boolean(data.tanks[4]);
+            const pressureOk = Number(data?.pressure) === 48;
+            if (!tanksOk || !pressureOk) {
+              this.applyPenalty('Hatalı tank seçimi veya basınç değeri! Dümenciden telsizle doğrula.');
+              this.broadcastFilteredState();
+              return;
+            }
+          }
+
+          if (this.missionState.operationTheme === 'golge_protokolu') {
+            if (data?.activeNode !== 'BETA' && data?.activeNode !== 'DELTA') {
+              this.applyPenalty(
+                'HATALI DÜĞÜM SEÇİMİ! Node-Beta veya Node-Delta köprüsünü seçmelisin.',
+                { timeLoss: 10, hullLoss: 0, stealthLoss: 5 }
+              );
+              this.broadcastFilteredState();
+              return;
+            }
+          }
+
+          const breaker = this.missionState.diagnostic.correctBreaker;
+          const shouldSolveNow =
+            this.missionState.operationTheme === 'golge_protokolu'
+              ? this.missionState.diagnostic.captainSelectedBreaker === breaker
+              : true;
+
+          if (this.missionState.operationTheme !== 'golge_protokolu') {
+            this.missionState.diagnostic.captainSelectedBreaker = breaker;
+            this.missionState.diagnostic.unlockedBreaker = breaker;
+          }
+          this.missionState.diagnostic.engineerActionTaken = true;
+          this.missionState.diagnostic.engineerSuggestedLine = this.missionState.diagnostic.faultyLine;
+          this.missionState.diagnostic.engineerValveAngle = this.missionState.diagnostic.targetValveAngle;
+          this.missionState.diagnostic.engineerThrottleActive = true;
+          this.missionState.diagnostic.isSolved = shouldSolveNow;
+
+          if (shouldSolveNow) {
+            this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine] = {
+              ...this.missionState.diagnostic.lines[this.missionState.diagnostic.faultyLine],
+              temp: 54,
+              press: 50,
+              noise: 36,
+              status: 'stabil',
+            };
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage =
+              this.missionState.operationTheme === 'golge_protokolu'
+                ? 'KÖPRÜ BAŞARIYLA KURULDU! Fiziksel panel ve güvenlik duvarı senkronize edildi.'
+                : 'BALAST DENGELENDİ! Vana ve basınç protokolü başarıyla mühürlendi.';
+          } else {
+            this.missionState.feedbackState = 'idle';
+            this.missionState.feedbackMessage =
+              'KÖPRÜ SENKRONİZE EDİLDİ! Ajanın Port-Delta (Sarı) ve 24.5V panelini kilitlemesi bekleniyor.';
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'theme_signal_solve' && activeMiniGame === 'sinyal_cozumu') {
+          if (this.missionState.signal.isSolved) return;
+
+          if (this.missionState.operationTheme === 'golge_protokolu') {
+            if (player.role === 'kaptan') {
+              const angle = Number(data?.prismAngle);
+              if (typeof data?.prismAngle !== 'number' || (angle !== 45 && angle !== 225)) {
+                this.applyPenalty(
+                  'LAZER SENSÖRÜ UYARISI! Prizma mandalını Hackerın bildirdiği doğru açıya getirin.',
+                  { timeLoss: 10, hullLoss: 0, stealthLoss: 10 }
+                );
+                this.broadcastFilteredState();
+                return;
+              }
+            } else {
+              if (Number(data?.empFreq) !== 740) {
+                this.applyPenalty(
+                  'EMP DAMPER HATALI! Hedef rezonansı 740 THz seviyesine sabitleyin.',
+                  { timeLoss: 10, hullLoss: 0, stealthLoss: 10 }
+                );
+                this.broadcastFilteredState();
+                return;
+              }
+            }
+          } else if (this.missionState.operationTheme === 'derin_basinc') {
+            if (player.role !== 'muhendis') {
+              client.send('error_message', 'Yalnızca Makinist manyetik torpido sinyalini kilitleyebilir.');
+              return;
+            }
+            const tubeOk = Number(data?.tube) === 2;
+            const freqOk = typeof data?.torpFreq === 'number' && Math.abs(Number(data.torpFreq) - 433.8) < 0.05;
+            if (!tubeOk || !freqOk) {
+              this.applyPenalty('Hatalı kovan veya frekans! Dümencinin sonarına danış.');
+              this.broadcastFilteredState();
+              return;
+            }
+          }
+
+          this.missionState.signal.engineerTunedFreq =
+            data?.freq || this.missionState.signal.correctFrequency;
+          this.missionState.signal.isLocked = true;
+          this.missionState.signal.frequencyMatched = true;
+          this.missionState.signal.isSolved = true;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage =
+            this.missionState.operationTheme === 'golge_protokolu'
+              ? 'OPTİK PRİZMA VE KÖR NOKTA KORİDORU SENKRONİZE EDİLDİ!'
+              : 'MANYETİK TORPİDO SİNYALİ KİLİTLENDİ! İletişim başarıyla sağlandı.';
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'theme_cable_solve' && activeMiniGame === 'kablo_baglantisi') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Makinist bölme yalıtımını tamamlayabilir.');
+            return;
+          }
+          if (this.missionState.cable.isSolved) return;
+
+          const valveOk = Boolean(data?.valves?.C) && !data?.valves?.A && !data?.valves?.B;
+          const switchOk =
+            Boolean(data?.switches?.sw2) &&
+            !data?.switches?.sw1 &&
+            !data?.switches?.sw3 &&
+            !data?.switches?.sw4;
+          const clampOk = Number(data?.clampProgress) >= 65;
+          if (!valveOk || !switchOk || !clampOk) {
+            this.applyPenalty('Hatalı valf, şalter veya kelepçe ayarı! Dümenciye telsizle sor.');
+            this.broadcastFilteredState();
+            return;
+          }
+
+          this.missionState.cable.isTested = true;
+          this.missionState.cable.isSolved = true;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage = 'Bölme yalıtım mührü hatasız kilitlendi!';
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'theme_airlock_solve' && activeMiniGame === 'hava_kilidi') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Makinist elektroliz üretimini başlatabilir.');
+            return;
+          }
+          if (this.missionState.airlock.isSolved) return;
+
+          const voltOk = Math.abs(Number(data?.volt) - 180) <= 5;
+          const catOk = Number(data?.catalystPct) >= 60 && Number(data?.catalystPct) <= 70;
+          const cellsOk =
+            Boolean(data?.cellSwitches?.katotA) &&
+            Boolean(data?.cellSwitches?.katotB) &&
+            Boolean(data?.cellSwitches?.anotC);
+          if (!voltOk || !catOk || !cellsOk) {
+            this.applyPenalty('Hatalı voltaj, katalizör veya hücre seçimi! Dümenciden telsizle doğrula.');
+            this.broadcastFilteredState();
+            return;
+          }
+
+          this.missionState.airlock.isSolved = true;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage = 'Oksijen üretimi ve hücre voltajı stabilize edildi!';
+          this.broadcastFilteredState();
+          return;
+        }
+      }
 
       // Arıza Teşhisi
       if (activeMiniGame === 'ariza_teshisi') {
@@ -637,6 +1148,83 @@ export class LostSignalRoom extends Room {
 
     // Handle Phase 2: Enerji Dağıtımı
     if (currentStatus === 'phase_energy') {
+      if (isThemeCustom) {
+        if (actionType === 'derin_basinc_transmit_core') {
+          if (player.role !== 'kaptan') return;
+          this.missionState.energy.isDraftShared = true;
+          this.missionState.feedbackState = 'idle';
+          this.missionState.feedbackMessage = 'Çekirdek enerji koordinatları makiniste iletildi!';
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'derin_basinc_seal_reactor') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Makinist reaktör kapağını mühürleyebilir.');
+            return;
+          }
+          if (this.missionState.energy.isLocked) return;
+
+          const rodOk = typeof data?.k02Position === 'number' && data.k02Position <= 20;
+          const valveOk = data?.valve1Open === true;
+          const pressureOk = data?.currentPressure === 28;
+
+          if (rodOk && valveOk && pressureOk) {
+            this.missionState.energy.engineerAllocation = { yasamDestegi: 5, itki: 5, kalkan: 5 };
+            this.missionState.energy.isDraftShared = true;
+            this.missionState.energy.isLocked = true;
+            this.missionState.feedbackState = 'success';
+            this.missionState.feedbackMessage = 'Soğutma pompası çalıştırıldı ve K-02 mühürlendi!';
+          } else {
+            this.applyPenalty('Hatalı reaktör mühürleme parametreleri (K-02 %20, Boru-1 Açık ve 28 Bar olmalı)!');
+          }
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'theme_apply_penalty') {
+          this.applyPenalty(
+            data?.reason || 'Hatalı müdahale tespit edildi!',
+            {
+              timeLoss: typeof data?.timeLoss === 'number' ? data.timeLoss : 15,
+              hullLoss: typeof data?.hullLoss === 'number' ? data.hullLoss : 10,
+              stealthLoss: typeof data?.stealthLoss === 'number' ? data.stealthLoss : 0,
+            }
+          );
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'golge_energy_solve') {
+          if (this.missionState.energy.isLocked) return;
+          if (player.role === 'muhendis') {
+            this.missionState.energy.isDraftShared = true;
+            this.missionState.feedbackState = 'idle';
+            this.missionState.feedbackMessage =
+              'Kasa şifre matrisi kırıldı! PIN (8429) Ajanın terminaline aktarıldı, Ajan onayı bekleniyor.';
+            this.broadcastFilteredState();
+            return;
+          }
+          if (player.role !== 'kaptan') return;
+          if (typeof data?.pin !== 'string' || data.pin.trim() !== '8429') {
+            this.applyPenalty('Hatalı kasa PIN kodu! Hacker ile telsizden doğrula.', {
+              timeLoss: 15,
+              hullLoss: 0,
+              stealthLoss: 10,
+            });
+            this.broadcastFilteredState();
+            return;
+          }
+          this.missionState.energy.engineerAllocation = { yasamDestegi: 5, itki: 5, kalkan: 5 };
+          this.missionState.energy.isDraftShared = true;
+          this.missionState.energy.isLocked = true;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage = 'Kasa şifresi kırıldı ve biyometrik veri başarıyla çekildi!';
+          this.broadcastFilteredState();
+          return;
+        }
+      }
+
       if (actionType === 'energy_set_allocation') {
         if (player.role !== 'muhendis') return;
         if (this.missionState.energy.isLocked) return;
@@ -692,6 +1280,106 @@ export class LostSignalRoom extends Room {
 
     // Handle Phase 3: Kurtarma Kararı
     if (currentStatus === 'phase_rescue') {
+      if (isThemeCustom) {
+        if (actionType === 'derin_basinc_transmit_vector') {
+          if (player.role !== 'kaptan') return;
+          const angleStr = String(data?.angle || '');
+          this.missionState.rescue.selectedRouteId = angleStr.includes('45')
+            ? 'alfa'
+            : angleStr.includes('15')
+            ? 'gama'
+            : 'beta';
+          this.missionState.rescue.captainApproved = true;
+          this.missionState.rescue.validationError = null;
+          this.missionState.feedbackState = 'idle';
+          this.missionState.feedbackMessage = 'Yükseliş vektörü makiniste aktarıldı!';
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'derin_basinc_trigger_ascent') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Makinist acil yüzeye çıkışı tetikleyebilir.');
+            return;
+          }
+          if (!this.missionState.rescue.captainApproved) {
+            client.send('error_message', 'Dümencinin yükseliş vektörünü aktarması bekleniyor!');
+            return;
+          }
+          const pressureOk = Number(data?.pressure) === 18;
+          const angleOk = Number(data?.angle) === 28;
+          const tanksOk =
+            Boolean(data?.tanks) &&
+            Boolean(data.tanks[1]) &&
+            !data.tanks[2] &&
+            Boolean(data.tanks[3]) &&
+            !data.tanks[4];
+          if (!pressureOk || !angleOk || !tanksOk) {
+            this.applyPenalty('Hatalı tahliye parametreleri! Balast basıncı, çıkış açısı ve tank sırası doğrulanamadı.');
+            this.broadcastFilteredState();
+            return;
+          }
+          const scoreData = calculateFinalScore(
+            4,
+            this.missionState.timeLeftSeconds,
+            this.missionState.hullIntegrity,
+            10
+          );
+          this.missionState.rescue.captainApproved = true;
+          this.missionState.rescue.engineerApproved = true;
+          this.missionState.status = 'phase_result';
+          this.missionState.outcomeType = 'tam_basari';
+          this.missionState.rescuedCrewCount = 10;
+          this.missionState.completedTasksCount = 4;
+          this.missionState.finalScore = scoreData.total;
+          this.missionState.scoreBreakdown = scoreData.breakdown;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage = 'Acil yüzeye çıkış başarıyla tamamlandı!';
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'golge_transmit_escape') {
+          if (player.role !== 'kaptan') return;
+          this.missionState.rescue.captainApproved = true;
+          this.missionState.rescue.selectedRouteId = data?.route === 'metro' ? 'alfa' : 'beta';
+          this.missionState.rescue.validationError = null;
+          this.missionState.feedbackState = 'idle';
+          this.missionState.feedbackMessage = 'Kaçış rotası koordinatları hacker terminaline aktarıldı!';
+          this.broadcastFilteredState();
+          return;
+        }
+
+        if (actionType === 'golge_execute_extraction') {
+          if (player.role !== 'muhendis') {
+            client.send('error_message', 'Yalnızca Hacker son kaçış tahliyesini onaylayabilir.');
+            return;
+          }
+          if (!this.missionState.rescue.captainApproved) {
+            client.send('error_message', 'Ajanın kaçış rotasını onaylayıp aktarması bekleniyor!');
+            return;
+          }
+          const scoreData = calculateFinalScore(
+            4,
+            this.missionState.timeLeftSeconds,
+            this.missionState.hullIntegrity,
+            10
+          );
+          this.missionState.rescue.captainApproved = true;
+          this.missionState.rescue.engineerApproved = true;
+          this.missionState.status = 'phase_result';
+          this.missionState.outcomeType = 'tam_basari';
+          this.missionState.rescuedCrewCount = 10;
+          this.missionState.completedTasksCount = 4;
+          this.missionState.finalScore = scoreData.total;
+          this.missionState.scoreBreakdown = scoreData.breakdown;
+          this.missionState.feedbackState = 'success';
+          this.missionState.feedbackMessage = 'Gölge Protokolü tahliyesi iz bırakmadan tamamlandı!';
+          this.broadcastFilteredState();
+          return;
+        }
+      }
+
       if (actionType === 'rescue_select_route') {
         this.missionState.rescue.selectedRouteId = data.routeId;
         this.missionState.rescue.captainApproved = false;
@@ -729,31 +1417,59 @@ export class LostSignalRoom extends Room {
     }
   }
 
-  private applyPenalty(reason: string) {
-    this.missionState.timeLeftSeconds = Math.max(0, this.missionState.timeLeftSeconds - 15);
-    this.missionState.hullIntegrity = Math.max(0, this.missionState.hullIntegrity - 10);
-    this.missionState.feedbackState = 'error';
-    this.missionState.feedbackMessage = `${reason} (-15s Süre, -%10 Bütünlük)`;
+  private applyPenalty(
+    reason: string,
+    opts?: { timeLoss?: number; hullLoss?: number; stealthLoss?: number }
+  ) {
+    const timeLoss = opts?.timeLoss ?? 15;
+    const hullLoss = opts?.hullLoss ?? 10;
+    const stealthLoss = opts?.stealthLoss ?? 0;
 
-    if (this.missionState.timeLeftSeconds <= 0 || this.missionState.hullIntegrity <= 0) {
+    this.missionState.timeLeftSeconds = Math.max(0, this.missionState.timeLeftSeconds - timeLoss);
+    this.missionState.hullIntegrity = Math.max(0, this.missionState.hullIntegrity - hullLoss);
+    if (stealthLoss > 0) {
+      this.missionState.stealthLevel = Math.max(0, (this.missionState.stealthLevel ?? 100) - stealthLoss);
+    }
+
+    const suffixParts: string[] = [];
+    if (timeLoss > 0) suffixParts.push(`-${timeLoss}s Süre`);
+    if (hullLoss > 0) suffixParts.push(`-%${hullLoss} Bütünlük`);
+    if (stealthLoss > 0) suffixParts.push(`-%${stealthLoss} Sessizlik`);
+
+    this.missionState.feedbackState = 'error';
+    this.missionState.feedbackMessage =
+      suffixParts.length > 0 ? `${reason} (${suffixParts.join(', ')})` : reason;
+
+    const stealthDepleted = stealthLoss > 0 && (this.missionState.stealthLevel ?? 100) <= 0;
+    if (this.missionState.timeLeftSeconds <= 0 || this.missionState.hullIntegrity <= 0 || stealthDepleted) {
       this.handleMissionFailure(
-        this.missionState.hullIntegrity <= 0 
-          ? 'İstasyon gövdesi kritik hasar alarak parçalandı!' 
+        stealthDepleted
+          ? 'Gizlilik tamamen deşifre oldu! Alarm sistemleri operasyonu kilitledi.'
+          : this.missionState.hullIntegrity <= 0
+          ? 'İstasyon gövdesi kritik hasar alarak parçalandı!'
           : 'Süre tükendi! İstasyon patlamadan önce tahliye tamamlanamadı.'
       );
     }
   }
 
   private handleServerTick() {
-    // 1. Disconnect Countdown: If partner disconnected during active mission
-    if (this.missionState.isDisconnected && this.disconnectSecondsLeft > 0) {
-      this.disconnectSecondsLeft--;
-      this.missionState.feedbackMessage = `Mürettebat üyesi bekleniyor: ${this.disconnectSecondsLeft}s`;
-
-      if (this.disconnectSecondsLeft <= 0) {
-        this.handleMissionFailure('Mürettebat üyesinin sinyali 45 saniye boyunca alınamadı. Görev sonlandırıldı.');
+    // 1. Disconnect Countdown: Track all disconnected players simultaneously
+    if (this.disconnectedPlayers.size > 0) {
+      let expiredName: string | null = null;
+      for (const info of this.disconnectedPlayers.values()) {
+        info.secondsLeft = Math.max(0, info.secondsLeft - 1);
+        if (info.secondsLeft <= 0 && !expiredName) {
+          expiredName = info.name;
+        }
+      }
+      if (expiredName) {
+        this.disconnectedPlayers.clear();
+        this.missionState.isDisconnected = false;
+        this.missionState.isPaused = false;
+        this.handleMissionFailure(`Mürettebat üyesinin (${expiredName}) sinyali 45 saniye boyunca alınamadı. Görev sonlandırıldı.`);
         return;
       }
+      this.syncDisconnectBanner();
       this.broadcastFilteredState();
       return;
     }
@@ -828,15 +1544,29 @@ export class LostSignalRoom extends Room {
     const isHost = this.playerSessions.size === 0;
     if (isHost) {
       this.hostSessionId = client.sessionId;
+      this.missionState.hostId = client.sessionId;
     }
 
-    // Role assignment: host is kaptan, second player is muhendis
-    let role: Role = isHost ? 'kaptan' : 'muhendis';
-    if (options.role && isHost) {
-      role = options.role;
+    const targetCount = this.missionState.targetPlayerCount || 2;
+    const allowedRoles = getOmegaRolesForCount(targetCount);
+    const occupiedRoles = new Set(Array.from(this.playerSessions.values()).map((p) => p.role));
+    const requestedRole = options?.role as Role | undefined;
+
+    let role: Role = allowedRoles[0];
+    if (requestedRole && allowedRoles.includes(requestedRole) && !occupiedRoles.has(requestedRole)) {
+      role = requestedRole;
+    } else {
+      const openRole = allowedRoles.find((r) => !occupiedRoles.has(r));
+      role = openRole || allowedRoles[0];
     }
 
-    const playerName = options.playerName || (role === 'kaptan' ? 'Kaptan Ece' : 'Mühendis Mert');
+    const defaultName =
+      isTeamOperationTheme(this.missionState.operationTheme)
+        ? getOmegaRoleMeta(role, targetCount === 3 ? 3 : 4).defaultName
+        : role === 'kaptan'
+        ? 'Kaptan Ece'
+        : 'Mühendis Mert';
+    const playerName = options?.playerName || defaultName;
 
     const session: PlayerSession = {
       sessionId: client.sessionId,
@@ -858,13 +1588,14 @@ export class LostSignalRoom extends Room {
       connected: true,
     };
 
-    // If game was paused waiting for this reconnecting player
-    if (this.missionState.isDisconnected) {
-      this.missionState.isDisconnected = false;
-      this.missionState.isPaused = false;
-      this.disconnectSecondsLeft = 0;
-      this.missionState.feedbackState = 'idle';
-      this.missionState.feedbackMessage = `${playerName} yeniden bağlandı! Görev sürüyor.`;
+    // If game was paused waiting for a disconnected player
+    if (this.disconnectedPlayers.size > 0) {
+      this.disconnectedPlayers.delete(client.sessionId);
+      this.syncDisconnectBanner();
+      if (this.disconnectedPlayers.size === 0) {
+        this.missionState.feedbackState = 'idle';
+        this.missionState.feedbackMessage = `${playerName} yeniden bağlandı! Görev sürüyor.`;
+      }
     }
 
     this.broadcastFilteredState();
@@ -874,57 +1605,96 @@ export class LostSignalRoom extends Room {
     const player = this.playerSessions.get(client.sessionId);
     if (!player) return;
 
+    const targetCount = this.missionState.targetPlayerCount || 2;
+    const isGraceTrackedStatus =
+      this.missionState.status === 'role_intro' ||
+      this.missionState.status === 'phase_game' ||
+      this.missionState.status === 'phase_energy' ||
+      this.missionState.status === 'phase_rescue';
+
     if (consented) {
       // Voluntary leave
       this.playerSessions.delete(client.sessionId);
-      const isGameInProgress = 
-        this.missionState.status === 'phase_game' || 
-        this.missionState.status === 'phase_energy' || 
-        this.missionState.status === 'phase_rescue';
+      this.disconnectedPlayers.delete(client.sessionId);
 
-      if (isGameInProgress) {
+      if (isGraceTrackedStatus) {
         this.handleMissionFailure(`Mürettebat üyesi (${player.name}) görevden ayrıldı. Görev sonlandırıldı.`);
       } else if (this.missionState.status === 'lobby') {
         this.missionState.players[player.role] = {
           id: '',
-          name: player.role === 'kaptan' ? 'Kaptan Bekleniyor...' : 'Arkadaşın Bekleniyor...',
+          name: this.getWaitingSlotName(this.missionState.operationTheme, player.role, targetCount),
           role: player.role,
           ready: false,
+          roleConfirmed: false,
           connected: false,
         };
+        this.transferHostIfNeeded(client.sessionId);
         this.broadcastFilteredState();
       }
       return;
     }
 
-    // Unvoluntary disconnect: pause game and allow 45s grace period for reconnection
+    // Unintentional disconnect
     player.connected = false;
-    const isGameInProgress = 
-      this.missionState.status === 'phase_game' || 
-      this.missionState.status === 'phase_energy' || 
-      this.missionState.status === 'phase_rescue';
+    const slot = this.missionState.players[player.role];
+    if (slot) {
+      slot.connected = false;
+    }
 
-    if (isGameInProgress) {
-      this.missionState.isPaused = true;
-      this.missionState.isDisconnected = true;
-      this.disconnectSecondsLeft = 45;
-      this.missionState.feedbackState = 'disconnected';
-      this.missionState.feedbackMessage = `${player.name} bağlantısı koptu. Yeniden bağlanması bekleniyor (45s)...`;
+    if (this.missionState.status === 'lobby') {
+      this.broadcastFilteredState();
+      try {
+        await this.allowReconnection(client, 15);
+        player.connected = true;
+        if (this.missionState.players[player.role]) {
+          this.missionState.players[player.role]!.connected = true;
+        }
+        this.broadcastFilteredState();
+      } catch {
+        this.playerSessions.delete(client.sessionId);
+        if (this.missionState.status === 'lobby') {
+          this.missionState.players[player.role] = {
+            id: '',
+            name: this.getWaitingSlotName(this.missionState.operationTheme, player.role, targetCount),
+            role: player.role,
+            ready: false,
+            roleConfirmed: false,
+            connected: false,
+          };
+          this.transferHostIfNeeded(client.sessionId);
+          this.broadcastFilteredState();
+        }
+      }
+      return;
+    }
+
+    if (isGraceTrackedStatus) {
+      this.disconnectedPlayers.set(client.sessionId, { name: player.name, secondsLeft: 45 });
+      this.syncDisconnectBanner();
       this.broadcastFilteredState();
 
       try {
         await this.allowReconnection(client, 45);
         // Player reconnected!
         player.connected = true;
-        this.missionState.isPaused = false;
-        this.missionState.isDisconnected = false;
-        this.disconnectSecondsLeft = 0;
-        this.missionState.feedbackState = 'idle';
-        this.missionState.feedbackMessage = `${player.name} yeniden bağlandı. Görev devam ediyor.`;
+        if (this.missionState.players[player.role]) {
+          this.missionState.players[player.role]!.connected = true;
+        }
+        this.disconnectedPlayers.delete(client.sessionId);
+        this.syncDisconnectBanner();
+        if (this.disconnectedPlayers.size === 0) {
+          this.missionState.feedbackState = 'idle';
+          this.missionState.feedbackMessage = `${player.name} yeniden bağlandı. Görev devam ediyor.`;
+        }
         this.broadcastFilteredState();
-      } catch (err) {
+      } catch {
         // 45s Grace period expired
-        this.handleMissionFailure(`Mürettebat üyesi (${player.name}) 45 saniye boyunca yeniden bağlanamadı. Görev sonlandırıldı.`);
+        this.disconnectedPlayers.delete(client.sessionId);
+        this.playerSessions.delete(client.sessionId);
+        if (this.missionState.status !== 'phase_result') {
+          this.syncDisconnectBanner();
+          this.handleMissionFailure(`Mürettebat üyesi (${player.name}) 45 saniye boyunca yeniden bağlanamadı. Görev sonlandırıldı.`);
+        }
       }
     }
   }
@@ -935,6 +1705,7 @@ export class LostSignalRoom extends Room {
       this.tickInterval.clear();
     }
     this.processedActionIds.clear();
+    this.disconnectedPlayers.clear();
   }
 
   /**
@@ -942,9 +1713,14 @@ export class LostSignalRoom extends Room {
    * Only the information pertinent to the player's role is sent to their phone.
    */
   public getFilteredStateForRole(role: Role): MissionState {
+    const filteredOmega = this.missionState.omegaData
+      ? filterOmegaStateForRole(this.missionState.omegaData, role)
+      : undefined;
+
     const base: MissionState = {
       ...this.missionState,
       myRole: role,
+      omegaData: filteredOmega,
     };
 
     if (role === 'kaptan') {

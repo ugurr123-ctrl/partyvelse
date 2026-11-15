@@ -5,14 +5,20 @@ interface Props {
   state: MissionState;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
   onUpdate?: (updater: (prev: MissionState) => MissionState) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen11AirlockCaptain: React.FC<Props> = ({ state, onAdvancePhase }) => {
+export const Screen11AirlockCaptain: React.FC<Props> = ({ state, onAdvancePhase, onAction }) => {
   const { airlock } = state;
   const [transmitted, setTransmitted] = useState(false);
 
   const handleTransmit = () => {
     setTransmitted(true);
+    onAction?.('captain_signal_ready', {
+      message: isDerinBasinc
+        ? 'Dümenci elektroliz parametrelerini aktardı.'
+        : 'Kaptan hava kilidi prosedürünü aktardı.',
+    });
     setTimeout(() => setTransmitted(false), 3000);
   };
 
@@ -172,20 +178,20 @@ export const Screen11AirlockCaptain: React.FC<Props> = ({ state, onAdvancePhase 
               </div>
             </div>
 
-            {/* Eşik Basıncı */}
+            {/* Katalizör Oranı */}
             <div className="bg-[#141123] rounded-lg p-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-[#2b273b] flex items-center justify-center text-[#00eefc]">
-                  <span className="material-symbols-outlined text-[18px]">speed</span>
+                  <span className="material-symbols-outlined text-[18px]">science</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-mono text-[9px] text-[#d5c4ac] uppercase">BASINÇ EŞİĞİ</span>
-                  <span className="text-xs text-white font-semibold">Emniyet Sınırı</span>
+                  <span className="font-mono text-[9px] text-[#d5c4ac] uppercase">KATALİZÖR ORANI</span>
+                  <span className="text-xs text-white font-semibold">Emniyet Aralığı</span>
                 </div>
               </div>
               <div className="text-right">
-                <span className="font-sora text-base text-[#00eefc] font-extrabold">35 Bar</span>
-                <span className="block font-mono text-[8px] text-[#ffb4ab] font-bold">AŞILAMAZ</span>
+                <span className="font-sora text-base text-[#00eefc] font-extrabold">%60 - %70</span>
+                <span className="block font-mono text-[8px] text-[#ffba27] font-bold">HEDEF BANT</span>
               </div>
             </div>
           </div>

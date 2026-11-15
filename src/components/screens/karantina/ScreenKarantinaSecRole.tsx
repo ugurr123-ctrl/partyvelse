@@ -6,7 +6,10 @@ interface Props {
   onConfirmRole: () => void;
 }
 
-export const ScreenKarantinaSecRole: React.FC<Props> = ({ onConfirmRole }) => {
+export const ScreenKarantinaSecRole: React.FC<Props> = ({ state, onConfirmRole }) => {
+  const myConfirmed = Boolean(state.players.muhendis?.roleConfirmed);
+  const partnerConnected = Boolean(state.players.kaptan?.connected);
+  const partnerConfirmed = Boolean(state.players.kaptan?.roleConfirmed);
   const helmetImg = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBilizEiIffwr8XJlo7TIJXj8YT9b25-lSyE7dR5UXD_y4jzqLVjhwbW_6wkDhNrNYU-uJ00aJesQWO4eIh9ZgfNd0-W-YAH4O8rhQApqV-nTT1Xoli3xXbpJ17J1wv3wVkidJCKkAP7ZJfgG0D_6S_oIMUIlJUZMsmVDB_sIm97mOFpHgpQPiEFM140wKiSMww6CuRnIdl5o5VNHNSa6P796rVpjCqPr-cdchB0AU';
 
   return (
@@ -29,7 +32,7 @@ export const ScreenKarantinaSecRole: React.FC<Props> = ({ onConfirmRole }) => {
         </div>
 
         <div className="w-9 h-9 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">verified_user</span>
         </div>
       </header>
 
@@ -157,21 +160,36 @@ export const ScreenKarantinaSecRole: React.FC<Props> = ({ onConfirmRole }) => {
               <span className="material-symbols-outlined text-[16px]">biotech</span>
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] font-mono font-bold text-white">ORTAK BAĞLANTISI: CANLI</div>
-              <div className="text-[10px] text-[#9e8f78] truncate">Biyolog mikroskop başında • Bağlantı aktif</div>
+              <div className="text-[10px] font-mono font-bold text-white">
+                {state.players.kaptan?.name || 'Baş Biyolog'} ({partnerConfirmed ? 'ONAYLADI' : partnerConnected ? 'BAĞLI' : 'BEKLENİYOR'})
+              </div>
+              <div className="text-[10px] text-[#9e8f78] truncate">
+                {partnerConfirmed
+                  ? 'Biyolog görevini onayladı · Hazır.'
+                  : partnerConnected
+                  ? 'Biyolog dosyayı inceliyor · Onay bekleniyor.'
+                  : 'Baş Biyolog bağlantısı bekleniyor.'}
+              </div>
             </div>
           </div>
-          <span className="text-[9px] font-mono text-cyan-300 font-bold uppercase">((•)) 99.4%</span>
+          <span className={`text-[9px] font-mono font-bold uppercase ${partnerConfirmed ? 'text-emerald-400' : partnerConnected ? 'text-cyan-300' : 'text-amber-300'}`}>
+            {partnerConfirmed ? '● HAZIR' : partnerConnected ? '● BAĞLI' : '○ ÇEVRİMDIŞI'}
+          </span>
         </div>
 
         {/* Confirm Role Action Button */}
         <button
           type="button"
           onClick={onConfirmRole}
-          className="w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] bg-gradient-to-r from-[#ffb703] via-[#ffc72c] to-[#ffa000] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110 mt-1"
+          disabled={myConfirmed}
+          className={`w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all mt-1 ${
+            myConfirmed
+              ? 'bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 cursor-default'
+              : 'shadow-lg active:scale-[0.98] bg-gradient-to-r from-[#ffb703] via-[#ffc72c] to-[#ffa000] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110 cursor-pointer'
+          }`}
         >
-          <span className="material-symbols-outlined text-[20px]">verified</span>
-          <span>ROLÜMÜ ANLADIM &gt;</span>
+          <span className="material-symbols-outlined text-[20px]">{myConfirmed ? 'check_circle' : 'verified'}</span>
+          <span>{myConfirmed ? 'ONAYLANDI · BİYOLOG BEKLENİYOR' : 'ROLÜMÜ ANLADIM >'}</span>
         </button>
 
         <div className="text-center text-[10px] font-mono text-[#9e8f78] flex items-center justify-center gap-1">

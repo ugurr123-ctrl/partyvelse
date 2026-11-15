@@ -40,12 +40,16 @@ export function getRandomMiniGames(previousPair?: [MiniGameType, MiniGameType]):
   return candidate;
 }
 
-export function generateRoomCode(theme?: OperationTheme): string {
+export function generateRoomCode(theme?: OperationTheme, playerCount: 2 | 3 | 4 = 4): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let prefix = 'KYP-';
   if (theme === 'karantina_2088') prefix = 'KR88-';
   else if (theme === 'golge_protokolu') prefix = 'SHDW-';
   else if (theme === 'derin_basinc') prefix = 'DP-';
+  else if (theme === 'omega_ekip') prefix = playerCount === 3 ? 'OMG3-' : 'OMG4-';
+  else if (theme === 'titan_maden') prefix = playerCount === 3 ? 'TTN3-' : 'TTN4-';
+  else if (theme === 'siber_kale') prefix = playerCount === 3 ? 'SBK3-' : 'SBK4-';
+  else if (theme === 'buzul_ussu') prefix = playerCount === 3 ? 'BZL3-' : 'BZL4-';
 
   let code = prefix;
   const count = prefix === 'KR88-' ? 2 : 4;
@@ -57,28 +61,28 @@ export function generateRoomCode(theme?: OperationTheme): string {
 
 export function generateKarantinaData(): KarantinaData {
   return {
-    spectralFilterNm: 415,
-    selectedBase: 'sitozin-9',
+    spectralFilterNm: 520,
+    selectedBase: 'adenin-x',
     bioPhase1Transmitted: false,
-    selectedUvSector: 3,
-    selectedValve: 'B',
+    selectedUvSector: 1,
+    selectedValve: 'A',
     phase1Solved: false,
 
     polymerPct: 45,
     enzymePct: 30,
     neutroPct: 25,
-    bondFreqGhz: 8.4,
+    bondFreqGhz: 4.5,
     bioPhase2Injected: false,
-    centrifugeRpm: 3800,
-    coolingValvePct: 75,
-    pressureReliefActive: true,
+    centrifugeRpm: 2400,
+    coolingValvePct: 50,
+    pressureReliefActive: false,
     phase2Solved: false,
 
-    vacuumFlowRate: 6.2,
+    vacuumFlowRate: 3.0,
     bioPhase3Started: false,
-    selectedChimney: 'BACA-02',
-    chimneyBar: 12.0,
-    safetyLatchUnlocked: true,
+    selectedChimney: 'BACA-01',
+    chimneyBar: 6.0,
+    safetyLatchUnlocked: false,
     phase3Solved: false,
 
     immunityScore: 10450,
@@ -643,6 +647,26 @@ export function generateAdvancedScenario(
   const cableData = generateCable();
   const radarData = generateRadar();
 
+  const isLowExtPressure = Math.random() < 0.5;
+  const externalPressureKpa = isLowExtPressure
+    ? 32 + Math.floor(Math.random() * 7)
+    : 42 + Math.floor(Math.random() * 11);
+  const targetDialIndex = isLowExtPressure ? 2 : 1;
+  const targetVacuumMin = isLowExtPressure ? 70 : 55;
+  const targetVacuumMax = isLowExtPressure ? 85 : 65;
+
+  const firstGame = selectedGames?.[0];
+  const initialTab =
+    firstGame === 'sinyal_cozumu'
+      ? 'sinyal'
+      : firstGame === 'hava_kilidi'
+      ? 'hava_kilidi'
+      : firstGame === 'kablo_baglantisi'
+      ? 'kablo'
+      : firstGame === 'radar_yonlendirme'
+      ? 'radar'
+      : 'reaktor';
+
   return {
     subsystems: {
       reaktor: {
@@ -674,10 +698,10 @@ export function generateAdvancedScenario(
         compressorPower: 1,
         currentDialIndex: 0,
         currentVacuum: 50,
-        targetDialIndex: 2,
-        targetVacuumMin: 70,
-        targetVacuumMax: 85,
-        externalPressureKpa: 36,
+        targetDialIndex,
+        targetVacuumMin,
+        targetVacuumMax,
+        externalPressureKpa,
       },
       kablo: {
         isRepaired: false,
@@ -709,7 +733,7 @@ export function generateAdvancedScenario(
       isActive: false,
       isResolved: false,
     },
-    activeSubsystemTab: 'reaktor',
+    activeSubsystemTab: initialTab,
     evacuationUnlocked: false,
     evacuationLog: [
       'OPERASYON ÇÖKÜŞ EŞİĞİ BAŞLATILDI.',
@@ -732,6 +756,7 @@ export function createInitialMissionState(
     roundId: generateRoundId(),
     status: 'entry',
     operationTheme: 'derin_basinc',
+    targetPlayerCount: 2,
     gameMode: 'standart',
     activeEnvironment: env,
     selectedMiniGames: selectedGames,

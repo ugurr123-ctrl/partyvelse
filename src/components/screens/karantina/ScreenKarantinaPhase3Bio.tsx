@@ -39,7 +39,7 @@ export const ScreenKarantinaPhase3Bio: React.FC<Props> = ({
     baranValves: 3,
   };
 
-  const [flowRate, setFlowRate] = useState<number>(kData.vacuumFlowRate || 6.2);
+  const [flowRate, setFlowRate] = useState<number>(kData.vacuumFlowRate ?? 3.0);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -76,7 +76,7 @@ export const ScreenKarantinaPhase3Bio: React.FC<Props> = ({
             <span>%{state.hullIntegrity}</span>
           </div>
           <div className="w-9 h-9 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-[#ffdba0]">
-            <span className="material-symbols-outlined text-[20px]">person</span>
+            <span className="material-symbols-outlined text-[20px]">science</span>
           </div>
         </div>
       </header>
@@ -288,6 +288,32 @@ export const ScreenKarantinaPhase3Bio: React.FC<Props> = ({
           </div>
           <span className="material-symbols-outlined text-cyan-400 text-[20px] shrink-0 animate-pulse">cell_tower</span>
         </div>
+
+        {/* Feedback Banner */}
+        {state.feedbackMessage && (
+          <div
+            className={`rounded-xl p-2.5 flex items-center gap-2 text-xs shadow-md border ${
+              state.feedbackState === 'success'
+                ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
+                : state.feedbackState === 'error'
+                ? 'bg-red-950/70 border-red-500/50 text-red-200'
+                : 'bg-cyan-950/70 border-cyan-500/50 text-cyan-200'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[18px] shrink-0 ${
+                state.feedbackState === 'success'
+                  ? 'text-emerald-400'
+                  : state.feedbackState === 'error'
+                  ? 'text-red-400'
+                  : 'text-cyan-400'
+              }`}
+            >
+              {state.feedbackState === 'success' ? 'check_circle' : state.feedbackState === 'error' ? 'error' : 'info'}
+            </span>
+            <span>{state.feedbackMessage}</span>
+          </div>
+        )}
 
         {/* Primary Action Button */}
         <button

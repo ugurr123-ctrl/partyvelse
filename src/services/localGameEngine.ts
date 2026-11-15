@@ -2,9 +2,10 @@ import { MissionState, Role } from '../types/game';
 import { RESCUE_ROUTES, calculateFinalScore, generateKarantinaData, generateRoundId } from './gameFactory';
 import { validateRescueDecision } from './phaseTransition';
 import { applyAdvancedAction } from './advancedScenarioLogic';
+import { applyOmegaAction } from './omegaGameEngine';
 
 /**
- * Authoritative local action execution for offline demo mode and 2-screen Dual View mode.
+ * Authoritative local action execution for offline demo mode and multi-screen Dual/Team View mode.
  * Applies the exact same rules, validation, feedback messages, and penalties as the Colyseus server.
  */
 export function applyLocalGameAction(
@@ -25,19 +26,39 @@ export function applyLocalGameAction(
     return result.nextState;
   }
 
-  // Helper to apply 15s time and 10% hull penalties on incorrect actions
-  const applyPenalty = (prevState: MissionState, reason: string): MissionState => {
-    const nextTime = Math.max(0, prevState.timeLeftSeconds - 15);
-    const nextHull = Math.max(0, prevState.hullIntegrity - 10);
+  if (actionType.startsWith('omega_')) {
+    const result = applyOmegaAction(state, actionType, data, actingRole);
+    return result.nextState;
+  }
+
+  // Helper to apply time, hull, and optional stealth penalties on incorrect actions
+  const applyPenalty = (
+    prevState: MissionState,
+    reason: string,
+    opts?: { timeLoss?: number; hullLoss?: number; stealthLoss?: number }
+  ): MissionState => {
+    const timeLoss = opts?.timeLoss ?? 15;
+    const hullLoss = opts?.hullLoss ?? 10;
+    const stealthLoss = opts?.stealthLoss ?? 0;
+    const nextTime = Math.max(0, prevState.timeLeftSeconds - timeLoss);
+    const nextHull = Math.max(0, prevState.hullIntegrity - hullLoss);
+    const prevStealth = prevState.stealthLevel ?? 100;
+    const nextStealth = Math.max(0, prevStealth - stealthLoss);
+    const suffixParts: string[] = [];
+    if (timeLoss > 0) suffixParts.push(`-${timeLoss}s Süre`);
+    if (hullLoss > 0) suffixParts.push(`-%${hullLoss} Bütünlük`);
+    if (stealthLoss > 0) suffixParts.push(`-%${stealthLoss} Sessizlik`);
+
     const penalized: MissionState = {
       ...prevState,
       timeLeftSeconds: nextTime,
       hullIntegrity: nextHull,
+      stealthLevel: stealthLoss > 0 ? nextStealth : prevState.stealthLevel,
       feedbackState: 'error',
-      feedbackMessage: `${reason} (-15s Süre, -%10 Bütünlük)`,
+      feedbackMessage: suffixParts.length > 0 ? `${reason} (${suffixParts.join(', ')})` : reason,
     };
 
-    if (nextTime <= 0 || nextHull <= 0) {
+    if (nextTime <= 0 || nextHull <= 0 || (stealthLoss > 0 && nextStealth <= 0)) {
       const finalHull = Math.max(0, penalized.hullIntegrity);
       const scoreData = calculateFinalScore(penalized.completedTasksCount || 0, 0, finalHull, 0);
       return {
@@ -50,19 +71,275 @@ export function applyLocalGameAction(
         finalScore: scoreData.total,
         scoreBreakdown: scoreData.breakdown,
         feedbackState: 'error',
-        feedbackMessage: nextHull <= 0 ? 'İstasyon gövdesi kritik hasar alarak parçalandı!' : 'Süre tükendi!',
+        feedbackMessage:
+          stealthLoss > 0 && nextStealth <= 0
+            ? 'Gizlilik tamamen deşifre oldu! Alarm sistemleri operasyonu kilitledi.'
+            : nextHull <= 0
+            ? 'İstasyon gövdesi kritik hasar alarak parçalandı!'
+            : 'Süre tükendi!',
       };
     }
     return penalized;
   };
 
   const currentStatus = state.status;
+  const isThemeCustom =
+    state.operationTheme === 'derin_basinc' ||
+    state.operationTheme === 'golge_protokolu';
 
   // ---------------------------------------------------------------------------
   // Phase Games (Phase 0 & 1)
   // ---------------------------------------------------------------------------
   if (currentStatus === 'phase_game') {
     const activeMiniGame = state.selectedMiniGames[state.currentPhaseIndex];
+
+    if (actionType === 'captain_signal_ready') {
+      if (actingRole !== 'kaptan') return state;
+      return {
+        ...state,
+        feedbackState: 'idle',
+        feedbackMessage: data?.message || 'Kaptan kılavuz verilerini operasyona aktardı.',
+      };
+    }
+
+    if (isThemeCustom) {
+      if (actionType === 'theme_apply_penalty') {
+        return applyPenalty(
+          state,
+          data?.reason || 'Hatalı müdahale tespit edildi!',
+          {
+            timeLoss: typeof data?.timeLoss === 'number' ? data.timeLoss : 15,
+            hullLoss: typeof data?.hullLoss === 'number' ? data.hullLoss : 10,
+            stealthLoss: typeof data?.stealthLoss === 'number' ? data.stealthLoss : 0,
+          }
+        );
+      }
+
+      if (actionType === 'theme_diagnostic_captain_sync' && activeMiniGame === 'ariza_teshisi') {
+        if (actingRole !== 'kaptan') return state;
+        if (state.diagnostic.isSolved) return state;
+
+        if (state.operationTheme === 'golge_protokolu') {
+          const isVoltageTarget = typeof data?.voltage === 'number' && Math.abs(data.voltage - 24.5) <= 0.5;
+          const isDeltaReady = data?.deltaCable === 'SARI';
+          if (!isVoltageTarget || !isDeltaReady) {
+            return applyPenalty(
+              state,
+              'VOLTAJ YA DA SOKET HATALI! Hackerın telsiz talimatlarını kontrol edip kablo ve voltajı yeniden ayarla.',
+              { timeLoss: 10, hullLoss: 0, stealthLoss: 5 }
+            );
+          }
+        }
+
+        const breaker = state.diagnostic.correctBreaker;
+        const shouldSolveNow = state.diagnostic.engineerActionTaken;
+        const updatedLines = shouldSolveNow
+          ? {
+              ...state.diagnostic.lines,
+              [state.diagnostic.faultyLine]: {
+                ...state.diagnostic.lines[state.diagnostic.faultyLine],
+                temp: 54,
+                press: 50,
+                noise: 36,
+                status: 'stabil' as const,
+              },
+            }
+          : state.diagnostic.lines;
+
+        return {
+          ...state,
+          diagnostic: {
+            ...state.diagnostic,
+            lines: updatedLines,
+            captainSelectedBreaker: breaker,
+            unlockedBreaker: breaker,
+            engineerActionTaken: shouldSolveNow ? true : state.diagnostic.engineerActionTaken,
+            isSolved: shouldSolveNow,
+          },
+          feedbackState: shouldSolveNow ? 'success' : 'idle',
+          feedbackMessage: shouldSolveNow
+            ? state.operationTheme === 'golge_protokolu'
+              ? 'GÜVENLİK DUVARI AŞILDI! Fiziksel panel bypass tamamlandı, faz kilidi açıldı.'
+              : 'KOORDİNATLAR AKTARILDI VE DEVRE DENGELENDİ! Sonraki aşamaya geçebilirsiniz.'
+            : state.operationTheme === 'golge_protokolu'
+              ? 'FİZİKSEL PANEL KİLİTLENDİ! Hackerın Subnet Köprüsünü senkronize etmesi bekleniyor.'
+              : 'Güvenlik kilidi açıldı ve koordinatlar makiniste aktarıldı!',
+        };
+      }
+
+      if (actionType === 'theme_diagnostic_solve' && activeMiniGame === 'ariza_teshisi') {
+        if (actingRole !== 'muhendis') return state;
+        if (state.diagnostic.isSolved) return state;
+
+        if (state.operationTheme === 'derin_basinc') {
+          const tanksOk =
+            Boolean(data?.tanks) &&
+            !data.tanks[1] &&
+            Boolean(data.tanks[2]) &&
+            !data.tanks[3] &&
+            Boolean(data.tanks[4]);
+          const pressureOk = Number(data?.pressure) === 48;
+          if (!tanksOk || !pressureOk) {
+            return applyPenalty(state, 'Hatalı tank seçimi veya basınç değeri! Dümenciden telsizle doğrula.');
+          }
+        }
+
+        if (state.operationTheme === 'golge_protokolu') {
+          if (data?.activeNode !== 'BETA' && data?.activeNode !== 'DELTA') {
+            return applyPenalty(
+              state,
+              'HATALI DÜĞÜM SEÇİMİ! Node-Beta veya Node-Delta köprüsünü seçmelisin.',
+              { timeLoss: 10, hullLoss: 0, stealthLoss: 5 }
+            );
+          }
+        }
+
+        const breaker = state.diagnostic.correctBreaker;
+        const shouldSolveNow =
+          state.operationTheme === 'golge_protokolu'
+            ? state.diagnostic.captainSelectedBreaker === breaker
+            : true;
+        const updatedLines = shouldSolveNow
+          ? {
+              ...state.diagnostic.lines,
+              [state.diagnostic.faultyLine]: {
+                ...state.diagnostic.lines[state.diagnostic.faultyLine],
+                temp: 54,
+                press: 50,
+                noise: 36,
+                status: 'stabil' as const,
+              },
+            }
+          : state.diagnostic.lines;
+
+        return {
+          ...state,
+          diagnostic: {
+            ...state.diagnostic,
+            lines: updatedLines,
+            captainSelectedBreaker:
+              state.operationTheme === 'golge_protokolu'
+                ? state.diagnostic.captainSelectedBreaker
+                : breaker,
+            unlockedBreaker:
+              state.operationTheme === 'golge_protokolu'
+                ? state.diagnostic.unlockedBreaker
+                : breaker,
+            engineerActionTaken: true,
+            engineerSuggestedLine: state.diagnostic.faultyLine,
+            engineerValveAngle: state.diagnostic.targetValveAngle,
+            engineerThrottleActive: true,
+            isSolved: shouldSolveNow,
+          },
+          feedbackState: shouldSolveNow ? 'success' : 'idle',
+          feedbackMessage: shouldSolveNow
+            ? state.operationTheme === 'golge_protokolu'
+              ? 'KÖPRÜ BAŞARIYLA KURULDU! Fiziksel panel ve güvenlik duvarı senkronize edildi.'
+              : 'BALAST DENGELENDİ! Vana ve basınç protokolü başarıyla mühürlendi.'
+            : 'KÖPRÜ SENKRONİZE EDİLDİ! Ajanın Port-Delta (Sarı) ve 24.5V panelini kilitlemesi bekleniyor.',
+        };
+      }
+
+      if (actionType === 'theme_signal_solve' && activeMiniGame === 'sinyal_cozumu') {
+        if (state.signal.isSolved) return state;
+
+        if (state.operationTheme === 'golge_protokolu') {
+          if (actingRole === 'kaptan') {
+            const angle = Number(data?.prismAngle);
+            if (typeof data?.prismAngle !== 'number' || (angle !== 45 && angle !== 225)) {
+              return applyPenalty(
+                state,
+                'LAZER SENSÖRÜ UYARISI! Prizma mandalını Hackerın bildirdiği doğru açıya getirin.',
+                { timeLoss: 10, hullLoss: 0, stealthLoss: 10 }
+              );
+            }
+          } else {
+            if (Number(data?.empFreq) !== 740) {
+              return applyPenalty(
+                state,
+                'EMP DAMPER HATALI! Hedef rezonansı 740 THz seviyesine sabitleyin.',
+                { timeLoss: 10, hullLoss: 0, stealthLoss: 10 }
+              );
+            }
+          }
+        } else if (state.operationTheme === 'derin_basinc') {
+          if (actingRole !== 'muhendis') return state;
+          const tubeOk = Number(data?.tube) === 2;
+          const freqOk = typeof data?.torpFreq === 'number' && Math.abs(Number(data.torpFreq) - 433.8) < 0.05;
+          if (!tubeOk || !freqOk) {
+            return applyPenalty(state, 'Hatalı kovan veya frekans! Dümencinin sonarına danış.');
+          }
+        }
+
+        return {
+          ...state,
+          signal: {
+            ...state.signal,
+            engineerTunedFreq: data?.freq || state.signal.correctFrequency,
+            isLocked: true,
+            frequencyMatched: true,
+            isSolved: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage:
+            state.operationTheme === 'golge_protokolu'
+              ? 'OPTİK PRİZMA VE KÖR NOKTA KORİDORU SENKRONİZE EDİLDİ!'
+              : 'MANYETİK TORPİDO SİNYALİ KİLİTLENDİ! İletişim başarıyla sağlandı.',
+        };
+      }
+
+      if (actionType === 'theme_cable_solve' && activeMiniGame === 'kablo_baglantisi') {
+        if (actingRole !== 'muhendis') return state;
+        if (state.cable.isSolved) return state;
+
+        const valveOk = Boolean(data?.valves?.C) && !data?.valves?.A && !data?.valves?.B;
+        const switchOk =
+          Boolean(data?.switches?.sw2) &&
+          !data?.switches?.sw1 &&
+          !data?.switches?.sw3 &&
+          !data?.switches?.sw4;
+        const clampOk = Number(data?.clampProgress) >= 65;
+        if (!valveOk || !switchOk || !clampOk) {
+          return applyPenalty(state, 'Hatalı valf, şalter veya kelepçe ayarı! Dümenciye telsizle sor.');
+        }
+
+        return {
+          ...state,
+          cable: {
+            ...state.cable,
+            isTested: true,
+            isSolved: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage: 'Bölme yalıtım mührü hatasız kilitlendi!',
+        };
+      }
+
+      if (actionType === 'theme_airlock_solve' && activeMiniGame === 'hava_kilidi') {
+        if (actingRole !== 'muhendis') return state;
+        if (state.airlock.isSolved) return state;
+
+        const voltOk = Math.abs(Number(data?.volt) - 180) <= 5;
+        const catOk = Number(data?.catalystPct) >= 60 && Number(data?.catalystPct) <= 70;
+        const cellsOk =
+          Boolean(data?.cellSwitches?.katotA) &&
+          Boolean(data?.cellSwitches?.katotB) &&
+          Boolean(data?.cellSwitches?.anotC);
+        if (!voltOk || !catOk || !cellsOk) {
+          return applyPenalty(state, 'Hatalı voltaj, katalizör veya hücre seçimi! Dümenciden telsizle doğrula.');
+        }
+
+        return {
+          ...state,
+          airlock: {
+            ...state.airlock,
+            isSolved: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage: 'Oksijen üretimi ve hücre voltajı stabilize edildi!',
+        };
+      }
+    }
 
     // Arıza Teşhisi (Reaktör)
     if (activeMiniGame === 'ariza_teshisi') {
@@ -436,6 +713,91 @@ export function applyLocalGameAction(
   // Phase 2: Enerji Dağıtımı
   // ---------------------------------------------------------------------------
   if (currentStatus === 'phase_energy') {
+    if (isThemeCustom) {
+      if (actionType === 'theme_apply_penalty') {
+        return applyPenalty(
+          state,
+          data?.reason || 'Hatalı müdahale tespit edildi!',
+          {
+            timeLoss: typeof data?.timeLoss === 'number' ? data.timeLoss : 15,
+            hullLoss: typeof data?.hullLoss === 'number' ? data.hullLoss : 10,
+            stealthLoss: typeof data?.stealthLoss === 'number' ? data.stealthLoss : 0,
+          }
+        );
+      }
+
+      if (actionType === 'derin_basinc_transmit_core') {
+        if (actingRole !== 'kaptan') return state;
+        return {
+          ...state,
+          energy: {
+            ...state.energy,
+            isDraftShared: true,
+          },
+          feedbackState: 'idle',
+          feedbackMessage: 'Çekirdek enerji koordinatları makiniste iletildi!',
+        };
+      }
+
+      if (actionType === 'derin_basinc_seal_reactor') {
+        if (actingRole !== 'muhendis') return state;
+        if (state.energy.isLocked) return state;
+
+        const rodOk = typeof data?.k02Position === 'number' && data.k02Position <= 20;
+        const valveOk = data?.valve1Open === true;
+        const pressureOk = data?.currentPressure === 28;
+
+        if (rodOk && valveOk && pressureOk) {
+          return {
+            ...state,
+            energy: {
+              ...state.energy,
+              engineerAllocation: { yasamDestegi: 5, itki: 5, kalkan: 5 },
+              isDraftShared: true,
+              isLocked: true,
+            },
+            feedbackState: 'success',
+            feedbackMessage: 'Soğutma pompası çalıştırıldı ve K-02 mühürlendi!',
+          };
+        }
+        return applyPenalty(state, 'Hatalı reaktör mühürleme parametreleri (K-02 %20, Boru-1 Açık ve 28 Bar olmalı)!');
+      }
+
+      if (actionType === 'golge_energy_solve') {
+        if (state.energy.isLocked) return state;
+        if (actingRole === 'muhendis') {
+          return {
+            ...state,
+            energy: {
+              ...state.energy,
+              isDraftShared: true,
+            },
+            feedbackState: 'idle',
+            feedbackMessage: 'Kasa şifre matrisi kırıldı! PIN (8429) Ajanın terminaline aktarıldı, Ajan onayı bekleniyor.',
+          };
+        }
+        if (actingRole !== 'kaptan') return state;
+        if (typeof data?.pin !== 'string' || data.pin.trim() !== '8429') {
+          return applyPenalty(
+            state,
+            'Hatalı kasa PIN kodu! Hacker ile telsizden doğrula.',
+            { timeLoss: 15, hullLoss: 0, stealthLoss: 10 }
+          );
+        }
+        return {
+          ...state,
+          energy: {
+            ...state.energy,
+            engineerAllocation: { yasamDestegi: 5, itki: 5, kalkan: 5 },
+            isDraftShared: true,
+            isLocked: true,
+          },
+          feedbackState: 'success',
+          feedbackMessage: 'Kasa şifresi kırıldı ve biyometrik veri başarıyla çekildi!',
+        };
+      }
+    }
+
     if (actionType === 'energy_set_allocation') {
       if (actingRole !== 'muhendis') return state;
       if (state.energy.isLocked) return state;
@@ -508,6 +870,107 @@ export function applyLocalGameAction(
   // Phase 3: Kurtarma Kararı
   // ---------------------------------------------------------------------------
   if (currentStatus === 'phase_rescue') {
+    if (isThemeCustom) {
+      if (actionType === 'derin_basinc_transmit_vector') {
+        if (actingRole !== 'kaptan') return state;
+        const angleStr = String(data?.angle || '');
+        const routeId = angleStr.includes('45') ? 'alfa' : angleStr.includes('15') ? 'gama' : 'beta';
+        return {
+          ...state,
+          rescue: {
+            ...state.rescue,
+            selectedRouteId: routeId,
+            captainApproved: true,
+            validationError: null,
+          },
+          feedbackState: 'idle',
+          feedbackMessage: 'Yükseliş vektörü makiniste aktarıldı!',
+        };
+      }
+
+      if (actionType === 'derin_basinc_trigger_ascent') {
+        if (actingRole !== 'muhendis') return state;
+        if (!state.rescue.captainApproved) {
+          return {
+            ...state,
+            feedbackState: 'error',
+            feedbackMessage: 'Dümencinin yükseliş vektörünü aktarması bekleniyor!',
+          };
+        }
+        const pressureOk = Number(data?.pressure) === 18;
+        const angleOk = Number(data?.angle) === 28;
+        const tanksOk =
+          Boolean(data?.tanks) &&
+          Boolean(data.tanks[1]) &&
+          !data.tanks[2] &&
+          Boolean(data.tanks[3]) &&
+          !data.tanks[4];
+        if (!pressureOk || !angleOk || !tanksOk) {
+          return applyPenalty(state, 'Hatalı tahliye parametreleri! Balast basıncı, çıkış açısı ve tank sırası doğrulanamadı.');
+        }
+        const scoreData = calculateFinalScore(4, state.timeLeftSeconds, state.hullIntegrity, 10);
+        return {
+          ...state,
+          rescue: {
+            ...state.rescue,
+            captainApproved: true,
+            engineerApproved: true,
+          },
+          status: 'phase_result',
+          outcomeType: 'tam_basari',
+          rescuedCrewCount: 10,
+          completedTasksCount: 4,
+          finalScore: scoreData.total,
+          scoreBreakdown: scoreData.breakdown,
+          feedbackState: 'success',
+          feedbackMessage: 'Acil yüzeye çıkış başarıyla tamamlandı!',
+        };
+      }
+
+      if (actionType === 'golge_transmit_escape') {
+        if (actingRole !== 'kaptan') return state;
+        return {
+          ...state,
+          rescue: {
+            ...state.rescue,
+            captainApproved: true,
+            selectedRouteId: data?.route === 'metro' ? 'alfa' : 'beta',
+            validationError: null,
+          },
+          feedbackState: 'idle',
+          feedbackMessage: 'Kaçış rotası koordinatları hacker terminaline aktarıldı!',
+        };
+      }
+
+      if (actionType === 'golge_execute_extraction') {
+        if (actingRole !== 'muhendis') return state;
+        if (!state.rescue.captainApproved) {
+          return {
+            ...state,
+            feedbackState: 'error',
+            feedbackMessage: 'Ajanın kaçış rotasını onaylayıp aktarması bekleniyor!',
+          };
+        }
+        const scoreData = calculateFinalScore(4, state.timeLeftSeconds, state.hullIntegrity, 10);
+        return {
+          ...state,
+          rescue: {
+            ...state.rescue,
+            captainApproved: true,
+            engineerApproved: true,
+          },
+          status: 'phase_result',
+          outcomeType: 'tam_basari',
+          rescuedCrewCount: 10,
+          completedTasksCount: 4,
+          finalScore: scoreData.total,
+          scoreBreakdown: scoreData.breakdown,
+          feedbackState: 'success',
+          feedbackMessage: 'Gölge Protokolü tahliyesi iz bırakmadan tamamlandı!',
+        };
+      }
+    }
+
     if (actionType === 'rescue_select_route') {
       return {
         ...state,
@@ -563,6 +1026,34 @@ export function applyLocalGameAction(
   if (actionType.startsWith('karantina_')) {
     const kData = state.karantinaData || generateKarantinaData();
 
+    const isBioAction =
+      actionType === 'karantina_set_spectral_filter' ||
+      actionType === 'karantina_phase1_bio_transmit' ||
+      actionType === 'karantina_set_bond_freq' ||
+      actionType === 'karantina_phase2_bio_inject' ||
+      actionType === 'karantina_set_vacuum_flow' ||
+      actionType === 'karantina_phase3_bio_start';
+
+    const isSecAction =
+      actionType.startsWith('karantina_phase1_sec_') ||
+      actionType.startsWith('karantina_phase2_sec_') ||
+      actionType.startsWith('karantina_phase3_sec_');
+
+    if (isBioAction && actingRole !== 'kaptan') {
+      return {
+        ...state,
+        feedbackState: 'error',
+        feedbackMessage: 'Yalnızca Baş Biyolog bu işlemi gerçekleştirebilir.',
+      };
+    }
+    if (isSecAction && actingRole !== 'muhendis') {
+      return {
+        ...state,
+        feedbackState: 'error',
+        feedbackMessage: 'Yalnızca Güvenlik Şefi bu işlemi gerçekleştirebilir.',
+      };
+    }
+
     if (actionType === 'karantina_set_spectral_filter') {
       return {
         ...state,
@@ -574,10 +1065,22 @@ export function applyLocalGameAction(
     }
 
     if (actionType === 'karantina_phase1_bio_transmit') {
+      if (data?.spectralNm !== undefined || data?.base !== undefined) {
+        const nmOk = Number(data?.spectralNm) === 415;
+        const baseOk = !data?.base || data.base === 'sitozin-9';
+        if (!nmOk || !baseOk) {
+          return applyPenalty(
+            state,
+            'Spektral filtre (415 nm) veya mutasyon bazı (Sitozin-9) doğrulanamadı!'
+          );
+        }
+      }
       return {
         ...state,
         karantinaData: {
           ...kData,
+          spectralFilterNm: data?.spectralNm ?? kData.spectralFilterNm,
+          selectedBase: data?.base ?? kData.selectedBase,
           bioPhase1Transmitted: true,
         },
         feedbackState: 'success',
@@ -612,6 +1115,7 @@ export function applyLocalGameAction(
         return {
           ...state,
           currentPhaseIndex: 1,
+          completedTasksCount: Math.max(state.completedTasksCount || 0, 1),
           karantinaData: {
             ...kData,
             selectedUvSector: 3,
@@ -637,19 +1141,23 @@ export function applyLocalGameAction(
     }
 
     if (actionType === 'karantina_phase2_bio_inject') {
+      if (data?.bondFreqGhz !== undefined && Math.abs(Number(data.bondFreqGhz) - 8.4) > 0.15) {
+        return applyPenalty(state, 'Reaksiyon bağ frekansı 8.4 GHz hedefine sabitlenmedi!');
+      }
       return {
         ...state,
         karantinaData: {
           ...kData,
+          bondFreqGhz: data?.bondFreqGhz ?? kData.bondFreqGhz,
           bioPhase2Injected: true,
         },
         feedbackState: 'success',
-        feedbackMessage: 'PANZEHİR REAKTÖRE ENJEKTE EDİLDİ! Güvenlik Şefinin santrifüj devrini 3800 RPM ayarlaması bekleniyor.',
+        feedbackMessage: 'PANZEHİR REAKTÖRE ENJEKTE EDİLDİ! Güvenlik Şefinin santrifüj ve soğutma ayarlarını kilitlemesi bekleniyor.',
       };
     }
 
     if (actionType === 'karantina_phase2_sec_adjust_rpm') {
-      const newRpm = Math.max(1000, Math.min(5000, (kData.centrifugeRpm || 3800) + (data.delta || 0)));
+      const newRpm = Math.max(1000, Math.min(5000, (kData.centrifugeRpm ?? 2400) + (data.delta || 0)));
       return {
         ...state,
         karantinaData: {
@@ -686,6 +1194,7 @@ export function applyLocalGameAction(
         return {
           ...state,
           currentPhaseIndex: 2,
+          completedTasksCount: Math.max(state.completedTasksCount || 0, 2),
           karantinaData: {
             ...kData,
             centrifugeRpm: 3800,
@@ -711,14 +1220,18 @@ export function applyLocalGameAction(
     }
 
     if (actionType === 'karantina_phase3_bio_start') {
+      if (data?.vacuumFlowRate !== undefined && Math.abs(Number(data.vacuumFlowRate) - 6.2) > 0.15) {
+        return applyPenalty(state, 'Vakum akış hızı 6.2 L/dk kritik değerine ayarlanmadı!');
+      }
       return {
         ...state,
         karantinaData: {
           ...kData,
+          vacuumFlowRate: data?.vacuumFlowRate ?? kData.vacuumFlowRate,
           bioPhase3Started: true,
         },
         feedbackState: 'success',
-        feedbackMessage: 'VAKUM DÖNGÜSÜ BAŞLATILDI! Güvenlik Şefinin BACA-02 sürgüsünü 12 Bar basınca ayarlaması bekleniyor.',
+        feedbackMessage: 'VAKUM DÖNGÜSÜ BAŞLATILDI! Güvenlik Şefinin doğru tahliye bacası ve basıncı ateşlemesi bekleniyor.',
       };
     }
 
@@ -733,7 +1246,7 @@ export function applyLocalGameAction(
     }
 
     if (actionType === 'karantina_phase3_sec_adjust_bar') {
-      const newBar = Math.max(0, Math.min(25, Number(((kData.chimneyBar || 12.0) + (data.delta || 0)).toFixed(1))));
+      const newBar = Math.max(0, Math.min(25, Number(((kData.chimneyBar ?? 6.0) + (data.delta || 0)).toFixed(1))));
       return {
         ...state,
         karantinaData: {
@@ -757,18 +1270,27 @@ export function applyLocalGameAction(
       const chimney = data.chimney ?? kData.selectedChimney;
       const bar = data.bar ?? kData.chimneyBar;
       if (chimney === 'BACA-02' && Math.abs(bar - 12.0) < 0.1) {
+        const immunityScore = Math.max(
+          2500,
+          Math.round(5500 + state.hullIntegrity * 25 + state.timeLeftSeconds * 12)
+        );
+        const selinAccuracy = Number(
+          Math.min(99.9, Math.max(70.0, 75 + state.hullIntegrity * 0.24)).toFixed(1)
+        );
         return {
           ...state,
           status: 'phase_result',
           outcomeType: 'tam_basari',
-          finalScore: 10450,
+          rescuedCrewCount: 10,
+          completedTasksCount: 3,
+          finalScore: immunityScore,
           karantinaData: {
             ...kData,
             selectedChimney: 'BACA-02',
             chimneyBar: 12.0,
             phase3Solved: true,
-            immunityScore: 10450,
-            selinAccuracy: 99.2,
+            immunityScore,
+            selinAccuracy,
             baranValves: 3,
           },
           feedbackState: 'success',
@@ -787,6 +1309,24 @@ export function applyLocalGameAction(
         currentPhaseIndex: 0,
         timeLeftSeconds: 300,
         hullIntegrity: 100,
+        completedTasksCount: 0,
+        rescuedCrewCount: 0,
+        finalScore: 0,
+        scoreBreakdown: undefined,
+        outcomeType: undefined,
+        players: {
+          ...state.players,
+          kaptan: {
+            ...state.players.kaptan,
+            ready: false,
+            roleConfirmed: false,
+          },
+          muhendis: {
+            ...state.players.muhendis,
+            ready: false,
+            roleConfirmed: false,
+          },
+        },
         karantinaData: generateKarantinaData(),
         feedbackState: 'idle',
         feedbackMessage: '',

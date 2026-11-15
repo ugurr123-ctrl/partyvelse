@@ -10,6 +10,9 @@ export interface RadioTransmission {
   message: string;
   frequency: string;
   timestamp: number;
+  isVoice?: boolean;
+  audioDataUrl?: string;
+  audioDurationMs?: number;
 }
 
 type RadioCallback = (transmission: RadioTransmission) => void;
@@ -112,6 +115,9 @@ class MultiplayerSyncService {
       // ignore quota errors
     }
 
+    // Mark as sent locally so sender does not treat echoed server broadcast as incoming alert/autoplay
+    this.sentRadioIds.add(transmission.id);
+
     // Forward through Colyseus WebSocket if connected to online server
     try {
       if (colyseusClient.isConnected()) {
@@ -123,6 +129,20 @@ class MultiplayerSyncService {
 
     // Trigger local listeners too so sending device immediately shows transmission
     this.notifyRadioCallbacks(transmission);
+  }
+
+  public isLocallySentRadio(id: string): boolean {
+    return this.sentRadioIds.has(id);
+  }
+
+  public tryClaimRadioAudioPlayback(id: string): boolean {
+    if (this.playedRadioAudioIds.has(id)) return false;
+    this.playedRadioAudioIds.add(id);
+    if (this.playedRadioAudioIds.size > 100) {
+      const first = this.playedRadioAudioIds.values().next().value;
+      if (first) this.playedRadioAudioIds.delete(first);
+    }
+    return true;
   }
 
   public subscribe(callback: MessageCallback): () => void {
@@ -149,7 +169,20 @@ class MultiplayerSyncService {
     });
   }
 
+  private seenRadioIds = new Set<string>();
+  private sentRadioIds = new Set<string>();
+  private playedRadioAudioIds = new Set<string>();
+
   private notifyRadioCallbacks(transmission: RadioTransmission) {
+    if (this.seenRadioIds.has(transmission.id)) {
+      return;
+    }
+    this.seenRadioIds.add(transmission.id);
+    if (this.seenRadioIds.size > 120) {
+      const first = this.seenRadioIds.values().next().value;
+      if (first) this.seenRadioIds.delete(first);
+    }
+
     this.radioCallbacks.forEach((cb) => {
       try {
         cb(transmission);

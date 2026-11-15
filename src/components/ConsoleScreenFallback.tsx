@@ -77,7 +77,7 @@ export const ConsoleScreenFallback: React.FC<Props> = ({
           </span>
           <span className="font-mono text-[10px] text-white/40 mt-1 flex items-center gap-1">
             <Cpu className="w-3 h-3 text-cyan-400" />
-            <span>MODÜL ÖN BELLEKTEN AKTARILIYOR • 0ms</span>
+            <span>MODÜL ÖN BELLEKTEN AKTARILIYOR</span>
           </span>
         </div>
 

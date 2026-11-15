@@ -1,0 +1,28 @@
+{
+  "appId": "com.partyverse.kayipsinyal",
+  "appName": "PARTYVERSE",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "allowsLinkPreview": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1400,
+      "launchAutoHide": true,
+      "backgroundColor": "#070510",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

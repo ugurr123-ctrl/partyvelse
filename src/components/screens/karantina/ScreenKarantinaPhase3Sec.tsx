@@ -16,32 +16,32 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
     spectralFilterNm: 415,
     selectedBase: 'sitozin-9',
     bioPhase1Transmitted: true,
-    selectedUvSector: 3,
-    selectedValve: 'B' as const,
+    selectedUvSector: 1,
+    selectedValve: 'A' as const,
     phase1Solved: true,
     polymerPct: 45,
     enzymePct: 30,
     neutroPct: 25,
     bondFreqGhz: 8.4,
     bioPhase2Injected: true,
-    centrifugeRpm: 3800,
-    coolingValvePct: 75,
-    pressureReliefActive: true,
+    centrifugeRpm: 2400,
+    coolingValvePct: 50,
+    pressureReliefActive: false,
     phase2Solved: true,
     vacuumFlowRate: 6.2,
     bioPhase3Started: true,
-    selectedChimney: 'BACA-02' as const,
-    chimneyBar: 12.0,
-    safetyLatchUnlocked: true,
+    selectedChimney: 'BACA-01' as const,
+    chimneyBar: 6.0,
+    safetyLatchUnlocked: false,
     phase3Solved: false,
     immunityScore: 10450,
     selinAccuracy: 99.2,
     baranValves: 3,
   };
 
-  const [chimney, setChimney] = useState<'BACA-01' | 'BACA-02' | 'BACA-03'>(kData.selectedChimney || 'BACA-02');
-  const [bar, setBar] = useState<number>(kData.chimneyBar || 12.0);
-  const [latchUnlocked, setLatchUnlocked] = useState<boolean>(kData.safetyLatchUnlocked ?? true);
+  const [chimney, setChimney] = useState<'BACA-01' | 'BACA-02' | 'BACA-03'>(kData.selectedChimney || 'BACA-01');
+  const [bar, setBar] = useState<number>(kData.chimneyBar ?? 6.0);
+  const [latchUnlocked, setLatchUnlocked] = useState<boolean>(kData.safetyLatchUnlocked ?? false);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -91,7 +91,7 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
         </div>
 
         <div className="w-9 h-9 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">shield</span>
         </div>
       </header>
 
@@ -130,7 +130,7 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
           </div>
           <h2 className="text-lg font-extrabold text-white leading-tight">Basınç Tahliyesini Ateşle</h2>
           <p className="text-xs text-[#d5c4ac] mt-1 leading-relaxed">
-            Biyoloğun bildirdiği <strong className="text-amber-300">BACA-02</strong> sürgüsünü seçip pnömatik basıncı tam <strong className="text-cyan-300">12 Bar</strong>&apos;a kalibre ederek tahliyeyi tetikleyin.
+            Biyoloğun bildirdiği tahliye bacası sürgüsünü seçip pnömatik basıncı telsizdeki hedef değere kalibre ederek tahliyeyi tetikleyin.
           </p>
         </div>
 
@@ -143,8 +143,10 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
             </div>
             <span className="text-[10px] font-mono text-[#9e8f78]">FREQ: 142.80 MHZ</span>
           </div>
-          <p className="text-xs font-bold text-amber-200 italic bg-[#0f0c1e] p-2 rounded-lg border border-white/5">
-            &ldquo;Gaz birikimi BACA-02 hattında yoğunlaştı! Tahliye sürgüsünü tam 12 Bar basınca ayarla!&rdquo;
+          <p className="text-xs font-bold text-cyan-100 italic bg-[#0f0c1e] p-2 rounded-lg border border-white/5">
+            &ldquo;{kData.bioPhase3Started
+              ? 'Vakum döngüsü aktif! Hangi baca ve basınç değerinin açılacağını Biyologdan telsizle doğrula.'
+              : 'Baş Biyolog vakum döngüsünü hazırlıyor; canlı tahliye emri bekleniyor...'}&rdquo;
           </p>
         </div>
 
@@ -155,7 +157,7 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
               <span className="material-symbols-outlined text-cyan-400 text-[16px]">air</span>
               <span>TAHLİYE BACALARI</span>
             </div>
-            <span className="text-[10px] font-mono text-[#ffb703] font-bold">HEDEF: BACA-02</span>
+            <span className="text-[10px] font-mono text-cyan-300 font-bold">SÜRGÜ SEÇİMİ</span>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -168,31 +170,31 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
               }}
               className={`p-2.5 rounded-xl border text-center transition-all ${
                 chimney === 'BACA-01'
-                  ? 'bg-cyan-950/40 border-cyan-400'
+                  ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_12px_rgba(0,238,252,0.25)]'
                   : 'bg-[#201d30] border-white/5 hover:border-white/10'
               }`}
             >
               <span className="material-symbols-outlined text-[22px] text-slate-400 block mx-auto">heat_pump</span>
               <div className="text-xs font-bold text-white mt-1">BACA-01</div>
-              <div className="text-[9px] font-mono text-slate-400 mt-0.5">KAPALI // 6 Bar</div>
+              <div className="text-[9px] font-mono text-slate-400 mt-0.5">BEKLEMEDE</div>
             </button>
 
-            {/* BACA-02 (TARGET) */}
+            {/* BACA-02 */}
             <button
               type="button"
               onClick={() => {
                 setChimney('BACA-02');
                 onAction('karantina_phase3_sec_select_chimney', { chimney: 'BACA-02' });
               }}
-              className={`p-2.5 rounded-xl border text-center transition-all relative ${
+              className={`p-2.5 rounded-xl border text-center transition-all ${
                 chimney === 'BACA-02'
-                  ? 'bg-amber-950/50 border-[#ffb703] shadow-[0_0_15px_rgba(255,183,3,0.3)]'
-                  : 'bg-[#201d30] border-white/10 hover:border-white/20'
+                  ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_12px_rgba(0,238,252,0.25)]'
+                  : 'bg-[#201d30] border-white/5 hover:border-white/10'
               }`}
             >
-              <span className="material-symbols-outlined text-[22px] text-[#ffb703] block mx-auto">warning</span>
-              <div className="text-xs font-bold text-[#ffdba0] mt-1">BACA-02</div>
-              <div className="text-[9px] font-mono text-amber-300 font-bold mt-0.5">12 Bar Gerekli</div>
+              <span className="material-symbols-outlined text-[22px] text-slate-400 block mx-auto">heat_pump</span>
+              <div className="text-xs font-bold text-white mt-1">BACA-02</div>
+              <div className="text-[9px] font-mono text-slate-400 mt-0.5">BEKLEMEDE</div>
             </button>
 
             {/* BACA-03 (BLOCKED) */}
@@ -211,8 +213,8 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
               <span className="material-symbols-outlined text-cyan-400 text-[16px]">speed</span>
               <span>PNÖMATİK BAR MANOMETRESİ</span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-[#ffb703] font-bold">
-              HEDEF: 12.0 BAR
+            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-cyan-300 font-bold">
+              MANUEL AYAR
             </span>
           </div>
 
@@ -235,7 +237,7 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
                 cy="60"
                 r="45"
                 fill="none"
-                stroke={Math.abs(bar - 12.0) < 0.1 ? '#00eefc' : '#ffb703'}
+                stroke="#00eefc"
                 strokeWidth="10"
                 strokeDasharray="283"
                 strokeDashoffset={strokeDashoffset}
@@ -299,6 +301,31 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
           </button>
         </div>
 
+        {state.feedbackMessage && (
+          <div
+            className={`p-3 rounded-xl border text-xs font-mono flex items-center gap-2 ${
+              state.feedbackState === 'success'
+                ? 'bg-emerald-950/50 border-emerald-500/50 text-emerald-200'
+                : state.feedbackState === 'error'
+                ? 'bg-rose-950/50 border-rose-500/50 text-rose-200'
+                : 'bg-cyan-950/50 border-cyan-500/50 text-cyan-200'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[18px] shrink-0 ${
+                state.feedbackState === 'success'
+                  ? 'text-emerald-400'
+                  : state.feedbackState === 'error'
+                  ? 'text-rose-400'
+                  : 'text-cyan-400'
+              }`}
+            >
+              {state.feedbackState === 'success' ? 'check_circle' : state.feedbackState === 'error' ? 'error' : 'info'}
+            </span>
+            <span>{state.feedbackMessage}</span>
+          </div>
+        )}
+
         {/* Primary Action Button */}
         <button
           type="button"
@@ -306,7 +333,7 @@ export const ScreenKarantinaPhase3Sec: React.FC<Props> = ({
           className="w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] bg-gradient-to-r from-[#ffb703] via-[#ffc72c] to-[#ffa000] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110"
         >
           <span className="material-symbols-outlined text-[20px]">rocket_launch</span>
-          <span>BACA-02 TAHLİYESİNİ ATEŞLE (12 BAR)</span>
+          <span>SEÇİLİ BACA TAHLİYESİNİ ATEŞLE</span>
         </button>
       </main>
     </div>

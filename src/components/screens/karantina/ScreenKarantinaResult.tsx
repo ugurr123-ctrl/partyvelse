@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MissionState } from '../../../types/game';
+import { SafeAssetImage } from '../../SafeAssetImage';
 
 interface Props {
   state: MissionState;
@@ -12,8 +13,46 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
   onRestartGame,
   onBackToLobby,
 }) => {
-  const isSuccess = state.outcomeType === 'tam_basari' || (state.hullIntegrity > 0 && state.timeLeftSeconds > 0);
+  const [copiedShare, setCopiedShare] = useState(false);
+  const isSuccess = state.outcomeType
+    ? state.outcomeType === 'tam_basari'
+    : (state.hullIntegrity > 0 && state.timeLeftSeconds > 0);
   const kData = state.karantinaData;
+  const dynamicImmunity = Math.max(
+    2500,
+    Math.round(5500 + state.hullIntegrity * 25 + state.timeLeftSeconds * 12)
+  );
+  const dynamicAccuracy = Number(
+    Math.min(99.9, Math.max(70.0, 75 + state.hullIntegrity * 0.24)).toFixed(1)
+  );
+  const computedXp = isSuccess ? (kData?.immunityScore ?? dynamicImmunity) : 0;
+
+  const handleShareScoreCard = async () => {
+    const timeFormatted = formatTimer(state.timeLeftSeconds);
+    const hostUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const shareText = isSuccess
+      ? `☣️ KARANTİNA 2088 // OPERASYON BAŞARILI!\n👥 Müfreze: ${state.players.kaptan.name} & ${state.players.muhendis.name}\n🛡️ Biyo-Bütünlük: %${state.hullIntegrity}\n⏱️ Kalan Süre: ${timeFormatted}\n🏆 Uyum Skoru: ${computedXp.toLocaleString('en-US')} XP\n\nBu rekoru geçebilecek bir çift veya arkadaş grubu var mı? Hemen oyna:\n👉 ${hostUrl}`
+      : `💀 KARANTİNA 2088 // İZOLASYON ÇÖKTÜ!\n👥 Müfreze: ${state.players.kaptan.name} & ${state.players.muhendis.name}\nSalgın ana kanallara sızdı! Bizi kurtarabilecek bir ekip var mı? Hadi dene:\n👉 ${hostUrl}`;
+
+    if (navigator?.share) {
+      try {
+        await navigator.share({
+          title: 'PARTYVERSE — Karantina 2088 Görev Karnesi',
+          text: shareText,
+          url: hostUrl,
+        });
+        return;
+      } catch {
+        // user cancelled
+      }
+    }
+
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(shareText);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2500);
+    }
+  };
 
   const selinAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJxWZpXXTG3IVNha6Wp1S6HKkQeGKihQ-74RmrOmNT0qeJC5mB9zZj665TPHJPzyY-JpvmNMhw-Nr1ZJyzAgBoi7CA-lMBcFlO0y2EDvhZ8HVfVIlRPAm8tlq-NUUsqcL1PJk1eqyuc-b2nNeh-sYoomuQyY-RDh7L8OMLdFof-l0Xdie3jemYRygUV7iR3Nif6b9pm8F5azyt8EMqifc5EOPlRZYhSL4BAg12eHc';
   const baranAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDIAgwGSA-euuAp5TlOVoIAlpkrP-8CfhQkPNmR5b-S1bVBlWoWTz7bFFjAYm4WDEXg3McTOJhtmTK041sz_P1US2DB_7t4GdZAUEZSHuWDAylIuW66pjcvyEnF1UOa-PI00PnoVvDzPO7Sb2XLddGTzXpqq_jVVL7wTaiuHBibx0eQtXJerTOjekkVS8gMuFec7tuQdFip_tujXIvrve0f1pPKs2tNOScV_Kwa8Pg';
@@ -50,7 +89,9 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
         </div>
 
         <div className="w-9 h-9 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">
+            {isSuccess ? 'verified' : 'crisis_alert'}
+          </span>
         </div>
       </header>
 
@@ -107,7 +148,7 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
             </div>
             <div className="mt-1">
               <span className="text-base font-mono font-black text-white">
-                {formatTimer(state.timeLeftSeconds > 0 ? state.timeLeftSeconds : 114)}
+                {formatTimer(Math.max(0, state.timeLeftSeconds))}
               </span>
               <span className="text-[8px] font-mono text-[#9e8f78] block">HEDEF: &gt; 01:00</span>
             </div>
@@ -121,7 +162,7 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
             </div>
             <div className="mt-1">
               <span className="text-base font-mono font-black text-cyan-300">
-                %{isSuccess ? Math.max(85, state.hullIntegrity) : 0}
+                %{isSuccess ? Math.max(0, state.hullIntegrity) : 0}
               </span>
               <span className="text-[8px] font-mono text-[#9e8f78] block">KRİTİK EŞİK: %65</span>
             </div>
@@ -135,9 +176,9 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
             </div>
             <div className="mt-1">
               <span className="text-base font-mono font-black text-amber-300">
-                {isSuccess ? (kData?.immunityScore || 10450).toLocaleString('en-US') : 0}
+                {computedXp.toLocaleString('en-US')}
               </span>
-              <span className="text-[8px] font-mono text-[#ffb703] block">+1,200 VIP XP</span>
+              <span className="text-[8px] font-mono text-[#ffb703] block">{isSuccess ? '+1,200 VIP XP' : 'BAŞARISIZ'}</span>
             </div>
           </div>
         </div>
@@ -146,15 +187,17 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
         <div className="bg-[#1c192c] border border-white/5 rounded-xl p-3 flex flex-col gap-2">
           <div className="flex items-center justify-between text-xs font-mono font-bold">
             <span className="text-white uppercase">MÜFREZE PERFORMANSI (2/2 AJAN)</span>
-            <span className="text-cyan-400">SENKRONİZASYON: %100</span>
+            <span className={isSuccess ? 'text-cyan-400' : 'text-red-400'}>
+              {isSuccess ? 'SENKRONİZASYON: %100' : 'PROSES KESİLDİ'}
+            </span>
           </div>
 
           {/* Selin (Baş Biyolog) */}
           <div className="bg-[#201d30] border border-white/5 rounded-xl p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-cyan-400/40">
-                <img src={selinAvatar} alt="Selin" className="w-full h-full object-cover" />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                <SafeAssetImage src={selinAvatar} alt="Selin" className="w-full h-full object-cover" fallbackIcon="biotech" />
+                <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${isSuccess ? 'bg-cyan-400' : 'bg-red-400'}`}></span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
@@ -163,15 +206,17 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
                     BAŞ BİYOLOG
                   </span>
                 </div>
-                <div className="text-[10px] text-[#9e8f78] mt-0.5">Panzehir Sentezi Kusursuz</div>
+                <div className="text-[10px] text-[#9e8f78] mt-0.5">
+                  {isSuccess ? 'Panzehir Sentezi Kusursuz' : 'Sentez Tamamlanamadı'}
+                </div>
               </div>
             </div>
 
             <div className="flex flex-col items-end">
               <span className="text-[9px] font-mono text-[#9e8f78] uppercase">ANTİKOR DOĞRULUĞU</span>
-              <span className="text-sm font-mono font-black text-cyan-300 flex items-center gap-1">
+              <span className={`text-sm font-mono font-black flex items-center gap-1 ${isSuccess ? 'text-cyan-300' : 'text-red-300'}`}>
                 <span className="material-symbols-outlined text-[14px]">biotech</span>
-                %{kData?.selinAccuracy || 99.2}
+                %{isSuccess ? (kData?.selinAccuracy ?? dynamicAccuracy) : Math.max(0, state.hullIntegrity)}
               </span>
             </div>
           </div>
@@ -180,8 +225,8 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
           <div className="bg-[#201d30] border border-white/5 rounded-xl p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-amber-400/40">
-                <img src={baranAvatar} alt="Baran" className="w-full h-full object-cover" />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ffb703]"></span>
+                <SafeAssetImage src={baranAvatar} alt="Baran" className="w-full h-full object-cover" fallbackIcon="security" />
+                <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${isSuccess ? 'bg-[#ffb703]' : 'bg-red-400'}`}></span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
@@ -190,15 +235,19 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
                     GÜVENLİK ŞEFİ
                   </span>
                 </div>
-                <div className="text-[10px] text-[#9e8f78] mt-0.5">UV İzolasyon &amp; 0 Sızıntı</div>
+                <div className="text-[10px] text-[#9e8f78] mt-0.5">
+                  {isSuccess ? 'UV İzolasyon & 0 Sızıntı' : 'Karantina İhlali Oluştu'}
+                </div>
               </div>
             </div>
 
             <div className="flex flex-col items-end">
               <span className="text-[9px] font-mono text-[#9e8f78] uppercase">VANA MÜHÜRLEME</span>
-              <span className="text-sm font-mono font-black text-amber-300 flex items-center gap-1">
+              <span className={`text-sm font-mono font-black flex items-center gap-1 ${isSuccess ? 'text-amber-300' : 'text-red-300'}`}>
                 <span className="material-symbols-outlined text-[14px]">done_all</span>
-                {kData?.baranValves || 3}/3
+                {isSuccess
+                  ? `${kData?.baranValves || 3}/3`
+                  : `${(kData?.phase1Solved ? 1 : 0) + (kData?.phase2Solved ? 1 : 0) + (kData?.phase3Solved ? 1 : 0)}/3`}
               </span>
             </div>
           </div>
@@ -226,10 +275,26 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
 
         {/* Actions */}
         <div className="flex flex-col gap-2 mt-1">
+          {/* Viral Social Share / Challenge Button */}
+          <button
+            type="button"
+            onClick={handleShareScoreCard}
+            className="w-full py-3.5 px-4 rounded-xl font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:brightness-110 text-white shadow-[0_4px_16px_rgba(219,39,119,0.35)] active:scale-[0.98] cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {copiedShare ? 'check_circle' : 'share'}
+            </span>
+            <span>
+              {copiedShare 
+                ? '✓ Görev Karnesi Kopyalandı! (Hikayene Yapıştır)' 
+                : 'Instagram / Hikayende Paylaş & Meydan Oku'}
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={onRestartGame}
-            className="w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] bg-gradient-to-r from-[#ffb703] via-[#ffc72c] to-[#ffa000] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110"
+            className="w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] bg-gradient-to-r from-[#ffb703] via-[#ffc72c] to-[#ffa000] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">replay</span>
             <span>AYNI EKİPLE YENİDEN OYNA</span>
@@ -238,10 +303,10 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
           <button
             type="button"
             onClick={onBackToLobby || onRestartGame}
-            className="w-full py-3.5 px-4 rounded-xl font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-[#1c192c] border border-white/10 hover:border-white/20 text-[#e6dff9] active:scale-[0.98]"
+            className="w-full py-3.5 px-4 rounded-xl font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-[#1c192c] border border-white/10 hover:border-white/20 text-[#e6dff9] active:scale-[0.98] cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-            <span>LOBİYE DÖN</span>
+            <span>ANA GİRİŞE DÖN</span>
           </button>
         </div>
       </main>

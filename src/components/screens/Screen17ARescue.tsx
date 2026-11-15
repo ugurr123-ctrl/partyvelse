@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../types/game';
 import { validateRescueDecision } from '../../services/phaseTransition';
+import { calculateFinalScore } from '../../services/gameFactory';
 
 interface Props {
   state: MissionState;
   onUpdate: (updater: (prev: MissionState) => MissionState) => void;
   onFinalizeMission: () => void;
   onAction?: (actionType: string, data: any) => void;
+  isOnline?: boolean;
 }
 
-export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMission, onAction }) => {
+export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMission, onAction, isOnline = false }) => {
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
   const { rescue, energy, myRole, hullIntegrity, timeLeftSeconds } = state;
   const { selectedRouteId, captainApproved, engineerApproved, routes } = rescue;
@@ -20,9 +22,9 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
   const [transmittedCaptain, setTransmittedCaptain] = useState(captainApproved);
 
   // Derin Basınç Makinist state
-  const [pressure, setPressure] = useState(18);
-  const [angle, setAngle] = useState(28);
-  const [tanks, setTanks] = useState<Record<number, boolean>>({ 1: true, 2: false, 3: true, 4: false });
+  const [pressure, setPressure] = useState(14);
+  const [angle, setAngle] = useState(15);
+  const [tanks, setTanks] = useState<Record<number, boolean>>({ 1: false, 2: false, 3: false, 4: false });
   const [isFiring, setIsFiring] = useState(false);
 
   const vectors = [
@@ -81,7 +83,7 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
   };
 
   const handleSimulatePartnerApproval = () => {
-    if (onAction) {
+    if (isOnline) {
       return;
     }
     setValidationError(null);
@@ -102,6 +104,15 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
 
   const handleConfirmRescue = () => {
     setValidationError(null);
+
+    if (isOnline && onAction) {
+      if (!bothApproved) {
+        setValidationError('Kurtarma başlatılmadan önce her iki oyuncunun da onay vermesi gerekiyor.');
+        return;
+      }
+      onAction('rescue_toggle_approval', { approved: true });
+      return;
+    }
 
     const validation = validateRescueDecision(state, activeRoute);
     if (!validation.success) {
@@ -126,6 +137,7 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
         vector: vectors[activeVectorIndex].name,
         angle: vectors[activeVectorIndex].angle,
       });
+      return;
     }
     onUpdate((prev) => ({
       ...prev,
@@ -139,30 +151,60 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
 
   // Derin Basınç Makinist trigger ascent
   const handleTriggerAscent = () => {
-    setIsFiring(true);
+    setValidationError(null);
+    const pressureOk = pressure === 18;
+    const angleOk = angle === 28;
+    const tanksOk = !!tanks[1] && !tanks[2] && !!tanks[3] && !tanks[4];
+
     if (onAction) {
-      onAction('derin_basinc_trigger_ascent', {
-        pressure,
-        angle,
-        tanks,
-      });
+      if (!pressureOk || !angleOk || !tanksOk) {
+        setValidationError('Hatalı basınç, burun açısı veya balast tankı seçimi! Dümenciden telsizle doğrula. Bütünlük -%10, Süre -15 sn!');
+        onAction('derin_basinc_trigger_ascent', { pressure, angle, tanks });
+        return;
+      }
+      setIsFiring(true);
+      setTimeout(() => {
+        onAction('derin_basinc_trigger_ascent', { pressure, angle, tanks });
+      }, 450);
+      return;
     }
 
-    setTimeout(() => {
+    if (!pressureOk || !angleOk || !tanksOk) {
+      setValidationError('Hatalı basınç, burun açısı veya balast tankı seçimi! Dümenciden telsizle doğrula. Bütünlük -%10, Süre -15 sn!');
       onUpdate((prev) => ({
         ...prev,
-        rescue: {
-          ...prev.rescue,
-          engineerApproved: true,
-          captainApproved: true,
-        },
+        hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
+        timeLeftSeconds: Math.max(0, prev.timeLeftSeconds - 15),
       }));
+      return;
+    }
+
+    setIsFiring(true);
+
+    setTimeout(() => {
+      onUpdate((prev) => {
+        const scoreData = calculateFinalScore(4, prev.timeLeftSeconds, prev.hullIntegrity, 10);
+        return {
+          ...prev,
+          rescue: {
+            ...prev.rescue,
+            engineerApproved: true,
+            captainApproved: true,
+          },
+          outcomeType: 'tam_basari',
+          rescuedCrewCount: 10,
+          completedTasksCount: 4,
+          finalScore: scoreData.total,
+          scoreBreakdown: scoreData.breakdown,
+        };
+      });
       onFinalizeMission();
     }, 600);
   };
 
   // Toggle Tank handler
   const handleToggleTank = (id: number) => {
+    setValidationError(null);
     setTanks(prev => ({
       ...prev,
       [id]: !prev[id]
@@ -177,13 +219,14 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
     setGolgeCaptainTransmitted(true);
     if (onAction) {
       onAction('golge_transmit_escape', { route: golgeEscapeRoute });
+      return;
     }
     onUpdate((prev) => ({
       ...prev,
       rescue: {
         ...prev.rescue,
         captainApproved: true,
-        selectedRouteId: 'beta',
+        selectedRouteId: golgeEscapeRoute === 'metro' ? 'alfa' : 'beta',
       },
     }));
   };
@@ -191,15 +234,24 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
   const handleGolgeExecuteExtraction = () => {
     if (onAction) {
       onAction('golge_execute_extraction', { route: golgeEscapeRoute });
+      return;
     }
-    onUpdate((prev) => ({
-      ...prev,
-      rescue: {
-        ...prev.rescue,
-        engineerApproved: true,
-        captainApproved: true,
-      },
-    }));
+    onUpdate((prev) => {
+      const scoreData = calculateFinalScore(4, prev.timeLeftSeconds, prev.hullIntegrity, 10);
+      return {
+        ...prev,
+        rescue: {
+          ...prev.rescue,
+          engineerApproved: true,
+          captainApproved: true,
+        },
+        outcomeType: 'tam_basari',
+        rescuedCrewCount: 10,
+        completedTasksCount: 4,
+        finalScore: scoreData.total,
+        scoreBreakdown: scoreData.breakdown,
+      };
+    });
     onFinalizeMission();
   };
 
@@ -335,7 +387,9 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
             </div>
             <div className="flex justify-between text-white">
               <span className="text-[#9e8f78]">Seçilen Kaçış Koridoru:</span>
-              <span className="text-[#ffb703] font-bold">Çatı Helipad Hovercraft</span>
+              <span className="text-[#ffb703] font-bold">
+                {selectedRouteId === 'alfa' ? 'Metro Tüneli // Servis Asansörü' : 'Çatı Helipad Hovercraft'}
+              </span>
             </div>
             <div className="flex justify-between text-white">
               <span className="text-[#9e8f78]">Siber İz Silinmesi:</span>
@@ -344,15 +398,42 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
           </div>
         </div>
 
+        {/* Agent Route Sync Banner */}
+        <div className={`p-3 rounded-xl border flex items-center justify-between text-xs font-mono ${
+          captainApproved
+            ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300'
+            : 'bg-amber-950/30 border-amber-500/40 text-amber-300'
+        }`}>
+          <span className="flex items-center gap-1.5 font-bold">
+            <span className="material-symbols-outlined text-[16px]">
+              {captainApproved ? 'check_circle' : 'hourglass_top'}
+            </span>
+            {captainApproved
+              ? 'Ajan tahliye rotasını aktardı'
+              : 'Ajanın tahliye rotasını aktarması bekleniyor'}
+          </span>
+        </div>
+
         {/* Action Button */}
         <div className="pt-2">
           <button
             type="button"
+            disabled={!captainApproved}
             onClick={handleGolgeExecuteExtraction}
-            className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-[#FFB703] to-[#FF8C00] shadow-[0_4px_0_#B26A00] active:translate-y-[2px] transition-all flex items-center justify-center gap-2 text-[#271900] font-sora text-xs font-black uppercase tracking-tight cursor-pointer select-none"
+            className={`w-full py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 font-sora text-xs font-black uppercase tracking-tight select-none ${
+              captainApproved
+                ? 'bg-gradient-to-r from-[#FFB703] to-[#FF8C00] shadow-[0_4px_0_#B26A00] active:translate-y-[2px] text-[#271900] cursor-pointer'
+                : 'bg-[#2b273b] text-[#d5c4ac] opacity-50 cursor-not-allowed border border-white/5'
+            }`}
           >
-            <span className="material-symbols-outlined text-[20px]">flight_takeoff</span>
-            <span>GÖLGE TAHLİYEYİ TETİKLE & SİBER İZLERİ SİL ›</span>
+            <span className="material-symbols-outlined text-[20px]">
+              {captainApproved ? 'flight_takeoff' : 'lock_clock'}
+            </span>
+            <span>
+              {captainApproved
+                ? 'GÖLGE TAHLİYEYİ TETİKLE & SİBER İZLERİ SİL ›'
+                : 'ÖNCE AJANIN TAHLİYE ROTASINI AKTARMASI BEKLENİYOR'}
+            </span>
           </button>
         </div>
       </div>
@@ -515,7 +596,7 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-sora text-[15px] font-bold text-[#e6dff9] truncate">Makinist Mert</span>
+                <span className="font-sora text-[15px] font-bold text-[#e6dff9] truncate">{state.players.muhendis.name || 'Makinist Mert'}</span>
                 <span className="material-symbols-outlined text-[14px] text-[#00eefc]">mic</span>
               </div>
               <span className="text-[11px] text-[#d5c4ac] truncate">Kabin: Balast valfleri başında emir bekliyor</span>
@@ -588,11 +669,11 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="font-mono text-[11px] text-[#00eefc] uppercase tracking-wider font-bold">TELSİZ // DÜMENCİ (ECE)</span>
+                <span className="font-mono text-[11px] text-[#00eefc] uppercase tracking-wider font-bold">TELSİZ // {state.players.kaptan.name || 'DÜMENCİ ECE'}</span>
                 <span className="font-mono text-[10px] text-[#d5c4ac]">CANLI SES</span>
               </div>
               <p className="text-[12px] text-[#e6dff9] italic font-medium leading-tight">
-                “Makinist! 28° açıyla Mercan Koridoruna kilitlen, Tank 1 ve Tank 3'ü tam tahliye et!”
+                “Dümenci telsizden kaçış rotası açısını, kritik basıncı ve tahliye edilecek balast tanklarını aktarıyor...”
               </p>
             </div>
           </div>
@@ -607,7 +688,7 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
                 <span className="font-sora text-[20px] text-[#00eefc] font-black">{activeTanksCount} / 4 AKTİF</span>
                 <span className="material-symbols-outlined text-[#00eefc] text-[18px] animate-bounce">arrow_upward</span>
               </div>
-              <span className="font-mono text-[11px] text-[#ffb703] font-bold">KORİDOR: MERCAN H-28</span>
+              <span className="font-mono text-[11px] text-[#ffb703] font-bold">KORİDOR: TELSİZ ROTASI</span>
             </div>
             <div className="flex flex-col items-end">
               <span className="font-mono text-[10px] text-[#9e8f78] uppercase font-bold">TAHMİNİ YÜKSELİŞ HIZI</span>
@@ -680,7 +761,7 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
                 <span className="font-sora text-[15px] text-[#e6dff9] font-bold">AZOT BASINCI</span>
               </div>
               <span className="font-mono text-[10px] text-[#ffdba0] px-2 py-0.5 rounded bg-[#363246] uppercase font-bold">
-                HEDEF: 18 BAR
+                MANUEL AYAR
               </span>
             </div>
 
@@ -735,17 +816,15 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
                 <span className="material-symbols-outlined text-[#00dbe9] text-[18px]">navigation</span>
                 <span className="font-sora text-[15px] text-[#e6dff9] font-bold">BURUN AÇISI</span>
               </div>
-              <span className={`px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold ${
-                angle === 28 ? 'bg-[#00eefc]/20 text-[#00eefc]' : 'bg-[#93000a]/40 text-[#ffb4ab]'
-              }`}>
-                {angle === 28 ? '28° MERCAN ROTA' : `${angle}° SAPMA`}
+              <span className="px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold bg-[#2b273b] text-[#00eefc]">
+                {angle}° AÇI
               </span>
             </div>
 
             <div className="bg-[#0f0c1e] p-space-sm rounded-lg flex flex-col gap-2">
               <div className="flex justify-between items-center text-[10px] font-mono text-[#9e8f78] px-1">
                 <span>0° (YATAY)</span>
-                <span className="text-[#ffb703] font-bold">28° (HEDEF KİLİT)</span>
+                <span className="text-[#ffdba0] font-bold">MANUEL</span>
                 <span>45° (DİK)</span>
               </div>
               <div className="relative w-full h-8 bg-[#2b273b] rounded-full p-1 flex items-center">
@@ -754,7 +833,10 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
                   min="0"
                   max="45"
                   value={angle}
-                  onChange={(e) => setAngle(Number(e.target.value))}
+                  onChange={(e) => {
+                    setValidationError(null);
+                    setAngle(Number(e.target.value));
+                  }}
                   className="w-full accent-amber-400 bg-transparent cursor-pointer"
                 />
               </div>
@@ -765,27 +847,27 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
             </div>
 
             <div className="grid grid-cols-3 gap-space-xs pt-1">
-              <button 
-                type="button" 
-                onClick={() => setAngle(15)} 
-                className="py-1.5 rounded bg-[#2b273b] text-[#d5c4ac] font-mono text-[10px] font-bold uppercase transition-all cursor-pointer"
-              >
-                15° GÜVENLİ
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setAngle(28)} 
-                className="py-1.5 rounded bg-[#ffb703] text-[#422c00] font-mono text-[10px] font-extrabold uppercase transition-all shadow cursor-pointer"
-              >
-                28° HEDEF
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setAngle(40)} 
-                className="py-1.5 rounded bg-[#2b273b] text-[#d5c4ac] font-mono text-[10px] font-bold uppercase transition-all cursor-pointer"
-              >
-                40° ACİL
-              </button>
+              {[
+                { val: 15, label: '15° YATAY' },
+                { val: 28, label: '28° ORTA' },
+                { val: 40, label: '40° DİK' },
+              ].map((preset) => (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => {
+                    setValidationError(null);
+                    setAngle(preset.val);
+                  }}
+                  className={`py-1.5 rounded font-mono text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                    angle === preset.val
+                      ? 'bg-[#ffb703] text-[#422c00] font-extrabold shadow'
+                      : 'bg-[#2b273b] text-[#d5c4ac]'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -794,40 +876,64 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
         {/* Team Synchronization Ready Check bar */}
         <div className="rounded-xl bg-[#2b273b] p-space-sm flex items-center justify-between shadow-lg border border-white/5">
           <div className="flex items-center gap-space-sm">
-            <div className="w-8 h-8 rounded-full bg-[#00eefc] text-[#002022] flex items-center justify-center font-sora font-bold text-[14px]">
-              M
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-sora font-bold text-[14px] ${
+              captainApproved ? 'bg-[#00eefc] text-[#002022]' : 'bg-[#ffb703]/20 text-[#ffb703]'
+            }`}>
+              D
             </div>
             <div>
-              <span className="font-mono text-[10px] text-[#9e8f78] uppercase block">MAKİNİST HAZIRLIĞI</span>
-              <span className="text-[12px] text-[#e6dff9] font-semibold">Tüm Parametreler Eşlendi</span>
+              <span className="font-mono text-[10px] text-[#9e8f78] uppercase block">DÜMENCİ ROTASYON ONAYI</span>
+              <span className="text-[12px] text-[#e6dff9] font-semibold">
+                {captainApproved ? 'Yükseliş Vektörü Aktarıldı • Hazır' : 'Dümencinin Kaçış Rotası Bekleniyor'}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0f0c1e]">
-            <span className="material-symbols-outlined text-[#00eefc] text-[16px]">wifi_tethering</span>
-            <span className="font-mono text-[10px] text-[#00eefc] uppercase font-bold">KOKPİT ÇİFT ONAY</span>
+            <span className={`material-symbols-outlined text-[16px] ${captainApproved ? 'text-[#00eefc]' : 'text-[#ffb703]'}`}>
+              {captainApproved ? 'wifi_tethering' : 'hourglass_top'}
+            </span>
+            <span className={`font-mono text-[10px] uppercase font-bold ${captainApproved ? 'text-[#00eefc]' : 'text-[#ffb703]'}`}>
+              {captainApproved ? 'KOKPİT ÇİFT ONAY' : 'BEKLENİYOR'}
+            </span>
           </div>
         </div>
+
+        {(validationError || state.feedbackMessage) && (
+          <div className="p-2.5 rounded-xl border bg-rose-500/15 border-rose-500/40 text-rose-300 text-xs leading-relaxed animate-fadeIn">
+            {validationError || state.feedbackMessage}
+          </div>
+        )}
 
         {/* Giant Physical Beveled Arcade Trigger Button */}
         <div className="pt-space-xs pb-4">
           <button
             type="button"
-            disabled={isFiring}
+            disabled={isFiring || !captainApproved}
             onClick={handleTriggerAscent}
-            className="relative w-full py-4 px-space-md rounded-xl bg-gradient-to-b from-[#ffb703] to-amber-600 text-[#422c00] shadow-2xl active:translate-y-1 transition-all flex items-center justify-center gap-space-sm uppercase overflow-hidden cursor-pointer shadow-[0_6px_0_#6b4b00]"
+            className={`relative w-full py-4 px-space-md rounded-xl transition-all flex items-center justify-center gap-space-sm uppercase overflow-hidden ${
+              captainApproved
+                ? 'bg-gradient-to-b from-[#ffb703] to-amber-600 text-[#422c00] shadow-2xl active:translate-y-1 cursor-pointer shadow-[0_6px_0_#6b4b00]'
+                : 'bg-[#2b273b] text-[#d5c4ac] opacity-55 cursor-not-allowed border border-white/5'
+            }`}
           >
-            <span className="material-symbols-outlined text-[28px] text-[#422c00]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              rocket_launch
+            <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+              {captainApproved ? 'rocket_launch' : 'lock_clock'}
             </span>
             <div className="flex flex-col text-left">
               <span className="font-sora text-[16px] font-black tracking-wider leading-tight">
-                {isFiring ? 'ATEŞLENİYOR...' : 'ACİL BALASTLARI ATEŞLE'}
+                {!captainApproved
+                  ? 'DÜMENCİ ONAYI BEKLENİYOR'
+                  : isFiring
+                  ? 'ATEŞLENİYOR...'
+                  : 'ACİL BALASTLARI ATEŞLE'}
               </span>
-              <span className="font-mono text-[10px] text-[#5e4100] font-bold tracking-widest">
-                YÜZEYE DOĞRU DİK İTİŞ BAŞLAT
+              <span className="font-mono text-[10px] font-bold tracking-widest opacity-80">
+                {captainApproved
+                  ? 'YÜZEYE DOĞRU DİK İTİŞ BAŞLAT'
+                  : 'ÖNCE DÜMENCİ KAÇIŞ ROTASINI AKTARMALI'}
               </span>
             </div>
-            <span className="material-symbols-outlined text-[24px] text-[#422c00] ml-auto">chevron_right</span>
+            <span className="material-symbols-outlined text-[24px] ml-auto">chevron_right</span>
           </button>
         </div>
 
@@ -942,8 +1048,11 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
+            disabled={isOnline && myRole !== 'kaptan'}
             onClick={myRole === 'kaptan' ? handleToggleMyApproval : handleSimulatePartnerApproval}
-            className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-2.5 ${
+            className={`p-3 rounded-2xl border transition-all flex items-center gap-2.5 ${
+              isOnline && myRole !== 'kaptan' ? 'cursor-default' : 'cursor-pointer'
+            } ${
               captainApproved 
                 ? 'bg-emerald-950/30 border-emerald-500 shadow-md ring-1 ring-emerald-500' 
                 : 'bg-[#1c192c] border-white/5 opacity-75 hover:opacity-100'
@@ -962,8 +1071,11 @@ export const Screen17ARescue: React.FC<Props> = ({ state, onUpdate, onFinalizeMi
 
           <button
             type="button"
+            disabled={isOnline && myRole !== 'muhendis'}
             onClick={myRole === 'muhendis' ? handleToggleMyApproval : handleSimulatePartnerApproval}
-            className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center gap-2.5 ${
+            className={`p-3 rounded-2xl border transition-all flex items-center gap-2.5 ${
+              isOnline && myRole !== 'muhendis' ? 'cursor-default' : 'cursor-pointer'
+            } ${
               engineerApproved 
                 ? 'bg-emerald-950/30 border-emerald-500 shadow-md ring-1 ring-emerald-500' 
                 : 'bg-[#1c192c] border-white/5 opacity-75 hover:opacity-100'

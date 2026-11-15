@@ -70,7 +70,8 @@ const expectedTemp = room.missionState.advancedScenario?.subsystems.reaktor.live
 const expectedPress = room.missionState.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure;
 assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coreTemp === expectedTemp, `Mühendise çekirdek ısısı (${expectedTemp}°C) iletildi`);
 assert(engineerView.advancedScenario?.subsystems.reaktor.liveTelemetry.coolantPressure === expectedPress, `Mühendise soğutucu basıncı (${expectedPress} kPa) iletildi`);
-assert(engineerView.advancedScenario?.subsystems.hava_kilidi.externalPressureKpa === 36, 'Mühendise dış sensör basıncı (36 kPa) iletildi');
+const expectedExtPressure = room.missionState.advancedScenario?.subsystems.hava_kilidi.externalPressureKpa;
+assert(engineerView.advancedScenario?.subsystems.hava_kilidi.externalPressureKpa === expectedExtPressure, `Mühendise dış sensör basıncı (${expectedExtPressure} kPa) iletildi`);
 assert(engineerView.advancedScenario?.subsystems.sinyal.symbolMap === undefined, 'Mühendise sembol-rakam tablosu GİZLENDİ');
 assert(engineerView.advancedScenario?.subsystems.sinyal.ruleType === undefined, 'Mühendise dönüşüm kuralı GİZLENDİ');
 assert(engineerView.advancedScenario?.subsystems.sinyal.targetFrequency === '??? MHz', 'Mühendise doğru frekans cevabı GİZLENDİ');
@@ -109,7 +110,7 @@ assert(!!startTuneAttempt.error, 'Başlangıç gücünde (2 MW) sinyal kilitleme
 // -----------------------------------------------------------------------------
 console.log('\n▶ [TEST 5] Kestirmelerin Reddedilmesi (Sıfır Hazırlık & Eksik Sistem Koruması)...');
 let freshState = createInitialMissionState('KYP-FRESH', 'kayip_sinyal', 'Kaptan Ece');
-freshState = { ...freshState, gameMode: 'gelismis', status: 'phase_game' };
+freshState = { ...freshState, gameMode: 'gelismis', status: 'phase_game', selectedMiniGames: ['ariza_teshisi', 'sinyal_cozumu'] };
 
 // KESTİRME 1: Sıfır hazırlıkla Rota Alfa denemesi reddedilmelidir
 freshState = applyAdvancedAction(freshState, 'advanced_rescue_select', { routeId: 'alfa' }, 'kaptan').nextState;
@@ -155,7 +156,7 @@ console.log('\n▶ [TEST 6] Seyahat Süresi & Gövde Stresi Düşümü ve Sını
 
 // Hazır durumdaki bir rota (Alfa) için süre yetersizse zaman aşımı olmalı
 let lowTimeState = createInitialMissionState('KYP-LOWTIME', 'kayip_sinyal', 'Kaptan Ece');
-lowTimeState = { ...lowTimeState, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 40 }; // Alfa için 75s gerek!
+lowTimeState = { ...lowTimeState, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 40, selectedMiniGames: ['ariza_teshisi', 'sinyal_cozumu'] }; // Alfa için 75s gerek!
 lowTimeState.advancedScenario!.subsystems.reaktor.isStabilized = true;
 lowTimeState.advancedScenario!.subsystems.sinyal.isLocked = true;
 lowTimeState.advancedScenario!.subsystems.hava_kilidi.isSealed = true;
@@ -171,7 +172,7 @@ assert(timeoutOutcome.timeLeftSeconds === 0, 'Kalan süre 0 olarak kaydedildi');
 
 // Hazır durumdaki bir rota (Beta) için gövde yetersizse (örn. %3) gövde parçalanmalı
 let lowHullState = createInitialMissionState('KYP-LOWHULL', 'kayip_sinyal', 'Kaptan Ece');
-lowHullState = { ...lowHullState, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 200, hullIntegrity: 3 }; // Beta için -%5 stres
+lowHullState = { ...lowHullState, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 200, hullIntegrity: 3, selectedMiniGames: ['ariza_teshisi', 'sinyal_cozumu'] }; // Beta için -%5 stres
 lowHullState.advancedScenario!.subsystems.reaktor.isStabilized = true;
 lowHullState.advancedScenario!.subsystems.sinyal.isLocked = true;
 
@@ -188,7 +189,7 @@ assert(hullDestroyedOutcome.hullIntegrity === 0, 'Gövde bütünlüğü %0 olara
 // -----------------------------------------------------------------------------
 console.log('\n▶ [TEST 7] Çözüm Yolu 1: Rota Alfa (10 Kişi - Dinamik Güç Aktarımları ile Tam Başarı)...');
 let path1 = createInitialMissionState('KYP-PATH1', 'kayip_sinyal', 'Kaptan Ece');
-path1 = { ...path1, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 260, hullIntegrity: 100 };
+path1 = { ...path1, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 260, hullIntegrity: 100, selectedMiniGames: ['ariza_teshisi', 'sinyal_cozumu'] };
 
 // 1. Reaktör Çözümü: Başlangıçta Soğutma 4 MW hazır (4 + 2 + 1 = 7 MW)
 const targetBreaker1 = path1.advancedScenario!.subsystems.reaktor.targetBreaker;
@@ -233,7 +234,9 @@ path1 = applyAdvancedAction(path1, 'advanced_signal_lock', {}, 'muhendis').nextS
 assert(path1.advancedScenario?.subsystems.sinyal.isLocked === true, `2. Adım: Sinyal ${targetSignalFreq1} ile USS Aurora ya kilitlendi`);
 
 // 4. Hava Kilidi Çözümü: Kompresörde 3 MW var
-path1 = applyAdvancedAction(path1, 'advanced_airlock_params', { dialIndex: 2, vacuum: 75 }, 'muhendis').nextState;
+const targetAirlockDial1 = path1.advancedScenario!.subsystems.hava_kilidi.targetDialIndex;
+const targetAirlockVacuum1 = path1.advancedScenario!.subsystems.hava_kilidi.targetVacuumMin;
+path1 = applyAdvancedAction(path1, 'advanced_airlock_params', { dialIndex: targetAirlockDial1, vacuum: targetAirlockVacuum1 }, 'muhendis').nextState;
 path1 = applyAdvancedAction(path1, 'advanced_airlock_seal', {}, 'muhendis').nextState;
 assert(path1.advancedScenario?.subsystems.hava_kilidi.isSealed === true, '3. Adım: Hava kilidi başarıyla mühürlendi');
 
@@ -253,7 +256,7 @@ assert(path1.hullIntegrity === 100 - 5, 'Gövde stresi (-%5) düşüldü (100 ->
 // -----------------------------------------------------------------------------
 console.log('\n▶ [TEST 8] Çözüm Yolu 2: Rota Beta (8 Kişi - Hava Kilidi Atlanarak Hızlı Kaçış)...');
 let path2 = createInitialMissionState('KYP-PATH2', 'kayip_sinyal', 'Kaptan Ece');
-path2 = { ...path2, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 240, hullIntegrity: 100 };
+path2 = { ...path2, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 240, hullIntegrity: 100, selectedMiniGames: ['ariza_teshisi', 'sinyal_cozumu'] };
 
 // 1. Reaktör Çözümü: Dinamik değerlerle çözülür
 const targetBreaker2 = path2.advancedScenario!.subsystems.reaktor.targetBreaker;
@@ -293,7 +296,7 @@ assert(path2.hullIntegrity === 100 - 5, 'Gövde stresi (-%5) düşüldü (100 ->
 // -----------------------------------------------------------------------------
 console.log('\n▶ [TEST 9] Acil Durum Yolu: Rota Gama (6 Kişi - Tek Sistemle Acil Kaçış Podu)...');
 let path3 = createInitialMissionState('KYP-PATH3', 'kayip_sinyal', 'Kaptan Ece');
-path3 = { ...path3, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 150, hullIntegrity: 80 };
+path3 = { ...path3, gameMode: 'gelismis', status: 'phase_game', timeLeftSeconds: 150, hullIntegrity: 80, selectedMiniGames: ['ariza_teshisi', 'sinyal_cozumu'] };
 
 // Sadece Reaktör dinamik değerlerle çözülür, Sinyal ve Hava kilidi yok
 const targetBreaker3 = path3.advancedScenario!.subsystems.reaktor.targetBreaker;

@@ -22,6 +22,8 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
 
   const turntableRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const lastEmitTimeRef = useRef(0);
+  const latestAzimuthRef = useRef(azimuthAngle);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (isSolved) return;
@@ -36,6 +38,10 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
+    if (isDraggingRef.current && !isSolved) {
+      onAction?.('radar_set_coordinates', { azimuth: latestAzimuthRef.current, elevation: elevationAngle });
+      lastEmitTimeRef.current = Date.now();
+    }
     isDraggingRef.current = false;
     try {
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
@@ -52,8 +58,13 @@ export const Screen14RadarEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
     const rad = Math.atan2(clientY - centerY, clientX - centerX);
     let deg = Math.round(rad * (180 / Math.PI)) + 90;
     if (deg < 0) deg += 360;
+    latestAzimuthRef.current = deg;
     setAzimuthAngle(deg);
-    onAction?.('radar_set_coordinates', { azimuth: deg, elevation: elevationAngle });
+    const now = Date.now();
+    if (now - lastEmitTimeRef.current >= 120) {
+      lastEmitTimeRef.current = now;
+      onAction?.('radar_set_coordinates', { azimuth: deg, elevation: elevationAngle });
+    }
   };
 
   const handleAdjustElevation = (delta: number) => {

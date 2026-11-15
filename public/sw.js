@@ -1,11 +1,21 @@
 // PARTYVERSE Service Worker - Offline Shell & Asset Cache
-const CACHE_NAME = 'partyverse-v1.0.0';
+const CACHE_NAME = 'partyverse-v1.2.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.svg',
+  '/pwa-192x192.png',
+  '/pwa-512x512.png',
+  '/pwa-maskable-512x512.png',
+  '/apple-touch-icon.png',
 ];
+
+const CACHEABLE_EXTERNAL_HOSTS = new Set([
+  'lh3.googleusercontent.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+]);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -46,18 +56,23 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
-        return caches.match('/index.html') || caches.match('/');
+        return caches.match('/index.html').then((res) => res || caches.match('/') || Response.error());
       })
     );
     return;
   }
 
-  // Cache first for static assets (scripts, styles, images, fonts)
+  // Cache first for static assets and allowlisted CDN images/fonts
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
+        const isSameOriginOk = response && response.status === 200 && response.type === 'basic';
+        const isAllowlistedExternal =
+          CACHEABLE_EXTERNAL_HOSTS.has(url.hostname) &&
+          response &&
+          (response.status === 200 || response.type === 'opaque');
+        if (!isSameOriginOk && !isAllowlistedExternal) {
           return response;
         }
         const toCache = response.clone();
@@ -66,8 +81,7 @@ self.addEventListener('fetch', (event) => {
         });
         return response;
       }).catch(() => {
-        // Fallback for offline
-        return cached;
+        return Response.error();
       });
     })
   );

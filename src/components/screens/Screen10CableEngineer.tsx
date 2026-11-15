@@ -29,26 +29,22 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
 
   const handleTogglePort = (portId: string) => {
     if (isSolved) return;
-    setPortAssignments(prev => {
-      const current = prev[portId];
-      if (current) {
-        // Unplug
-        const updated = { ...prev, [portId]: null };
-        onAction?.('cable_assign_port', { portId, cableId: null });
-        onUpdate(p => ({ ...p, cable: { ...p.cable, portAssignments: updated } }));
-        return updated;
-      } else {
-        // Plug selected cable, remove from any other port
-        const updated = { ...prev };
-        Object.keys(updated).forEach(p => {
-          if (updated[p] === selectedCableId) updated[p] = null;
-        });
-        updated[portId] = selectedCableId;
-        onAction?.('cable_assign_port', { portId, cableId: selectedCableId });
-        onUpdate(p => ({ ...p, cable: { ...p.cable, portAssignments: updated } }));
-        return updated;
-      }
-    });
+    const current = portAssignments[portId];
+    if (current) {
+      const updated = { ...portAssignments, [portId]: null };
+      setPortAssignments(updated);
+      onAction?.('cable_assign_port', { portId, cableId: null });
+      onUpdate(p => ({ ...p, cable: { ...p.cable, portAssignments: updated } }));
+    } else {
+      const updated = { ...portAssignments };
+      Object.keys(updated).forEach(p => {
+        if (updated[p] === selectedCableId) updated[p] = null;
+      });
+      updated[portId] = selectedCableId;
+      setPortAssignments(updated);
+      onAction?.('cable_assign_port', { portId, cableId: selectedCableId });
+      onUpdate(p => ({ ...p, cable: { ...p.cable, portAssignments: updated } }));
+    }
   };
 
   const handleLockCircuit = () => {
@@ -117,37 +113,42 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
   const [valves, setValves] = useState({
     A: false,
     B: false,
-    C: true, // Sealed
+    C: false,
   });
   const [switches, setSwitches] = useState({
     sw1: false,
-    sw2: true, // Enabled
+    sw2: false,
     sw3: false,
     sw4: false,
   });
-  const [clampProgress, setClampProgress] = useState(75);
+  const [clampProgress, setClampProgress] = useState(20);
+  const [derinFeedback, setDerinFeedback] = useState<string>('');
 
   const toggleValve = (v: 'A' | 'B' | 'C') => {
     if (cable.isSolved) return;
+    setDerinFeedback('');
     setValves(prev => ({ ...prev, [v]: !prev[v] }));
   };
 
   const toggleSwitch = (sw: 'sw1' | 'sw2' | 'sw3' | 'sw4') => {
     if (cable.isSolved) return;
+    setDerinFeedback('');
     setSwitches(prev => ({ ...prev, [sw]: !prev[sw] }));
   };
 
   const executeSealProcess = () => {
-    // Protocol requires: Valf-C sealed, Switch 2 active, Clamp tightly locked (e.g. >= 70%)
     const valveCorrect = valves.C && !valves.A && !valves.B;
     const switchCorrect = switches.sw2 && !switches.sw1 && !switches.sw3 && !switches.sw4;
     const clampCorrect = clampProgress >= 65;
 
+    if (onAction) {
+      setDerinFeedback('');
+      onAction('theme_cable_solve', { valves, switches, clampProgress });
+      return;
+    }
+
     if (valveCorrect && switchCorrect && clampCorrect) {
-      if (onAction) {
-        // Also fire cable_test_connections if online so colyseus room resolves
-        onAction('cable_test_connections', {});
-      }
+      setDerinFeedback('');
       onUpdate((prev) => ({
         ...prev,
         cable: {
@@ -157,6 +158,7 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
         },
       }));
     } else {
+      setDerinFeedback('Hatalı valf, şalter veya kelepçe ayarı! Dümenciye telsizle sor. Bütünlük -%10, Süre -15 sn!');
       onUpdate((prev) => ({
         ...prev,
         hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
@@ -259,7 +261,7 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
               <span className="font-sora text-xs text-white font-bold">1. Mekanik Baypas Valfleri</span>
             </div>
             <span className="font-mono text-[9px] text-[#ffdba0] px-2 py-0.5 rounded bg-[#2b273b]">
-              {valves.C ? 'VALF-C MÜHÜRLÜ' : 'MÜHÜR BEKLENİYOR'}
+              {Object.values(valves).filter(Boolean).length}/3 MÜHÜRLÜ
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2 pt-1">
@@ -302,7 +304,7 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
               <span className="font-sora text-xs text-white font-bold">2. Basınç Denge Şalterleri</span>
             </div>
             <span className="font-mono text-[9px] text-[#00eefc] bg-[#2b273b] px-2 py-0.5 rounded">
-              DÜMENCİ EMRİ: Ş-02
+              DÜMENCİ TELSİZ EMRİ
             </span>
           </div>
           <div className="grid grid-cols-4 gap-1.5 pt-1">
@@ -364,6 +366,22 @@ export const Screen10CableEngineer: React.FC<Props> = ({ state, onUpdate, onAdva
             </div>
           </div>
         </div>
+
+        {(state.feedbackMessage || derinFeedback) && (() => {
+          const isSuccess = state.feedbackMessage ? state.feedbackState === 'success' : false;
+          const isIdle = state.feedbackMessage ? state.feedbackState === 'idle' : false;
+          return (
+            <div className={`p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
+              isSuccess
+                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                : isIdle
+                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
+                : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+            }`}>
+              {state.feedbackMessage || derinFeedback}
+            </div>
+          );
+        })()}
 
         {/* Primary Action Trigger */}
         {!cable.isSolved ? (

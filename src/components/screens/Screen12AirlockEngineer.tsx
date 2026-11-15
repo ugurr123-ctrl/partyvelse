@@ -113,33 +113,42 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
 
   // Derin Basınç Elektroliz state
-  const [derinVolt, setDerinVolt] = useState(180);
-  const [catalystPct, setCatalystPct] = useState(65);
+  const [derinVolt, setDerinVolt] = useState(150);
+  const [catalystPct, setCatalystPct] = useState(30);
   const [cellSwitches, setCellSwitches] = useState({
-    katotA: true,
-    katotB: true,
-    anotC: true,
+    katotA: false,
+    katotB: false,
+    anotC: false,
   });
+  const [derinFeedback, setDerinFeedback] = useState<string>('');
 
   const toggleCellSwitch = (cell: 'katotA' | 'katotB' | 'anotC') => {
     if (airlock.isSolved) return;
+    setDerinFeedback('');
     setCellSwitches(prev => ({ ...prev, [cell]: !prev[cell] }));
   };
 
   const handleStartOxygenProduction = () => {
-    // 180V (+- 5V), catalyst >= 60 && <= 70, all 3 cells active
     const voltOk = Math.abs(derinVolt - 180) <= 5;
     const catOk = catalystPct >= 60 && catalystPct <= 70;
     const cellsOk = cellSwitches.katotA && cellSwitches.katotB && cellSwitches.anotC;
 
-    if (voltOk && catOk && cellsOk) {
-      if (onAction) {
-        onAction('airlock_verify', {
-          dialIndex: airlock.targetDialIndex,
-          sealLocked: airlock.targetSealLocked,
-          vacuumPower: Math.floor((airlock.targetVacuumMin + airlock.targetVacuumMax) / 2),
-        });
+    if (onAction) {
+      if (voltOk && catOk && cellsOk) {
+        setDerinFeedback('');
+      } else {
+        setDerinFeedback('Hatalı voltaj, katalizör veya hücre seçimi! Dümenciden telsizle doğrula. Bütünlük -%10, Süre -15 sn!');
       }
+      onAction('theme_airlock_solve', {
+        volt: derinVolt,
+        catalystPct,
+        cellSwitches,
+      });
+      return;
+    }
+
+    if (voltOk && catOk && cellsOk) {
+      setDerinFeedback('');
       onUpdate((prev) => ({
         ...prev,
         airlock: {
@@ -148,6 +157,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
         },
       }));
     } else {
+      setDerinFeedback('Hatalı voltaj, katalizör veya hücre seçimi! Dümenciden telsizle doğrula. Bütünlük -%10, Süre -15 sn!');
       onUpdate((prev) => ({
         ...prev,
         hullIntegrity: Math.max(0, prev.hullIntegrity - 10),
@@ -202,7 +212,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             Elektroliz Voltajını Kilitle &amp; O₂ Üret
           </h2>
           <p className="text-xs text-[#d5c4ac] leading-relaxed">
-            Dümencinin telsizden verdiği hedef voltaj (180V) ve katot sırasına göre şalterleri devreye sok.
+            Dümencinin telsizden verdiği hedef voltaj, katalizör oranı ve hücre sırasına göre şalterleri devreye sok.
           </p>
         </div>
 
@@ -228,7 +238,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
                 cy="100"
                 fill="none"
                 r="82"
-                stroke={Math.abs(derinVolt - 180) <= 5 ? '#00eefc' : '#ffb703'}
+                stroke="#ffb703"
                 strokeDasharray="515"
                 strokeDashoffset={`${320 - ((derinVolt - 140) / 80) * 180}`}
                 strokeLinecap="round"
@@ -238,7 +248,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             <div className="absolute flex flex-col items-center z-20">
               <span className="font-sora text-2xl font-extrabold text-[#ffba27] tracking-tight">{derinVolt}V</span>
               <span className="font-mono text-[8px] text-[#00eefc] uppercase font-bold tracking-wider">
-                {Math.abs(derinVolt - 180) <= 5 ? 'KİLİTLİ (180V)' : 'KALİBRASYON'}
+                MANUEL AYAR
               </span>
             </div>
           </div>
@@ -290,7 +300,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             />
             <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-3 text-[8px] font-mono text-zinc-400">
               <span>%0</span>
-              <span className="text-[#00eefc] font-bold">OPTİMAL: %60 - %70</span>
+              <span className="text-[#00eefc] font-bold">DÜMENCİ KATALİZÖR ORANI</span>
               <span>%100</span>
             </div>
           </div>
@@ -336,6 +346,22 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
             })}
           </div>
         </div>
+
+        {(state.feedbackMessage || derinFeedback) && (() => {
+          const isSuccess = state.feedbackMessage ? state.feedbackState === 'success' : false;
+          const isIdle = state.feedbackMessage ? state.feedbackState === 'idle' : false;
+          return (
+            <div className={`p-2.5 rounded-xl border text-xs leading-relaxed animate-fadeIn ${
+              isSuccess
+                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                : isIdle
+                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
+                : 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+            }`}>
+              {state.feedbackMessage || derinFeedback}
+            </div>
+          );
+        })()}
 
         {/* Big Action Push Button */}
         {!airlock.isSolved ? (
@@ -450,7 +476,7 @@ export const Screen12AirlockEngineer: React.FC<Props> = ({ state, onUpdate, onAd
 
           <div className="flex items-center justify-between text-[9px] font-mono text-[#d5c4ac]">
             <span>0% Düşük</span>
-            <span>Nominal: {airlock.targetVacuumMin > 0 ? `${airlock.targetVacuumMin} - ${airlock.targetVacuumMax}%` : 'Kaptanın Belirttiği Aralık'}</span>
+            <span>Nominal: Kaptanın Belirttiği Aralık</span>
             <span>100% Aşırı</span>
           </div>
         </div>

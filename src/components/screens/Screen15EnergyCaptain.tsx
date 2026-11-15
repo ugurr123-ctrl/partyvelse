@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MissionState } from '../../types/game';
+import { SafeAssetImage } from '../SafeAssetImage';
 
 interface Props {
   state: MissionState;
@@ -38,14 +39,16 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
     setTimeout(() => {
       setTransmitted(true);
       setIsTransmitting(false);
-      onUpdate((prev) => ({
-        ...prev,
-        energy: {
-          ...prev.energy,
-          isDraftShared: true,
-        },
-      }));
-    }, 1200);
+      if (!onAction) {
+        onUpdate((prev) => ({
+          ...prev,
+          energy: {
+            ...prev.energy,
+            isDraftShared: true,
+          },
+        }));
+      }
+    }, 600);
   };
 
   const handleLockEnergy = () => {
@@ -98,8 +101,8 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
 
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
   const [golgePin, setGolgePin] = useState<string>('');
-  const [golgeUsbAttached, setGolgeUsbAttached] = useState<boolean>(true);
-  const [golgeProgress, setGolgeProgress] = useState<number>(84);
+  const [golgeProgress, setGolgeProgress] = useState<number>(energy.isLocked ? 100 : 84);
+  const effectiveGolgeProgress = energy.isLocked ? 100 : golgeProgress;
 
   const handleGolgeKeypad = (digit: string) => {
     if (energy.isLocked) return;
@@ -115,11 +118,18 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
 
   const handleGolgeExtractData = () => {
     // Correct PIN from hacker terminal: 8429
-    if (golgePin === '8429' || golgePin.length === 4) {
+    if (onAction) {
+      setFeedback({ type: 'idle', msg: '' });
+      onAction('golge_energy_solve', { pin: golgePin });
+      return;
+    }
+
+    if (golgePin === '8429') {
       setGolgeProgress(100);
-      if (onAction) {
-        onAction('energy_lock', {});
-      }
+      setFeedback({
+        type: 'success',
+        msg: 'BİYOMETRİK VERİ BAŞARIYLA ÇEKİLDİ! 128 TB kriptolu veri diske aktarıldı, kasa boşaltıldı.',
+      });
       onUpdate((prev) => ({
         ...prev,
         energy: {
@@ -128,14 +138,10 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
           isLocked: true,
         },
       }));
-      setFeedback({
-        type: 'success',
-        msg: 'BİYOMETRİK VERİ BAŞARIYLA ÇEKİLDİ! 128 TB kriptolu veri diske aktarıldı, kasa boşaltıldı.',
-      });
     } else {
       setFeedback({
         type: 'error',
-        msg: 'GÜVENLİK PIN HATASI! Hackerın ilettiği 4 haneli kodu girin (8429).',
+        msg: 'GÜVENLİK PIN HATASI! Hackerın telsizden ilettiği 4 haneli kodu doğrulayın.',
       });
       onUpdate((prev) => ({
         ...prev,
@@ -199,12 +205,18 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
             <div className="flex flex-col flex-1 min-w-0">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[9px] text-[#ffba27] tracking-wider uppercase font-bold">
-                  {state.engineerName || 'MERT (GÖLGE HACKER)'}
+                  {state.players.muhendis.name || 'MERT (GÖLGE HACKER)'}
                 </span>
-                <span className="font-mono text-[8px] text-[#00eefc] bg-[#0f0c1e] px-1.5 py-0.5 rounded">TELSİZ</span>
+                <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded font-bold ${
+                  isDraftShared ? 'text-emerald-400 bg-emerald-950/60' : 'text-[#00eefc] bg-[#0f0c1e]'
+                }`}>
+                  {isDraftShared ? 'PIN İLETİLDİ' : 'HACKER BEKLENİYOR'}
+                </span>
               </div>
               <p className="font-manrope text-xs text-white font-medium mt-0.5 leading-snug">
-                “Kasa deşifre edildi! PIN: <span className="text-[#ffb703] font-bold tracking-widest font-mono">8 - 4 - 2 - 9</span>. Hemen tuşla ve diski kitle!”
+                {isDraftShared
+                  ? '“Kasa matrisi kırıldı! Telsizden iletilen 4 haneli PIN kodunu tuşlayıp diski kitle!”'
+                  : '“Hacker kasa şifre matrisini kırıyor; şifre iletildiğinde 4 haneli PIN kodunu tuşla.”'}
               </p>
             </div>
           </div>
@@ -212,10 +224,12 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
 
         {/* 2.5D Kasa & Sürücü Yuvası Visual Card */}
         <div className="relative w-full h-40 rounded-xl overflow-hidden shadow-xl bg-[#0f0c1e] border border-white/5 flex items-center justify-center">
-          <img 
+          <SafeAssetImage 
             className="w-full h-full object-cover" 
             alt="Kasa & Veri Çekme" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaqmbRRBJADbPwqOECQ5GA5h6rxtfsiytAFe96DdBz4-TjbUItT-PpF98VWeK1yFnoLrOIdVoJXoAF25tOYABet9Ws5MZGr_qtdb7LlTiXDBIP-tad9CxipsLMUuCcgVsJrBQstzhEHQQtOx6SwcYF_wvuHqxWuXiQEeHwmOvqLqlZPCI_fYMAC2Wqbq229d2YC8yIL2OI_DY9wrVvxOCFOQWE6osR3JiM1IdNKvM"
+            fallbackIcon="usb"
+            fallbackLabel="KRİYO VERİ KASASI"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c1e] via-transparent to-[#0f0c1e]/40"></div>
           <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#0f0c1e]/80 border border-white/5">
@@ -224,7 +238,7 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
           </div>
           <div className="absolute bottom-2 inset-x-3 flex items-center justify-between">
             <span className="font-mono text-[9px] text-[#00eefc] bg-[#201d30]/90 px-2 py-0.5 rounded">
-              VERİ TRANSFERİ: %{golgeProgress}
+              VERİ TRANSFERİ: %{effectiveGolgeProgress}
             </span>
             <span className="font-mono text-[9px] text-[#ffba27] bg-[#201d30]/90 px-2 py-0.5 rounded">
               28°C / 1.2 BAR
@@ -281,16 +295,16 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
         </div>
 
         {/* Feedback message if any */}
-        {feedback.msg && (
+        {(state.feedbackMessage || feedback.msg) && (
           <div className={`p-3 rounded-xl border flex items-center gap-2 ${
-            feedback.type === 'success' 
+            (state.feedbackMessage ? state.feedbackState === 'success' : feedback.type === 'success')
               ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' 
               : 'bg-red-950/40 border-red-500/50 text-red-300'
           }`}>
             <span className="material-symbols-outlined text-[18px]">
-              {feedback.type === 'success' ? 'check_circle' : 'error'}
+              {(state.feedbackMessage ? state.feedbackState === 'success' : feedback.type === 'success') ? 'check_circle' : 'error'}
             </span>
-            <span className="text-xs font-semibold leading-tight">{feedback.msg}</span>
+            <span className="text-xs font-semibold leading-tight">{state.feedbackMessage || feedback.msg}</span>
           </div>
         )}
 
@@ -298,7 +312,7 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
         <div className="pt-1 flex flex-col gap-1.5">
           {energy.isLocked ? (
             <button
-              onClick={() => onAdvancePhase({ roundId: state.currentRoundId || 'round1', expectedPhaseIndex: 2 })}
+              onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
               className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all"
               type="button"
             >
@@ -532,7 +546,7 @@ export const Screen15EnergyCaptain: React.FC<Props> = ({ state, onUpdate, onAdva
             </div>
             <div className="flex flex-col">
               <div className="flex items-center space-x-space-xs">
-                <span className="font-sora text-[16px] font-bold text-[#e6dff9]">Mert (Makinist)</span>
+                <span className="font-sora text-[16px] font-bold text-[#e6dff9]">{state.players.muhendis.name || 'Mert (Makinist)'}</span>
                 <span className="bg-[#00eefc]/20 text-[#00eefc] px-1 rounded font-mono text-[10px] font-bold">BAĞLI</span>
               </div>
               <span className="text-[12px] text-[#d5c4ac]">Reaktör Soğutma Odasında • CH-02 Dinlemede</span>

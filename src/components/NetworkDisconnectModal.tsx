@@ -6,9 +6,15 @@ interface Props {
   isOpen: boolean;
   onReconnect: () => void;
   countdownSeconds?: number;
+  isOwnConnectionLost?: boolean;
 }
 
-export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, countdownSeconds = 45 }) => {
+export const NetworkDisconnectModal: React.FC<Props> = ({
+  isOpen,
+  onReconnect,
+  countdownSeconds = 45,
+  isOwnConnectionLost = false,
+}) => {
   const [reconnecting, setReconnecting] = React.useState(false);
 
   const handleReconnect = () => {
@@ -27,7 +33,11 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, c
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          onClick={(e) => { if (e.target === e.currentTarget) onReconnect(); }}
+          onClick={(e) => {
+            if (!isOwnConnectionLost && e.target === e.currentTarget) {
+              onReconnect();
+            }
+          }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
         >
           <motion.div 
@@ -38,14 +48,16 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, c
             className="relative w-full max-w-md p-6 rounded-2xl bg-[#141123] border border-rose-500/50 shadow-[0_0_50px_rgba(244,63,94,0.3)] text-center text-[#e6dff9] space-y-4"
           >
         
-        {/* Quick Close Button */}
-        <button
-          onClick={onReconnect}
-          className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
-          title="Kapat & Bağlan"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Quick Close Button (hidden when device's own WebSocket dropped) */}
+        {!isOwnConnectionLost && (
+          <button
+            onClick={onReconnect}
+            className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+            title="Kapat & Bağlan"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
         
         {/* Animated warning beacon */}
         <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-[0_0_24px_rgba(244,63,94,0.4)]">
@@ -55,13 +67,21 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, c
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono font-bold tracking-wider uppercase">
             <AlertOctagon className="w-3.5 h-3.5" />
-            <span>SUB-RÖLE BAĞLANTISI KOPTU</span>
+            <span>{isOwnConnectionLost ? 'CİHAZ BAĞLANTISI KOPTU' : 'SUB-RÖLE BAĞLANTISI KOPTU'}</span>
           </div>
           <h3 className="text-xl font-bold font-sora text-white">
-            İstasyon Ağı Askıya Alındı
+            {isOwnConnectionLost ? 'İnternet veya Sunucu Bağlantınız Kesildi' : 'İstasyon Ağı Askıya Alındı'}
           </h3>
           <p className="text-xs text-[#a59db8] max-w-xs mx-auto">
-            Takım arkadaşınızla telemetri senkronizasyonu kesildi. <strong className="text-rose-300">Görev süresi duraklatıldı</strong> ve reaktör kontrolleri emniyet amacıyla kilitlendi.
+            {isOwnConnectionLost ? (
+              <>
+                45 saniye içinde otomatik yeniden bağlanma deneniyor. Bağlantınız geldiğinde kaldığınız aşamadan devam edeceksiniz.
+              </>
+            ) : (
+              <>
+                Takım arkadaşınızla telemetri senkronizasyonu kesildi. <strong className="text-rose-300">Görev süresi duraklatıldı</strong> ve reaktör kontrolleri emniyet amacıyla kilitlendi.
+              </>
+            )}
           </p>
         </div>
 
@@ -96,7 +116,9 @@ export const NetworkDisconnectModal: React.FC<Props> = ({ isOpen, onReconnect, c
         </button>
 
         <p className="text-[11px] text-[#9e8f78]">
-          (Bu ekran, gerçek uzay telsiz kopmalarını ve test senaryolarını doğrulamak için tasarlanmıştır.)
+          {isOwnConnectionLost
+            ? 'Sayfa yenileme veya anlık ağ kopmalarında koltuğunuz 45 saniye boyunca korunur.'
+            : 'Oyuncu yeniden bağlandığında görev kaldığı noktadan devam eder.'}
         </p>
           </motion.div>
         </motion.div>

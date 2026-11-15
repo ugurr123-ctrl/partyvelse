@@ -5,7 +5,7 @@ import {
   AdvancedSubsystemId,
   MiniGameType
 } from '../../types/game';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface Props {
   state: MissionState;
@@ -22,15 +22,19 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   const adv = state.advancedScenario;
   const isCaptain = role === 'kaptan';
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
-  const [activeTab, setActiveTab] = useState<AdvancedSubsystemId>(
-    adv?.activeSubsystemTab || 'reaktor'
-  );
-
-  React.useEffect(() => {
-    if (adv?.activeSubsystemTab && adv.activeSubsystemTab !== activeTab) {
-      setActiveTab(adv.activeSubsystemTab);
+  const gameToSubsystemInit = (g?: MiniGameType): AdvancedSubsystemId => {
+    switch (g) {
+      case 'ariza_teshisi': return 'reaktor';
+      case 'sinyal_cozumu': return 'sinyal';
+      case 'kablo_baglantisi': return 'kablo';
+      case 'hava_kilidi': return 'hava_kilidi';
+      case 'radar_yonlendirme': return 'radar';
+      default: return 'reaktor';
     }
-  }, [adv?.activeSubsystemTab]);
+  };
+  const [activeTab, setActiveTab] = useState<AdvancedSubsystemId>(
+    gameToSubsystemInit(state.selectedMiniGames?.[0])
+  );
 
   const selectedReactorLine = adv?.subsystems?.reaktor?.engineerSuggestedLine ?? null;
   const reactorCoolingAngle = adv?.subsystems?.reaktor?.engineerValveAngle ?? null;
@@ -48,7 +52,6 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 
   const handleTabChange = (tab: AdvancedSubsystemId) => {
     setActiveTab(tab);
-    onAction('advanced_tab_change', { tab });
   };
 
   const handlePowerChange = (field: 'coolingPumps' | 'antennaBooster' | 'airlockCompressor' | 'shieldReserve', delta: number) => {
@@ -129,7 +132,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
               <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400 font-bold">
-                {isDerinBasinc ? 'DERİN DALIP // PROTOKOLÜ' : 'OPERASYON: ÇÖKÜŞ EŞİĞİ'}
+                {isDerinBasinc ? 'DERİN DALIŞ // PROTOKOLÜ' : 'OPERASYON: ÇÖKÜŞ EŞİĞİ'}
               </span>
             </div>
             <div className="flex items-center space-x-1.5 mt-0.5">
@@ -205,6 +208,24 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
           </div>
         </div>
       </header>
+
+      {/* Authoritative Feedback Banner */}
+      {state.feedbackMessage && (
+        <div className={`relative z-20 mb-2 px-3 py-2 rounded-xl border text-[11px] font-mono flex items-center gap-2 shadow ${
+          state.feedbackState === 'success'
+            ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-200'
+            : state.feedbackState === 'idle'
+            ? 'bg-cyan-950/90 border-cyan-500/60 text-cyan-200'
+            : 'bg-red-950/90 border-red-500/60 text-red-200'
+        }`}>
+          <span className={`font-bold ${
+            state.feedbackState === 'success' ? 'text-emerald-400' : state.feedbackState === 'idle' ? 'text-cyan-400' : 'text-red-400'
+          }`}>
+            {state.feedbackState === 'success' ? '✓' : state.feedbackState === 'idle' ? '●' : '⚠'}
+          </span>
+          <span>{state.feedbackMessage}</span>
+        </div>
+      )}
 
       {/* 2. Critical Event Banner */}
       {adv.event.isActive && !adv.event.isResolved && (
@@ -321,15 +342,13 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
 
       {/* 4. Active Subsystem Workspace */}
       <main className="relative z-10 flex-1 flex flex-col space-y-2 overflow-y-auto max-h-[560px] pr-0.5">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex flex-col space-y-2"
-          >
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0.65, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+          className="flex-1 flex flex-col space-y-2"
+        >
 
         {/* ================================================================= */}
         {/* TAB 1: REAKTÖR ÇEKİRDEĞİ                                          */}
@@ -1111,7 +1130,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
         )}
 
         {/* ================================================================= */}
-        {/* TAB 4: YARDIMCI GÜÇ MATRİSİ (10 MW)                                */}
+        {/* TAB 4: YARDIMCI GÜÇ MATRİSİ (7 MW)                                */}
         {/* ================================================================= */}
         {activeTab === 'guc_matrisi' && (
           <div className="flex-1 flex flex-col space-y-3">
@@ -1240,6 +1259,12 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
             </div>
 
             {/* Routes */}
+            {(() => {
+              const activeGames: MiniGameType[] = state.selectedMiniGames || ['ariza_teshisi', 'sinyal_cozumu'];
+              const activeSolvedCount = activeGames.filter((g) => getSubsystemSolved(g)).length;
+              const activeTotalCount = activeGames.length;
+              const minBetaRequired = Math.min(2, activeTotalCount);
+              return (
             <div className="space-y-2.5">
               {/* Route Alfa */}
               <div 
@@ -1262,19 +1287,15 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <span>🛡️ Gövde: -%5</span>
                 </div>
                 <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
-                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR (TAM OPERASYONEL):</span>
+                  <span className="text-slate-400 block font-bold">
+                    ZORUNLU ÖNKOŞULLAR (TÜM AKTİF SİSTEMLER {activeSolvedCount}/{activeTotalCount}):
+                  </span>
                   <div className="grid grid-cols-2 gap-1">
-                    {state.selectedMiniGames?.map((g) => (
+                    {activeGames.map((g) => (
                       <span key={g} className={getSubsystemSolved(g) ? 'text-emerald-400 font-bold' : 'text-red-400'}>
                         {getSubsystemSolved(g) ? `✓ ${getMiniGameLabel(g, isDerinBasinc)}` : `✗ ${getMiniGameLabel(g, isDerinBasinc)}`}
                       </span>
                     ))}
-                    <span className={adv.subsystems.reaktor.isStabilized ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör/Balast' : '✗ Reaktör/Balast'}
-                    </span>
-                    <span className={adv.subsystems.sinyal.isLocked ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.sinyal.isLocked ? '✓ Sinyal/Sonar' : '✗ Sinyal/Sonar'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -1300,13 +1321,12 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <span>🛡️ Gövde: -%5</span>
                 </div>
                 <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
-                  <span className="text-slate-400 block font-bold">ZORUNLU ÖNKOŞULLAR:</span>
-                  <div className="grid grid-cols-2 gap-1">
-                    <span className={adv.subsystems.reaktor.isStabilized ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.reaktor.isStabilized ? '✓ Reaktör Dengeli' : '✗ Reaktör Gerekli'}
-                    </span>
-                    <span className={adv.subsystems.sinyal.isLocked ? 'text-emerald-400 font-bold' : 'text-red-400'}>
-                      {adv.subsystems.sinyal.isLocked ? '✓ Sinyal Kilitli' : '✗ Sinyal Gerekli'}
+                  <span className="text-slate-400 block font-bold">ASGARİ ÖNKOŞUL (EN AZ {minBetaRequired} AKTİF SİSTEM):</span>
+                  <div className="flex items-center justify-between">
+                    <span className={activeSolvedCount >= minBetaRequired ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                      {activeSolvedCount >= minBetaRequired
+                        ? `✓ Hazır (${activeSolvedCount}/${activeTotalCount} sistem onarıldı)`
+                        : `✗ En az ${minBetaRequired} aktif sistem onarılmalı (${activeSolvedCount}/${activeTotalCount})`}
                     </span>
                   </div>
                 </div>
@@ -1333,15 +1353,19 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
                   <span>🛡️ Gövde: -%10</span>
                 </div>
                 <div className="bg-[#0e0c1f] p-2 rounded-xl border border-white/5 space-y-1 text-[10px] font-mono">
-                  <span className="text-slate-400 block font-bold">ASGARİ ÖNKOŞUL (EN AZ 1 SİSTEM):</span>
+                  <span className="text-slate-400 block font-bold">ASGARİ ÖNKOŞUL (EN AZ 1 AKTİF SİSTEM):</span>
                   <div className="flex items-center justify-between">
-                    <span className={(adv.subsystems.reaktor.isStabilized || adv.subsystems.sinyal.isLocked) ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
-                      {(adv.subsystems.reaktor.isStabilized || adv.subsystems.sinyal.isLocked) ? '✓ Sistem Hazırlığı Tamam' : '✗ Sıfır hazırlıkla fırlatılamaz (Reaktör veya Sinyal şart)'}
+                    <span className={activeSolvedCount >= 1 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                      {activeSolvedCount >= 1
+                        ? `✓ Kaçış podu fırlatmaya hazır (${activeSolvedCount}/${activeTotalCount} • -%10 gövde)`
+                        : `✗ Pod fırlatmak için en az 1 aktif sistem onarılmalı (${activeSolvedCount}/${activeTotalCount})`}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
+              );
+            })()}
 
             {/* Approval status */}
             <div className="bg-[#121024] p-2.5 rounded-xl border border-white/10 flex items-center justify-between text-[11px] font-mono">
@@ -1376,7 +1400,6 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
         )}
 
           </motion.div>
-        </AnimatePresence>
       </main>
 
       {/* 5. Mission Evacuation Log Footer */}

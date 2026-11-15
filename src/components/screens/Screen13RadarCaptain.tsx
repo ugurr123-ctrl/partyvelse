@@ -5,14 +5,18 @@ interface Props {
   state: MissionState;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
   onUpdate?: (updater: (prev: MissionState) => MissionState) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen13RadarCaptain: React.FC<Props> = ({ state, onAdvancePhase }) => {
+export const Screen13RadarCaptain: React.FC<Props> = ({ state, onAdvancePhase, onAction }) => {
   const { radar } = state;
   const [transmitted, setTransmitted] = useState(false);
 
   const handleTransmit = () => {
     setTransmitted(true);
+    onAction?.('captain_signal_ready', {
+      message: 'Kaptan radar kerterizini telsizden aktardı.',
+    });
     setTimeout(() => setTransmitted(false), 3000);
   };
 

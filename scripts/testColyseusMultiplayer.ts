@@ -241,6 +241,31 @@ async function runMultiplayerTests() {
     assertTrue(stateA?.players.muhendis.name === 'Mühendis Can', 'Mühendis korundu');
     assertTrue(stateA?.players.kaptan.ready === false, 'Hazır durumları sıfırlandı');
 
+    // -------------------------------------------------------------------------
+    // TEST 9: LOBİDE GÖREV SIRASI YENİLEME (reroll_tasks - Yalnızca Oda Lideri)
+    // -------------------------------------------------------------------------
+    console.log('\n▶ [TEST 9] Görev Sırası Yenileme (reroll_tasks) Senkronizasyonu...');
+    let stateBPostReconnect: any = null;
+    reconnectedRoomB.onMessage('state_update', (msg: MissionState) => {
+      stateBPostReconnect = msg;
+    });
+    const initialTaskOrder = JSON.stringify(stateA?.selectedMiniGames || []);
+    let rerollGuestError = '';
+    reconnectedRoomB.onMessage('error_message', (err: string) => {
+      rerollGuestError = err;
+    });
+    reconnectedRoomB.send('reroll_tasks');
+    await new Promise((r) => setTimeout(r, 60));
+    assertTrue(rerollGuestError.length > 0, 'Misafirin reroll_tasks talebi sunucu tarafından reddedildi');
+
+    roomA.send('reroll_tasks');
+    await new Promise((r) => setTimeout(r, 80));
+    assertTrue(
+      JSON.stringify(stateA?.selectedMiniGames || []) !== initialTaskOrder &&
+        JSON.stringify(stateA?.selectedMiniGames || []) === JSON.stringify(stateBPostReconnect?.selectedMiniGames || []),
+      'Oda lideri reroll_tasks gönderdiğinde yeni görev dizisi iki oyuncuya senkronize edildi'
+    );
+
     // Cleanup
     await roomA.leave();
     await reconnectedRoomB.leave();

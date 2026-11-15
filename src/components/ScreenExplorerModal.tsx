@@ -33,6 +33,7 @@ export interface ScreenMeta {
   miniGameKey?: string;
   phaseIndex?: number;
   theme?: OperationTheme;
+  gameMode?: 'standart' | 'gelismis';
 }
 
 export const ALL_17_SCREENS: ScreenMeta[] = [
@@ -212,7 +213,7 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     name: '16. Enerji Dağıtımı — Mühendis',
     role: 'muhendis',
     category: '3. Aşama Güç',
-    desc: '12 MW toplam reaktör bütçesi, Yaşam / İtki / Kalkan kademeli artış tuşları, hat kayıpları ve taslak paylaşımı.',
+    desc: '15 MW toplam reaktör bütçesi, Yaşam / İtki / Kalkan kademeli artış tuşları, hat kayıpları ve taslak paylaşımı.',
     referencePath: '/public/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli',
     htmlPath: '/assets/extracted_stitch/stitch_partyverse_mobile_game_experience/kay_p_sinyal_ortak_kurtarma_paneli/code.html',
     statusKey: 'phase_energy',
@@ -376,6 +377,172 @@ export const ALL_17_SCREENS: ScreenMeta[] = [
     statusKey: 'phase_result',
     theme: 'karantina_2088',
   },
+  {
+    id: 31,
+    name: '31. Gelişmiş Taktik Mod — Kaptan',
+    role: 'kaptan',
+    category: 'Gelişmiş Mod (2P)',
+    desc: 'Reaktör, Sinyal ve Hava Kilidi alt sistemlerini eşzamanlı izleme, plazma uyarısı ve 7 MW güç matrisi.',
+    referencePath: '/public/assets/gelismis_mod',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'kayip_sinyal',
+    gameMode: 'gelismis',
+  },
+  {
+    id: 32,
+    name: '32. Gelişmiş Taktik Mod — Mühendis',
+    role: 'muhendis',
+    category: 'Gelişmiş Mod (2P)',
+    desc: 'Serbest sekme geçişli eşzamanlı müdahale, vana/frekans ayarları ve 7 MW enerji yönlendirmesi.',
+    referencePath: '/public/assets/gelismis_mod',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'kayip_sinyal',
+    gameMode: 'gelismis',
+  },
+  {
+    id: 33,
+    name: '33. Derin Basınç — HİDRO-04 Lobi',
+    role: 'ortak',
+    category: 'Derin Basınç (2P)',
+    desc: 'Abisal hendek -850m dalış kabini lobisi, Dümenci & Makinist kadrosu ve TRX-7 sonar telemetrisi.',
+    referencePath: '/public/assets/derin_basinc',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'derin_basinc',
+  },
+  {
+    id: 34,
+    name: '34. Derin Basınç — Sonar & Glif (Mühendis)',
+    role: 'muhendis',
+    category: 'Derin Basınç (2P)',
+    desc: 'Su altı akustik glif çözümü, balast valfi ve HİDRO-04 kabin basıncı dengelemesi.',
+    referencePath: '/public/assets/derin_basinc',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    miniGameKey: 'sinyal_cozumu',
+    phaseIndex: 0,
+    theme: 'derin_basinc',
+  },
+  {
+    id: 35,
+    name: '35. Gölge Protokolü — Neon Kasa Lobisi',
+    role: 'ortak',
+    category: 'Gölge Protokolü (2P)',
+    desc: 'Megacorp Kat 84 sızma lobisi, Sahadaki Ajan & Gölge Hacker kadrosu ve görev karıştırma paneli.',
+    referencePath: '/public/assets/golge_protokolu',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'golge_protokolu',
+  },
+  {
+    id: 36,
+    name: '36. Gölge Protokolü — Siber Operasyon',
+    role: 'kaptan',
+    category: 'Gölge Protokolü (2P)',
+    desc: 'Güvenlik duvarı bypass, lazer koridoru zamanlaması ve kasa PIN sızdırma konsolu.',
+    referencePath: '/public/assets/golge_protokolu',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    miniGameKey: 'ariza_teshisi',
+    phaseIndex: 0,
+    theme: 'golge_protokolu',
+  },
+  {
+    id: 37,
+    name: '37. Omega Çekirdeği — Takım Lobisi (3–4P)',
+    role: 'ortak',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: 'Komutan, Mühendis, Kriptolog ve Güvenlik rolleriyle 5 aşamalı uzay istasyonu kriz lobisi.',
+    referencePath: '/public/assets/omega_ekip',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'omega_ekip',
+  },
+  {
+    id: 38,
+    name: '38. Omega Çekirdeği — 5 Aşamalı Konsol',
+    role: 'kaptan',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: '5 sektör telemetrisi, osilatör/parazit çözümü, 12 MW bara matrisi, şalter zinciri ve çift mühür tahliye.',
+    referencePath: '/public/assets/omega_ekip',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'omega_ekip',
+  },
+  {
+    id: 39,
+    name: '39. Titan Derin Maden — Takım Lobisi (3–4P)',
+    role: 'ortak',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: 'Metan gazı ve yüksek sismik basınç altında 3–4 kişilik Titan sondaj platformu takım lobisi.',
+    referencePath: '/public/assets/titan_maden',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'titan_maden',
+  },
+  {
+    id: 40,
+    name: '40. Titan Derin Maden — 5 Aşamalı Konsol',
+    role: 'muhendis',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: '5 sondaj sektörü ısı/basınç/titreşim okuma, akustik şifre ve 12 MW jeotermal şebeke kontrolü.',
+    referencePath: '/public/assets/titan_maden',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'titan_maden',
+  },
+  {
+    id: 41,
+    name: '41. Siber Kale — Takım Lobisi (3–4P)',
+    role: 'ortak',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: 'Çok katmanlı siber savunma ağı ve 4 uzman rolden oluşan Siber Kale operasyon lobisi.',
+    referencePath: '/public/assets/siber_kale',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'siber_kale',
+  },
+  {
+    id: 42,
+    name: '42. Siber Kale — 5 Aşamalı Konsol',
+    role: 'kaptan',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: '5 ağ düğümü telemetrisi, parazit kaynağı izolasyonu, 4 seviyeli güvenlik duvarı ve şifreli tahliye.',
+    referencePath: '/public/assets/siber_kale',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'siber_kale',
+  },
+  {
+    id: 43,
+    name: '43. Buzul Üssü 12 — Takım Lobisi (3–4P)',
+    role: 'ortak',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: 'Kutup kriyojenik reaktör üssü için 3–4 oyunculu asimetrik ekip lobisi ve rol takası.',
+    referencePath: '/public/assets/buzul_ussu',
+    htmlPath: '',
+    statusKey: 'lobby',
+    theme: 'buzul_ussu',
+  },
+  {
+    id: 44,
+    name: '44. Buzul Üssü 12 — 5 Aşamalı Konsol',
+    role: 'muhendis',
+    category: '3–4 Kişilik Takım Operasyonu',
+    desc: 'Kriyojenik 5 sektör valf ve termal yük dengelemesi, HF rezonans ve buz kıran tahliye konsolu.',
+    referencePath: '/public/assets/buzul_ussu',
+    htmlPath: '',
+    statusKey: 'phase_game',
+    phaseIndex: 0,
+    theme: 'buzul_ussu',
+  },
 ];
 
 interface Props {
@@ -403,9 +570,35 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
     }
 
     if (!currentScreen.htmlPath) {
+      const themeLabel = currentScreen.theme || 'varsayılan';
+      const standaloneHtml = `<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PARTYVERSE — ${currentScreen.name}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#110e1e] text-[#e6dff9] flex items-center justify-center p-4 font-sans">
+  <main class="w-full max-w-[390px] rounded-[32px] bg-[#141123] border border-white/10 p-6 shadow-2xl space-y-4">
+    <header class="flex items-center justify-between border-b border-white/10 pb-3">
+      <div>
+        <span class="text-[10px] font-mono uppercase tracking-widest text-[#ffb703]">${currentScreen.category}</span>
+        <h1 class="text-base font-bold text-white mt-0.5">${currentScreen.name}</h1>
+      </div>
+      <span class="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-[10px] font-mono uppercase text-cyan-300">${currentScreen.role}</span>
+    </header>
+    <p class="text-xs text-[#d5c4ac] leading-relaxed">${currentScreen.desc}</p>
+    <footer class="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-mono text-[#9e8f78]">
+      <span>TEMA: ${themeLabel.toUpperCase()}</span>
+      <span>ASİMETRİK KONSOL</span>
+    </footer>
+  </main>
+</body>
+</html>`;
       setCodeCache((prev) => ({
         ...prev,
-        [currentScreen.id]: `<!-- PARTYVERSE — ${currentScreen.name} -->\n<!-- Tema: ${currentScreen.theme || 'Varsayılan'} | Rol: ${currentScreen.role} -->\n<!-- Açıklama: ${currentScreen.desc} -->\n<div class="partyverse-screen-preview">\n  <header>\n    <h2>${currentScreen.name}</h2>\n    <span class="badge">${currentScreen.category}</span>\n  </header>\n  <main>\n    <p>${currentScreen.desc}</p>\n  </main>\n</div>`
+        [currentScreen.id]: standaloneHtml,
       }));
       setLoadingCode(false);
       return;
@@ -493,12 +686,12 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-mono tracking-widest text-[#00f0ff] uppercase px-2 py-0.5 rounded bg-[#00f0ff]/10">
-                  17+ EKRAN KATALOĞU & KOD GEZGİNİ
+                  8 OYUN · {ALL_17_SCREENS.length} EKRAN KATALOĞU
                 </span>
-                <span className="text-xs text-[#a59db8] hidden sm:inline">Kaptan & Mühendis Birebir Konsolları</span>
+                <span className="text-xs text-[#a59db8] hidden sm:inline">2P & 3–4P Takım Konsolları</span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white font-sora">
-                PARTYVERSE — Kayıp Sinyal Tüm Ekranlar & Gerçek HTML Kodu
+                PARTYVERSE — Tüm Operasyon Ekranları & HTML Kaynağı
               </h2>
             </div>
           </div>
@@ -513,7 +706,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
         {/* Main 2-Column Split: Screen Selector List (Left) & Inspector / Code (Right) */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
-          {/* Left: 18 Screens Scrollable Sidebar */}
+          {/* Left: 44 Screens Scrollable Sidebar */}
           <div className="w-full md:w-80 max-h-[28vh] md:max-h-none border-b md:border-b-0 md:border-r border-white/10 overflow-y-auto p-3 space-y-1.5 bg-[#0f0c1e]/60 shrink-0">
             <span className="text-[10px] font-mono text-[#9e8f78] uppercase px-2 block mb-1">
               EKRAN SEÇİN ({ALL_17_SCREENS.length} EKRAN):
@@ -639,7 +832,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono text-[#00f0ff] font-bold">
-                      {currentScreen.htmlPath}
+                      {currentScreen.htmlPath || 'Canlı React Modül Bileşeni'}
                     </span>
                     {loadingCode && (
                       <span className="flex items-center gap-1 text-[11px] text-[#ffb703]">
@@ -699,7 +892,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                     <div className="w-20 h-3 rounded-full bg-black/60"></div>
                   </div>
                   
-                  {/* Iframe */}
+                  {/* Iframe or Live Component Preview */}
                   {currentScreen.htmlPath ? (
                     <iframe 
                       src={currentScreen.htmlPath} 
@@ -709,7 +902,17 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                   ) : (
                     <div className="w-full flex-1 p-6 bg-[#110e1e] text-[#e6dff9] flex flex-col items-center justify-center text-center gap-3">
                       <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
-                        <span className="material-symbols-outlined text-[28px]">biotech</span>
+                        <span className="material-symbols-outlined text-[28px]">
+                          {currentScreen.theme === 'karantina_2088'
+                            ? 'biotech'
+                            : currentScreen.theme === 'golge_protokolu'
+                            ? 'security'
+                            : currentScreen.theme === 'derin_basinc'
+                            ? 'waves'
+                            : currentScreen.theme === 'omega_ekip' || currentScreen.theme === 'titan_maden' || currentScreen.theme === 'siber_kale' || currentScreen.theme === 'buzul_ussu'
+                            ? 'groups'
+                            : 'rocket_launch'}
+                        </span>
                       </div>
                       <span className="px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-400/40 text-[10px] font-mono text-cyan-300 font-bold uppercase">
                         {currentScreen.category}
@@ -727,6 +930,64 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                         <ArrowRight className="w-4 h-4" />
                         <span>Canlı Konsolda Oyna</span>
                       </button>
+                    </div>
+                  )}
+
+                  {/* Simulated State Overlay inside Mobile Preview Bezel */}
+                  {mockState !== 'normal' && (
+                    <div
+                      className={`z-30 ${
+                        mockState === 'disconnected'
+                          ? 'absolute inset-0 top-5 bg-[#090714]/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center gap-3'
+                          : 'absolute inset-x-3 bottom-3 p-3 rounded-xl border backdrop-blur-md shadow-xl flex items-start gap-2.5'
+                      } ${
+                        mockState === 'incomplete'
+                          ? 'bg-amber-950/90 border-amber-400/60 text-amber-200'
+                          : mockState === 'waiting'
+                          ? 'bg-cyan-950/90 border-cyan-400/60 text-cyan-200'
+                          : mockState === 'error'
+                          ? 'bg-rose-950/90 border-rose-500/70 text-rose-200'
+                          : 'text-rose-200'
+                      }`}
+                    >
+                      {mockState === 'disconnected' ? (
+                        <>
+                          <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/50 flex items-center justify-center text-rose-400 animate-pulse">
+                            <WifiOff className="w-6 h-6" />
+                          </div>
+                          <span className="font-mono text-xs font-bold uppercase tracking-wider text-rose-300">
+                            BAĞLANTI KOPTU · DURUM SİMÜLASYONU
+                          </span>
+                          <p className="text-xs text-[#d5c4ac] leading-relaxed">
+                            Sub-röle hattı kesildi. Süre duraklatıldı ve kontroller yeniden bağlanılana kadar kilitlendi.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setMockState('normal')}
+                            className="px-3.5 py-2 rounded-lg bg-[#ffb703] text-[#271900] font-sora font-bold text-xs cursor-pointer"
+                          >
+                            Normal Duruma Dön
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="shrink-0 mt-0.5">
+                            {mockState === 'incomplete' && <Sliders className="w-4 h-4 text-amber-300" />}
+                            {mockState === 'waiting' && <Clock className="w-4 h-4 text-cyan-300 animate-pulse" />}
+                            {mockState === 'error' && <AlertTriangle className="w-4 h-4 text-rose-400" />}
+                          </span>
+                          <div className="text-left text-[11px] font-mono leading-snug">
+                            <strong className="block uppercase text-[10px] mb-0.5">
+                              {mockState === 'incomplete' && 'EKSİK SEÇİM SİMÜLASYONU'}
+                              {mockState === 'waiting' && 'ORTAK BEKLENİYOR'}
+                              {mockState === 'error' && 'HATALI MÜDAHALE CEZASI'}
+                            </strong>
+                            {mockState === 'incomplete' && 'Lütfen tüm soket, frekans veya vana hedeflerini belirleyip onaylayın.'}
+                            {mockState === 'waiting' && 'Diğer operatörün adımını tamamlaması bekleniyor...'}
+                            {mockState === 'error' && 'Gövde Bütünlüğü -%15, Kalan Süre -20 sn ceza uygulandı!'}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

@@ -16,31 +16,31 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
     spectralFilterNm: 415,
     selectedBase: 'sitozin-9',
     bioPhase1Transmitted: true,
-    selectedUvSector: 3,
-    selectedValve: 'B' as const,
+    selectedUvSector: 1,
+    selectedValve: 'A' as const,
     phase1Solved: false,
     polymerPct: 45,
     enzymePct: 30,
     neutroPct: 25,
     bondFreqGhz: 8.4,
     bioPhase2Injected: false,
-    centrifugeRpm: 3800,
-    coolingValvePct: 75,
-    pressureReliefActive: true,
+    centrifugeRpm: 2400,
+    coolingValvePct: 50,
+    pressureReliefActive: false,
     phase2Solved: false,
     vacuumFlowRate: 6.2,
     bioPhase3Started: false,
-    selectedChimney: 'BACA-02' as const,
-    chimneyBar: 12.0,
-    safetyLatchUnlocked: true,
+    selectedChimney: 'BACA-01' as const,
+    chimneyBar: 6.0,
+    safetyLatchUnlocked: false,
     phase3Solved: false,
     immunityScore: 10450,
     selinAccuracy: 99.2,
     baranValves: 3,
   };
 
-  const [selectedSector, setSelectedSector] = useState<number>(kData.selectedUvSector || 3);
-  const [selectedValve, setSelectedValve] = useState<'A' | 'B' | 'C'>(kData.selectedValve || 'B');
+  const [selectedSector, setSelectedSector] = useState<number>(kData.selectedUvSector || 1);
+  const [selectedValve, setSelectedValve] = useState<'A' | 'B' | 'C'>(kData.selectedValve || 'A');
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -74,7 +74,7 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
         </div>
 
         <div className="w-9 h-9 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">shield</span>
         </div>
       </header>
 
@@ -124,7 +124,7 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
           </div>
           <h2 className="text-lg font-extrabold text-white leading-tight">UV Koridorunu ve Hava Kilidini Mühürle</h2>
           <p className="text-xs text-[#d5c4ac] mt-1 leading-relaxed">
-            Biyoloğun telsizden aktardığı mutasyonlu <strong className="text-amber-300">UV Sektör 3</strong>&apos;ü ve acil durum mekanik vanasını derhal kilitleyin.
+            Biyoloğun telsizden aktardığı <strong className="text-amber-300">mutasyonlu UV sektörünü</strong> ve acil durum mekanik vanasını derhal kilitleyin.
           </p>
         </div>
 
@@ -144,8 +144,10 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
               </span>
             </div>
           </div>
-          <p className="text-xs font-bold text-amber-200 italic bg-[#0f0c1e] p-2 rounded-lg border border-white/5">
-            &ldquo;Kritik mutasyon Sitozin-9 bağında! UV Sektör 3 ve Vana-B derhal kilitlenmeli!&rdquo;
+          <p className="text-xs font-bold text-cyan-100 italic bg-[#0f0c1e] p-2 rounded-lg border border-white/5">
+            &ldquo;{kData.bioPhase1Transmitted
+              ? 'Mutasyon teşhisi hazır! Biyologdan hangi UV sektörü ve vananın kilitleneceğini telsizle öğren.'
+              : 'Baş Biyolog spektrum analizini sürdürüyor; canlı telsiz talimatı bekleniyor...'}&rdquo;
           </p>
         </div>
 
@@ -156,7 +158,7 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
               <span className="material-symbols-outlined text-cyan-400 text-[16px]">grid_view</span>
               <span>UV MATRİS IZGARASI</span>
             </div>
-            <span className="text-[10px] font-mono font-bold text-[#ffb703]">SPEKTRUM HEDEF: 415 NM</span>
+            <span className="text-[10px] font-mono font-bold text-cyan-300">SEKTÖR SEÇİMİ AKTİF</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -177,9 +179,9 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
                 <span className="text-[9px] font-mono text-[#9e8f78] uppercase">SEKTÖR 01</span>
                 <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
               </div>
-              <div className="text-sm font-bold text-white mt-0.5">GÜVENLİ</div>
-              <div className="text-[10px] text-[#9e8f78] font-mono mt-1">MUTASYON: %0</div>
-              <div className="text-[10px] text-slate-400 font-mono mt-0.5">UV GÜCÜ: 380 nm</div>
+              <div className="text-sm font-bold text-white mt-0.5">BEKLEMEDE</div>
+              <div className="text-[10px] text-[#9e8f78] font-mono mt-1">KANAL: UV-A</div>
+              <div className="text-[10px] text-slate-400 font-mono mt-0.5">İZOLASYON HAZIR</div>
             </button>
 
             {/* Sektör 02 */}
@@ -199,37 +201,31 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
                 <span className="text-[9px] font-mono text-[#9e8f78] uppercase">SEKTÖR 02</span>
                 <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
               </div>
-              <div className="text-sm font-bold text-white mt-0.5">GÜVENLİ</div>
-              <div className="text-[10px] text-[#9e8f78] font-mono mt-1">MUTASYON: %2</div>
-              <div className="text-[10px] text-slate-400 font-mono mt-0.5">UV GÜCÜ: 395 nm</div>
+              <div className="text-sm font-bold text-white mt-0.5">BEKLEMEDE</div>
+              <div className="text-[10px] text-[#9e8f78] font-mono mt-1">KANAL: UV-B</div>
+              <div className="text-[10px] text-slate-400 font-mono mt-0.5">İZOLASYON HAZIR</div>
             </button>
 
-            {/* Sektör 03 (TARGET) */}
+            {/* Sektör 03 */}
             <button
               type="button"
               onClick={() => {
                 setSelectedSector(3);
                 onAction('karantina_phase1_sec_select_sector', { sector: 3 });
               }}
-              className={`p-2.5 rounded-xl border text-left transition-all relative ${
+              className={`p-2.5 rounded-xl border text-left transition-all ${
                 selectedSector === 3
-                  ? 'bg-amber-950/50 border-[#ffb703] shadow-[0_0_16px_rgba(255,183,3,0.35)]'
-                  : 'bg-amber-950/20 border-amber-500/30'
+                  ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_12px_rgba(0,238,252,0.25)]'
+                  : 'bg-[#201d30] border-white/5 hover:border-white/10'
               }`}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] font-mono text-[#ffb703] font-bold uppercase">SEKTÖR 03</span>
-                  <span className="material-symbols-outlined text-[12px] text-[#ffb703]">warning</span>
-                </div>
-                <span className="w-2 h-2 rounded-full bg-[#ffb703] animate-pulse"></span>
+                <span className="text-[9px] font-mono text-[#9e8f78] uppercase">SEKTÖR 03</span>
+                <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
               </div>
-              <div className="text-sm font-bold text-amber-200 mt-0.5">KONTAMİNASYON</div>
-              <div className="text-[10px] text-amber-400 font-bold font-mono mt-1">MUTASYON: %94 KRİTİK</div>
-              <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-amber-500/20 text-[#ffb703] text-[9px] font-mono font-bold">
-                <span>UV AYARI</span>
-                <span>415 nm ✓</span>
-              </div>
+              <div className="text-sm font-bold text-white mt-0.5">BEKLEMEDE</div>
+              <div className="text-[10px] text-[#9e8f78] font-mono mt-1">KANAL: UV-C</div>
+              <div className="text-[10px] text-slate-400 font-mono mt-0.5">İZOLASYON HAZIR</div>
             </button>
 
             {/* Sektör 04 (BLOCKED) */}
@@ -274,22 +270,22 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
               <div className="text-[9px] font-mono text-slate-400 mt-0.5">AÇIK</div>
             </button>
 
-            {/* Vana B (TARGET) */}
+            {/* Vana B */}
             <button
               type="button"
               onClick={() => {
                 setSelectedValve('B');
                 onAction('karantina_phase1_sec_select_valve', { valve: 'B' });
               }}
-              className={`p-2.5 rounded-xl border text-center transition-all relative ${
+              className={`p-2.5 rounded-xl border text-center transition-all ${
                 selectedValve === 'B'
-                  ? 'bg-amber-950/50 border-[#ffb703] shadow-[0_0_15px_rgba(255,183,3,0.3)]'
-                  : 'bg-[#201d30] border-white/10 hover:border-white/20'
+                  ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_12px_rgba(0,238,252,0.25)]'
+                  : 'bg-[#201d30] border-white/5 hover:border-white/10'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] text-[#ffb703] block mx-auto">check_circle</span>
-              <div className="text-xs font-bold text-[#ffdba0] mt-1">VANA-B</div>
-              <div className="text-[9px] font-mono text-amber-300 font-bold mt-0.5">MÜHÜRLENECEK</div>
+              <span className="material-symbols-outlined text-[20px] text-slate-400 block mx-auto">radio_button_unchecked</span>
+              <div className="text-xs font-bold text-white mt-1">VANA-B</div>
+              <div className="text-[9px] font-mono text-slate-400 mt-0.5">HAZIR</div>
             </button>
 
             {/* Vana C */}
@@ -301,13 +297,13 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
               }}
               className={`p-2.5 rounded-xl border text-center transition-all ${
                 selectedValve === 'C'
-                  ? 'bg-cyan-950/40 border-cyan-400'
+                  ? 'bg-cyan-950/40 border-cyan-400 shadow-[0_0_12px_rgba(0,238,252,0.25)]'
                   : 'bg-[#201d30] border-white/5 hover:border-white/10'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px] text-cyan-400 block mx-auto">shield</span>
+              <span className="material-symbols-outlined text-[20px] text-slate-400 block mx-auto">radio_button_unchecked</span>
               <div className="text-xs font-bold text-white mt-1">VANA-C</div>
-              <div className="text-[9px] font-mono text-cyan-300 mt-0.5">KORUMALI</div>
+              <div className="text-[9px] font-mono text-slate-400 mt-0.5">HAZIR</div>
             </button>
           </div>
         </div>
@@ -318,6 +314,31 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
           <span>DİKKAT: Yanlış sektör mühürlenirse virüs ana hava kanallarına yayılır.</span>
         </div>
 
+        {state.feedbackMessage && (
+          <div
+            className={`p-3 rounded-xl border text-xs font-mono flex items-center gap-2 ${
+              state.feedbackState === 'success'
+                ? 'bg-emerald-950/50 border-emerald-500/50 text-emerald-200'
+                : state.feedbackState === 'error'
+                ? 'bg-rose-950/50 border-rose-500/50 text-rose-200'
+                : 'bg-cyan-950/50 border-cyan-500/50 text-cyan-200'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[18px] shrink-0 ${
+                state.feedbackState === 'success'
+                  ? 'text-emerald-400'
+                  : state.feedbackState === 'error'
+                  ? 'text-rose-400'
+                  : 'text-cyan-400'
+              }`}
+            >
+              {state.feedbackState === 'success' ? 'check_circle' : state.feedbackState === 'error' ? 'error' : 'info'}
+            </span>
+            <span>{state.feedbackMessage}</span>
+          </div>
+        )}
+
         {/* Primary Action Button */}
         <button
           type="button"
@@ -325,7 +346,7 @@ export const ScreenKarantinaPhase1Sec: React.FC<Props> = ({
           className="w-full py-4 px-4 rounded-xl font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] bg-gradient-to-r from-[#ffb703] via-[#ffc72c] to-[#ffa000] text-[#271900] shadow-[0_4px_20px_rgba(255,183,3,0.35)] hover:brightness-110"
         >
           <span className="material-symbols-outlined text-[20px]">lock</span>
-          <span>UV IŞINLARINI VE VANA-B MÜHÜRLE</span>
+          <span>SEÇİLİ SEKTÖR VE VANAYI MÜHÜRLE</span>
         </button>
       </main>
     </div>

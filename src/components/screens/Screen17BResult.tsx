@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MissionState } from '../../types/game';
+import { SafeAssetImage } from '../SafeAssetImage';
 
 interface Props {
   state: MissionState;
@@ -10,13 +11,9 @@ interface Props {
 export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobbyReturn }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [replayRotate, setReplayRotate] = useState(0);
+  const [copiedShare, setCopiedShare] = useState(false);
   
-  // Local toggle to allow previewing both Victory and Failure in real-time
-  const [previewOutcome, setPreviewOutcome] = useState<'basarisizlik' | 'tam_basari'>(
-    state.outcomeType === 'basarisizlik' ? 'basarisizlik' : 'tam_basari'
-  );
-
-  const isFailure = previewOutcome === 'basarisizlik';
+  const isFailure = state.outcomeType === 'basarisizlik';
   const isDerinBasinc = state.operationTheme === 'derin_basinc';
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
 
@@ -24,6 +21,36 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
 
   const minutes = Math.floor(timeLeftSeconds / 60).toString().padStart(2, '0');
   const seconds = (timeLeftSeconds % 60).toString().padStart(2, '0');
+
+  const handleShareScoreCard = async () => {
+    const timeFormatted = `${minutes}:${seconds}`;
+    const hostUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const themeName = isGolgeProtokolu ? 'Gölge Protokolü' : isDerinBasinc ? 'Derin Basınç' : 'Kayıp Sinyal';
+    const leaderName = state.players.kaptan.name || 'Kaptan';
+    const partnerName = state.players.muhendis.name || 'Mühendis';
+    const shareText = !isFailure
+      ? `🏆 ${themeName.toUpperCase()} // OPERASYON BAŞARILI!\n👥 Mürettebat: ${leaderName} & ${partnerName}\n🛡️ Gövde Bütünlüğü: %${hullIntegrity}\n⏱️ Kalan Süre: ${timeFormatted}\n⭐ Toplam Skor: ${finalScore || 1850} Puan\n\nBu rekoru geçebilecek bir ikili var mı? Hemen oyna:\n👉 ${hostUrl}`
+      : `💥 ${themeName.toUpperCase()} // GÖREV BAŞARISIZ!\n👥 Mürettebat: ${leaderName} & ${partnerName}\nSistem çöktü! Bizi kurtarabilecek bir ekip var mı? Hadi dene:\n👉 ${hostUrl}`;
+
+    if (navigator?.share) {
+      try {
+        await navigator.share({
+          title: `PARTYVERSE — ${themeName} Görev Karnesi`,
+          text: shareText,
+          url: hostUrl,
+        });
+        return;
+      } catch {
+        // user cancelled
+      }
+    }
+
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(shareText);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2500);
+    }
+  };
 
   // Interactive Particle Canvas (Golden Stardust for Victory, Red Ash / Sparks for Failure)
   useEffect(() => {
@@ -116,37 +143,6 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
     <div className="w-full max-w-[420px] mx-auto flex flex-col relative overflow-hidden select-none animate-fadeIn text-[#e6dff9] pb-8 font-sans">
       {/* Particle Canvas */}
       <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-20 w-full h-full opacity-60" />
-
-      {/* Outcome Switcher Bar */}
-      <div className="relative z-40 px-margin pt-2 flex items-center justify-between">
-        <div className="text-[10px] font-mono uppercase tracking-wider text-on-surface-variant font-bold">
-          SONUÇ PROTOKOLÜ:
-        </div>
-        <div className="flex items-center gap-1 bg-[#363246]/80 p-0.5 rounded-lg border border-white/10 backdrop-blur-md">
-          <button
-            type="button"
-            onClick={() => setPreviewOutcome('basarisizlik')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
-              isFailure 
-                ? 'bg-[#93000a] text-[#ffdad6] shadow-sm' 
-                : 'text-[#d5c4ac] hover:text-[#e6dff9]'
-            }`}
-          >
-            Süre Bitti / Hata
-          </button>
-          <button
-            type="button"
-            onClick={() => setPreviewOutcome('tam_basari')}
-            className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
-              !isFailure 
-                ? 'bg-[#ffb703] text-[#422c00] shadow-sm' 
-                : 'text-[#d5c4ac] hover:text-[#e6dff9]'
-            }`}
-          >
-            Zafer / Yüzey
-          </button>
-        </div>
-      </div>
 
       {isFailure ? (
         /* ================= FAILURE SCREEN ================= */
@@ -266,7 +262,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                         <span className="material-symbols-outlined text-[#ffb703] text-[18px]">crisis_alert</span>
                         <span className="text-[12px] text-[#e6dff9] font-medium">Görev Aşaması</span>
                       </div>
-                      <span className="font-mono text-[11px] text-[#ffb703] text-right font-bold">6. Görev (Acil Tahliye)</span>
+                      <span className="font-mono text-[11px] text-[#ffb703] text-right font-bold">4. Aşama (Acil Tahliye)</span>
                     </div>
                   </div>
 
@@ -319,10 +315,11 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 {/* Ece Card */}
                 <div className="flex flex-col items-center bg-[#1c192c] border border-[#93000a]/30 rounded-lg p-3 group shadow-sm">
                   <div className="relative w-14 h-14 rounded-xl overflow-hidden shadow-lg mb-2 grayscale brightness-75">
-                    <img 
+                    <SafeAssetImage 
                       className="w-full h-full object-cover" 
                       alt="Ece" 
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjneeJLFuxwZXqCp9n0nolhcFqV8kIP4eP-bUHd_IS7Q56A2X1NsM_e7NpsGLqiH7V5QrjjzpODzs5lrX4cklFH9pE_2TWW3o-Vky9Bh5x5m5eB4kagmjjFkp8VmwGC2abL5fOIrUDXQli8anUR_1d-X19wWdQHYpuu9S90yPmwsRRs6lq-bTSQEYMKg3QUN4x7S_gVJDosZoXIEWN4Q_k6i1PGRLr6CCJ1AJDNb0" 
+                      fallbackIcon="person"
                     />
                     <div className="absolute inset-0 bg-red-950/40"></div>
                     <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#ffb4ab] text-[#690005] flex items-center justify-center shadow font-bold text-[10px]">
@@ -340,10 +337,11 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 {/* Mert Card */}
                 <div className="flex flex-col items-center bg-[#1c192c] border border-[#93000a]/30 rounded-lg p-3 group shadow-sm">
                   <div className="relative w-14 h-14 rounded-xl overflow-hidden shadow-lg mb-2 grayscale brightness-75">
-                    <img 
+                    <SafeAssetImage 
                       className="w-full h-full object-cover" 
                       alt="Mert" 
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSDGyHEo6C57QfHLfzHn6fHpATwZ_E4dRftmOaQg_x3YXnw8n7tnNeqdE0gOgdK4VaiihLM8bAzh7zjRdQTf2oT_bgIlocy1EBKvKWfyuPCVDxlhRBYRDtYYxvKlhwJBCILE5AC2lTlb9bHIVuVNyegbFuVtMWeYkciEfgUS4vXS62n5FqJqbZrC-1o66H4IPlTdRWp4LXOQ-1UtYt-Lpi5fl3prglhdDKxNsDJo8" 
+                      fallbackIcon="person"
                     />
                     <div className="absolute inset-0 bg-red-950/40"></div>
                     <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#ffb4ab] text-[#690005] flex items-center justify-center shadow font-bold text-[10px]">
@@ -379,6 +377,19 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
             <div className="flex flex-col gap-space-sm pt-2">
               <button 
                 type="button"
+                onClick={handleShareScoreCard}
+                className="w-full py-3.5 px-4 rounded-xl font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:brightness-110 text-white shadow-[0_4px_16px_rgba(219,39,119,0.35)] active:scale-[0.98] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {copiedShare ? 'check_circle' : 'share'}
+                </span>
+                <span>
+                  {copiedShare ? '✓ Görev Karnesi Kopyalandı!' : 'Instagram / Hikayende Paylaş & Meydan Oku'}
+                </span>
+              </button>
+
+              <button 
+                type="button"
                 onClick={handleReplayClick}
                 className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-red-600 via-[#ff5252] to-rose-600 text-white font-sora text-[15px] uppercase tracking-wide flex items-center justify-center gap-space-sm shadow-[0_6px_0_#690005,0_12px_24px_rgba(255,180,171,0.25)] transition-all active:translate-y-[4px] cursor-pointer font-bold"
               >
@@ -397,7 +408,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 className="w-full py-3.5 px-6 rounded-xl bg-[#2b273b] hover:bg-[#363246] text-[#00dbe9] font-sora text-[14px] uppercase tracking-wide flex items-center justify-center gap-space-xs transition-all active:scale-[0.98] shadow-md cursor-pointer font-semibold"
               >
                 <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                <span>Lobiye dön</span>
+                <span>Ana Girişe Dön</span>
               </button>
             </div>
           </div>
@@ -545,10 +556,12 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                   {/* Ece */}
                   <div className="bg-[#1c192c] p-space-sm rounded-lg flex items-center gap-space-sm">
                     <div className="relative w-12 h-12 flex-shrink-0">
-                      <img 
+                      <SafeAssetImage 
                         className="w-12 h-12 rounded-lg object-cover" 
                         alt="Ece" 
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcPjETe5MI452OUuJ3r4_Mk8ZU0BkUKORzp9r4seCjl6rBmuqBn9nvS0Ck8t0shBsBbspZduFYI_CQNQCc34Ik8fCWcUjZO2tjHkyPQZ7b_ahWXVASA6Fz5uE1zuAhxAEcYrtnyqYlM9dKAbG8AzWQ20K-GfVsDtiztToKr8NQISvGhJ47yamHheuo_gLgZpGgwXr2jo-st9r8JQSqsH9ti9zlTnIoJxNjQVw3toE"
+                        fallbackIcon="person"
+                        fallbackClassName="rounded-lg"
                       />
                       <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#00eefc] border-2 border-[#1c192c]"></div>
                     </div>
@@ -568,10 +581,12 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                   {/* Mert */}
                   <div className="bg-[#1c192c] p-space-sm rounded-lg flex items-center gap-space-sm">
                     <div className="relative w-12 h-12 flex-shrink-0">
-                      <img 
+                      <SafeAssetImage 
                         className="w-12 h-12 rounded-lg object-cover" 
                         alt="Mert" 
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCipTg5khFIJHJFrxJj-3jTARQ70do2nyaG-tffFIOjmOaJeKVk4WWSd8GC4UHoDVKNl8JrNhhqjCwjBbTFLVevJN5cBcbgyPQkjDoHpLsefy2ihUNRpLea18wV1La4B3OE1uRssC-HQs8SZECflPFNLVFYcFbFHcctKdMy1s5SqOuWHYNAcLJoL0e-nPF3WDNDLdPjGj0OLeUYQoZJ4u2gwY1yIq6VSuPhwtGyTJw"
+                        fallbackIcon="person"
+                        fallbackClassName="rounded-lg"
                       />
                       <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#00eefc] border-2 border-[#1c192c]"></div>
                     </div>
@@ -609,12 +624,25 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
             <div className="flex flex-col gap-space-sm pt-2">
               <button 
                 type="button"
+                onClick={handleShareScoreCard}
+                className="w-full py-3.5 px-4 rounded-xl font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:brightness-110 text-white shadow-[0_4px_16px_rgba(219,39,119,0.35)] active:scale-[0.98] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {copiedShare ? 'check_circle' : 'share'}
+                </span>
+                <span>
+                  {copiedShare ? '✓ Görev Karnesi Kopyalandı!' : 'Instagram / Hikayende Paylaş & Meydan Oku'}
+                </span>
+              </button>
+
+              <button 
+                type="button"
                 onClick={handleReplayClick}
-                className="w-full h-14 bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#422c00] font-sora text-[15px] font-extrabold rounded-xl flex items-center justify-center gap-space-sm shadow-[0_6px_20px_rgba(255,183,3,0.35)] active:translate-y-1 transition-all cursor-pointer shadow-[0_6px_0_#6b4b00]"
+                className="w-full h-14 bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#422c00] font-sora text-[15px] font-extrabold rounded-xl flex items-center justify-center gap-space-sm active:translate-y-1 transition-all cursor-pointer shadow-[0_6px_0_#6b4b00,0_6px_20px_rgba(255,183,3,0.35)]"
                 id="btn-replay"
               >
                 <span className="material-symbols-outlined text-[22px] font-bold">restart_alt</span>
-                <span>Aynı Mürettebatla Yeniden Dal</span>
+                <span>{isDerinBasinc ? 'Aynı Mürettebatla Yeniden Dal' : 'Aynı Ekiple Tekrar Oyna'}</span>
               </button>
 
               <button 
@@ -623,7 +651,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
                 className="w-full h-12 bg-[#2b273b] text-[#00dbe9] hover:bg-[#363246] font-sora text-[14px] rounded-xl flex items-center justify-center gap-space-xs active:scale-[0.98] transition-all cursor-pointer font-bold"
               >
                 <span className="material-symbols-outlined text-[20px]">chevron_left</span>
-                <span>Lobiye dön</span>
+                <span>Ana Girişe Dön</span>
               </button>
             </div>
           </div>

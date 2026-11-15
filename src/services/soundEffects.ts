@@ -12,6 +12,7 @@ try {
 } catch {}
 
 let audioCtx: AudioContext | null = null;
+const muteListeners = new Set<(muted: boolean) => void>();
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -27,9 +28,31 @@ function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
+if (typeof window !== 'undefined') {
+  const unlockAudio = () => {
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    if (ctx && ctx.state === 'running') {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    }
+  };
+  window.addEventListener('pointerdown', unlockAudio, { passive: true });
+  window.addEventListener('keydown', unlockAudio, { passive: true });
+}
+
 export const soundManager = {
   isMuted(): boolean {
     return isAudioMuted;
+  },
+
+  subscribeMute(cb: (muted: boolean) => void): () => void {
+    muteListeners.add(cb);
+    return () => {
+      muteListeners.delete(cb);
+    };
   },
 
   setMuted(muted: boolean) {
@@ -37,6 +60,11 @@ export const soundManager = {
     try {
       localStorage.setItem('partyverse_sound_muted', String(muted));
     } catch {}
+    muteListeners.forEach((cb) => {
+      try {
+        cb(muted);
+      } catch {}
+    });
     if (!muted) {
       this.playClick();
     }

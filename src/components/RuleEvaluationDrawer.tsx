@@ -53,10 +53,10 @@ export const RuleEvaluationDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
                 <span className="text-[10px] font-mono tracking-widest text-[#00f0ff] uppercase px-2 py-0.5 rounded bg-[#00f0ff]/10 border border-[#00f0ff]/20">
                   OYUN MİMARİSİ RAPORU
                 </span>
-                <span className="text-xs text-[#a59db8]">v2.4 Spesifikasyon</span>
+                <span className="text-xs text-[#a59db8]">v3.0 Güncel Spesifikasyon</span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white font-sora">
-                Kayıp Sinyal: Oyun Mantığı Değerlendirmesi & Bilgi/Eylem Akışı
+                PARTYVERSE: 8 Oyun Mimarisi, 3–4 Kişilik Takımlar & Çok Oyunculu Akış
               </h2>
             </div>
           </div>
@@ -104,10 +104,10 @@ export const RuleEvaluationDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
               <div className="p-3 rounded-lg bg-[#201d30] border border-white/5 space-y-1.5">
                 <div className="text-xs font-semibold text-amber-300">Çelişki C: Enerji Dağıtımının Kurtarma Sonucuna Etkisi</div>
                 <p className="text-[11px] text-[#9e8f78] leading-normal">
-                  Enerji kararlarının rotaları nasıl etkileyeceği belirsizdi (12 enerjinin hat kayıpları ve rota gereksinimleri bağı kopabilirdi).
+                  Enerji kararlarının rotaları nasıl etkileyeceği belirsizdi (15 enerjinin hat kayıpları ve rota gereksinimleri bağı kopabilirdi).
                 </p>
                 <div className="text-[11px] text-[#00f0ff] font-medium pt-1 border-t border-white/5">
-                  ✓ Çözüm: 3 sistem (İtki, Kalkan, Yaşam Desteği) için ayrılan net güç, 4. aşamadaki Rota Alfa (4 İtki), Beta (3 İtki/3 Kalkan) ve Gama (4 Kalkan) erişimini doğrudan kilitler.
+                  ✓ Çözüm: 3 sistem (İtki, Kalkan, Yaşam Desteği) için ayrılan net güç, 4. aşamadaki Rota Alfa (5 İtki / 4 Kalkan), Beta (3 İtki / 3 Kalkan) ve Gama (4 Kalkan) erişimini doğrudan kilitler.
                 </div>
               </div>
             </div>
@@ -140,7 +140,7 @@ export const RuleEvaluationDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
                 <span className="text-[10px] font-mono text-[#dcb8ff] font-bold uppercase">AŞAMA 3 (1.0 DK)</span>
                 <h4 className="text-xs font-bold text-white mt-0.5">Enerji Dağıtımı</h4>
                 <p className="text-[11px] text-[#a59db8] mt-1">
-                  Toplam 12 birim enerji. Mühendis hat kayıplarını hesaplayıp taslak iletir; Kaptan gizli asgari eşiklerle onaylayıp kilitler.
+                  Toplam 15 birim enerji. Mühendis hat kayıplarını hesaplayıp taslak iletir; Kaptan gizli asgari eşiklerle onaylayıp kilitler.
                 </p>
               </div>
 
@@ -269,20 +269,48 @@ export const RuleEvaluationDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Section 4: Gerçek Bağlantı vs Simülasyon Ayrımı */}
+          {/* Section 4: Canlı Çok Oyunculu (Colyseus) & Yerel Test Modları */}
           <div className="p-4 rounded-xl bg-[#0f0c1e] border border-cyan-500/30 space-y-2">
             <div className="flex items-center gap-2 text-[#00f0ff] font-bold font-sora text-sm">
               <Wifi className="w-4 h-4 text-[#00f0ff]" />
-              <span>4. Simülasyon ile Gerçek Bağlantı Ayrımı</span>
+              <span>4. Canlı Çok Oyunculu (Colyseus) & Yerel Senkronizasyon</span>
             </div>
             <p className="text-xs text-[#a59db8]">
-              Kullanıcı brifine harfiyen uyularak çalışmayan harici sunucular varmış gibi yanıltıcı göstergeler eklenmemiştir:
+              Uygulama gerçek WebSocket odalarıyla 2, 3 veya 4 ayrı cihazda eşzamanlı çalıştığı gibi, çevrimdışı veya tek cihaz testlerinde de eksiksiz çalışır:
             </p>
             <ul className="text-xs space-y-1 list-disc list-inside text-[#d1c8e6]">
-              <li><strong className="text-white">Çift Cihaz / Çift Sekme Gerçek Senkronizasyonu:</strong> Tarayıcı <code className="text-[#00f0ff]">BroadcastChannel</code> ve <code className="text-[#00f0ff]">localStorage</code> kanalı üzerinden iki ayrı sekme veya pencere açıldığında oda kodu ve hamleler anında birbirine iletilir.</li>
-              <li><strong className="text-white">Simülatör / Solo Modu:</strong> Tek başına oynayan kullanıcılar için üst panelde "Rol Değiştir (Kaptan ⇄ Mühendis)" düğmesi ve otomatik partner simülasyonu mevcuttur.</li>
-              <li><strong className="text-white">Bağlantı Kesintisi Simülasyonu:</strong> "Bağlantıyı Kes" anahtarıyla süre dondurulur, panolar kilitlenir ve "Yeniden Bağlan" kurtarma durumu gerçekçi olarak test edilebilir.</li>
+              <li><strong className="text-white">Gerçek Zamanlı Colyseus Sunucusu:</strong> Tüm hamleler, sayaçlar, ceza kesintileri, rol filtrelemeleri ve Bas-Konuş telsiz yayınları sunucu otoritesi altında WebSocket ile senkronize edilir; sayfa yenilemede 45 saniyelik otomatik yeniden bağlanma desteği bulunur.</li>
+              <li><strong className="text-white">Çoklu Telefon & Çift Sekme Modu:</strong> Tek cihazda <code className="text-[#00f0ff]">Çoklu Telefon</code> görünümüyle 2, 3 veya 4 rolü aynı ekranda yan yana test edebilir ya da aynı tarayıcıda <code className="text-[#00f0ff]">BroadcastChannel</code> ile sekmeler arası oynayabilirsiniz.</li>
+              <li><strong className="text-white">Gelişmiş Taktik Modu (7 MW):</strong> Kayıp Sinyal, Derin Basınç ve Gölge Protokolü içinde rastgele atanan 2 sistemi eşzamanlı yönetmeye ve plazma dalgasına karşı 7 MW güç matrisi kurmaya olanak tanır.</li>
             </ul>
+          </div>
+
+          {/* Section 5: 8 Oyun Kataloğu Özeti */}
+          <div className="p-4 rounded-xl bg-[#1c192c] border border-emerald-500/25 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-300 font-bold font-sora text-sm">
+              <Zap className="w-4 h-4 text-emerald-400" />
+              <span>5. Tüm Operasyonlar: 4 İki Kişilik + 4 Üç/Dört Kişilik Takım Oyunu</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-lg bg-[#201d30] border border-amber-500/20 space-y-1">
+                <div className="font-bold text-amber-300">2 Kişilik Operasyonlar (4 Aşama)</div>
+                <ul className="text-[11px] text-[#c7beaf] space-y-1 list-disc list-inside">
+                  <li><strong>Kayıp Sinyal:</strong> Aurora-7 uzay istasyonu arıza, şifre, enerji ve kurtarma.</li>
+                  <li><strong>Derin Basınç:</strong> -850m HİDRO-04 denizaltısı sonar glifleri ve balast tahliyesi.</li>
+                  <li><strong>Gölge Protokolü:</strong> Kat 84 lazer koridoru, firewall bypass ve kasa PIN sızdırma.</li>
+                  <li><strong>Karantina 2088:</strong> Baş Biyolog & Güvenlik Şefi biyo-izotop, santrifüj ve 12 Bar vakum.</li>
+                </ul>
+              </div>
+              <div className="p-3 rounded-lg bg-[#201d30] border border-emerald-500/20 space-y-1">
+                <div className="font-bold text-emerald-300">3–4 Kişilik Takım Operasyonları (5 Aşama · Zorluk Ölçekli)</div>
+                <ul className="text-[11px] text-[#c7beaf] space-y-1 list-disc list-inside">
+                  <li><strong>Omega Çekirdeği:</strong> Yörünge çekirdek istasyonunda 5 aşamalı çapraz rol zinciri.</li>
+                  <li><strong>Titan Derin Maden:</strong> Metan ve yüksek sismik basınç altında sondaj tahliyesi.</li>
+                  <li><strong>Siber Kale:</strong> 4 seviyeli güvenlik duvarı, düğüm izolasyonu ve kriptolu çıkış.</li>
+                  <li><strong>Buzul Üssü 12:</strong> Kriyojenik reaktör ve termal yük dengeleme operasyonu.</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 

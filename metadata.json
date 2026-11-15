@@ -1,6 +1,6 @@
 {
   "name": "PARTYVERSE — Kayıp Sinyal: Uzay İstasyonu Konsolu",
-  "description": "İki oyunculu eş zamanlı asimetrik uzay istasyonu konsolu ve arıza kurtarma oyunu. Kaptan ve Mühendis rolleri, taktiksel 2.5D konsollar ve 17 ekranlı modüler arayüz.",
-  "requestFramePermissions": [],
+  "description": "2–4 oyunculu 8 eş zamanlı asimetrik co-op operasyon konsolu: Kayıp Sinyal, Derin Basınç, Gölge Protokolü, Karantina 2088 ve 4 adet 3–4 kişilik 5 aşamalı takım operasyonu.",
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

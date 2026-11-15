@@ -16,32 +16,32 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
     spectralFilterNm: 415,
     selectedBase: 'sitozin-9',
     bioPhase1Transmitted: true,
-    selectedUvSector: 3,
-    selectedValve: 'B' as const,
+    selectedUvSector: 1,
+    selectedValve: 'A' as const,
     phase1Solved: true,
     polymerPct: 45,
     enzymePct: 30,
     neutroPct: 25,
     bondFreqGhz: 8.4,
     bioPhase2Injected: true,
-    centrifugeRpm: 3800,
-    coolingValvePct: 75,
-    pressureReliefActive: true,
+    centrifugeRpm: 2400,
+    coolingValvePct: 50,
+    pressureReliefActive: false,
     phase2Solved: false,
     vacuumFlowRate: 6.2,
     bioPhase3Started: false,
-    selectedChimney: 'BACA-02' as const,
-    chimneyBar: 12.0,
-    safetyLatchUnlocked: true,
+    selectedChimney: 'BACA-01' as const,
+    chimneyBar: 6.0,
+    safetyLatchUnlocked: false,
     phase3Solved: false,
     immunityScore: 10450,
     selinAccuracy: 99.2,
     baranValves: 3,
   };
 
-  const [rpm, setRpm] = useState<number>(kData.centrifugeRpm || 3800);
-  const [coolingPct, setCoolingPct] = useState<number>(kData.coolingValvePct || 75);
-  const [reliefActive, setReliefActive] = useState<boolean>(kData.pressureReliefActive ?? true);
+  const [rpm, setRpm] = useState<number>(kData.centrifugeRpm ?? 2400);
+  const [coolingPct, setCoolingPct] = useState<number>(kData.coolingValvePct ?? 50);
+  const [reliefActive, setReliefActive] = useState<boolean>(kData.pressureReliefActive ?? false);
 
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -96,7 +96,7 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
         </div>
 
         <div className="w-9 h-9 rounded-full bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-          <span className="material-symbols-outlined text-[20px]">person</span>
+          <span className="material-symbols-outlined text-[20px]">shield</span>
         </div>
       </header>
 
@@ -135,7 +135,7 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
           </div>
           <h2 className="text-lg font-extrabold text-white leading-tight">Santrifüjü ve Soğutmayı Ayarla</h2>
           <p className="text-xs text-[#d5c4ac] mt-1 leading-relaxed">
-            Biyoloğun telsizle bildirdiği santrifüj devir hızını (<strong className="text-amber-300">3800 RPM</strong>) ve soğutma seviyesini fiziksel konsolda sabitle.
+            Biyoloğun telsizle bildirdiği santrifüj devir hızını ve soğutma seviyesini fiziksel konsolda sabitle.
           </p>
         </div>
 
@@ -148,8 +148,10 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
             </div>
             <span className="text-[10px] font-mono text-[#9e8f78]">FREQ: 142.8 MHZ</span>
           </div>
-          <p className="text-xs font-bold text-amber-200 italic bg-[#0f0c1e] p-2 rounded-lg border border-white/5">
-            &ldquo;Santrifüjü tam 3800 RPM seviyesine getir ve soğutma valfini %75 aç, yoksa reaktör patlar!&rdquo;
+          <p className="text-xs font-bold text-cyan-100 italic bg-[#0f0c1e] p-2 rounded-lg border border-white/5">
+            &ldquo;{kData.bioPhase2Injected
+              ? 'Panzehir enjekte edildi! Biyologdan hedef santrifüj RPM ve soğutma yüzdesini telsizle öğren.'
+              : 'Baş Biyolog panzehir sentezi yapıyor; reaktör hedefleri telsizden iletilecek...'}&rdquo;
           </p>
         </div>
 
@@ -160,8 +162,8 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
               <span className="material-symbols-outlined text-[#ffb703] text-[16px]">speed</span>
               <span>ROTOR DEVRİ (RPM TACH)</span>
             </div>
-            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-[#ffb703] font-bold">
-              HEDEF: 3800
+            <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-cyan-300 font-bold">
+              MANUEL KALİBRASYON
             </span>
           </div>
 
@@ -186,7 +188,7 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
                 cy="60"
                 r="45"
                 fill="none"
-                stroke={rpm === 3800 ? '#00eefc' : '#ff5252'}
+                stroke="#00eefc"
                 strokeWidth="10"
                 strokeDasharray="283"
                 strokeDashoffset={strokeDashoffset}
@@ -252,7 +254,6 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
           <div className="grid grid-cols-5 gap-1.5 mt-1">
             {[0, 25, 50, 75, 100].map((val) => {
               const isSelected = coolingPct === val;
-              const isOptimal = val === 75;
               return (
                 <button
                   key={val}
@@ -267,11 +268,6 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
                   <div className="text-[10px] font-mono font-bold">
                     {val === 0 ? 'KAPALI' : `%${val}`}
                   </div>
-                  {isOptimal && (
-                    <div className="text-[8px] font-mono text-[#ffb703] font-bold mt-0.5">
-                      [OPT]
-                    </div>
-                  )}
                 </button>
               );
             })}
@@ -307,6 +303,31 @@ export const ScreenKarantinaPhase2Sec: React.FC<Props> = ({
           <span className="material-symbols-outlined text-[15px] text-amber-400">warning</span>
           <span>Taktik not: Hatalı devir antikorun parçalanmasına yol açar.</span>
         </div>
+
+        {state.feedbackMessage && (
+          <div
+            className={`p-3 rounded-xl border text-xs font-mono flex items-center gap-2 ${
+              state.feedbackState === 'success'
+                ? 'bg-emerald-950/50 border-emerald-500/50 text-emerald-200'
+                : state.feedbackState === 'error'
+                ? 'bg-rose-950/50 border-rose-500/50 text-rose-200'
+                : 'bg-cyan-950/50 border-cyan-500/50 text-cyan-200'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[18px] shrink-0 ${
+                state.feedbackState === 'success'
+                  ? 'text-emerald-400'
+                  : state.feedbackState === 'error'
+                  ? 'text-rose-400'
+                  : 'text-cyan-400'
+              }`}
+            >
+              {state.feedbackState === 'success' ? 'check_circle' : state.feedbackState === 'error' ? 'error' : 'info'}
+            </span>
+            <span>{state.feedbackMessage}</span>
+          </div>
+        )}
 
         {/* Primary Action Button */}
         <button

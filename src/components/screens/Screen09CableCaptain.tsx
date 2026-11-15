@@ -5,9 +5,10 @@ interface Props {
   state: MissionState;
   onAdvancePhase: (payload?: { roundId: string; expectedPhaseIndex: number }) => void;
   onUpdate?: (updater: (prev: MissionState) => MissionState) => void;
+  onAction?: (actionType: string, data: any) => void;
 }
 
-export const Screen09CableCaptain: React.FC<Props> = ({ state, onAdvancePhase }) => {
+export const Screen09CableCaptain: React.FC<Props> = ({ state, onAdvancePhase, onAction }) => {
   const { cable } = state;
   const [transmitted, setTransmitted] = useState(false);
 
@@ -15,6 +16,11 @@ export const Screen09CableCaptain: React.FC<Props> = ({ state, onAdvancePhase })
 
   const handleTransmit = () => {
     setTransmitted(true);
+    onAction?.('captain_signal_ready', {
+      message: isDerinBasinc
+        ? 'Dümenci sızıntı bölmesi protokolünü aktardı.'
+        : 'Kaptan kablo bağlantı şemasını telsizden aktardı.',
+    });
     setTimeout(() => setTransmitted(false), 3000);
   };
 
@@ -180,7 +186,7 @@ export const Screen09CableCaptain: React.FC<Props> = ({ state, onAdvancePhase })
                 <span className="text-zinc-500">➔</span>
                 <span className="flex-1 text-center py-1 rounded bg-[#2b273b] font-mono text-xs text-[#00eefc] font-bold">ŞALTER-02</span>
                 <span className="text-zinc-500">➔</span>
-                <span className="flex-1 text-center py-1 rounded bg-[#2b273b] font-mono text-xs text-[#ffdba0] font-bold">ACİL KELEPÇE</span>
+                <span className="flex-1 text-center py-1 rounded bg-[#2b273b] font-mono text-xs text-[#ffdba0] font-bold">ACİL KELEPÇE (≥%65)</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-[#141123]">

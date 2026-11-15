@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MissionState, ENVIRONMENTS } from '../../types/game';
+import { SafeAssetImage } from '../SafeAssetImage';
 
 interface Props {
   state: MissionState;
@@ -91,7 +92,7 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
   const isGolgeProtokolu = state.operationTheme === 'golge_protokolu';
 
   // Gölge Protokolü Phase 1 (Ajan: Fiziksel Panel) states
-  const [golgeSelectedCable, setGolgeSelectedCable] = useState<'SARI' | 'MOR' | null>('SARI');
+  const [golgeSelectedCable, setGolgeSelectedCable] = useState<'SARI' | 'MOR' | null>(null);
   const [golgePorts, setGolgePorts] = useState<{
     ALPHA: { status: 'idle' | 'plugged'; cable?: string };
     BETA: { status: 'idle' | 'plugged'; cable?: string };
@@ -103,7 +104,7 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
     GAMMA: { status: 'idle' },
     DELTA: { status: 'idle' },
   });
-  const [golgeVoltage, setGolgeVoltage] = useState<number>(24.5);
+  const [golgeVoltage, setGolgeVoltage] = useState<number>(18.0);
 
   const handleGolgePortClick = (portKey: 'ALPHA' | 'BETA' | 'GAMMA' | 'DELTA') => {
     if (diagnostic.isSolved) return;
@@ -124,33 +125,38 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
   };
 
   const handleGolgeExecuteIntervention = () => {
-    // If voltage is 24.5V (within 0.5V tolerance) and Delta or Beta has a connection
     const isVoltageTarget = Math.abs(golgeVoltage - 24.5) <= 0.5;
-    const isBetaLocked = golgePorts.BETA.status === 'plugged';
     const isDeltaReady = golgePorts.DELTA.status === 'plugged' && golgePorts.DELTA.cable === 'SARI';
 
-    if (isVoltageTarget && (isDeltaReady || isBetaLocked)) {
-      if (onAction) {
-        onAction('diagnostic_captain_breaker', { breaker: 'K2' });
-      }
-      onUpdate((prev) => ({
-        ...prev,
-        diagnostic: {
-          ...prev.diagnostic,
-          captainSelectedBreaker: 'K2',
-          unlockedBreaker: 'K2',
-          engineerActionTaken: true,
-          isSolved: true,
-        },
-      }));
+    if (onAction) {
+      setFeedback({ type: 'idle', msg: '' });
+      onAction('theme_diagnostic_captain_sync', {
+        solve: true,
+        voltage: golgeVoltage,
+        deltaCable: golgePorts.DELTA.status === 'plugged' ? golgePorts.DELTA.cable : 'NONE',
+      });
+      return;
+    }
+
+    if (isVoltageTarget && isDeltaReady) {
       setFeedback({
         type: 'success',
         msg: 'GÜVENLİK DUVARI AŞILDI! Fiziksel panel bypass tamamlandı, faz kilidi açıldı.',
       });
+      onUpdate((prev) => ({
+        ...prev,
+        diagnostic: {
+          ...prev.diagnostic,
+          captainSelectedBreaker: prev.diagnostic.correctBreaker,
+          unlockedBreaker: prev.diagnostic.correctBreaker,
+          engineerActionTaken: true,
+          isSolved: true,
+        },
+      }));
     } else {
       setFeedback({
         type: 'error',
-        msg: 'VOLTAJ YA DA SOKET HATALI! Hackerın talimatlarını kontrol edin (24.5V & Port-Delta Sarı).',
+        msg: 'VOLTAJ YA DA SOKET HATALI! Hackerın telsiz talimatlarını kontrol edip kablo ve voltajı yeniden ayarla.',
       });
       onUpdate((prev) => ({
         ...prev,
@@ -216,12 +222,12 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[10px] text-[#00eefc] uppercase font-bold truncate">
-                {state.engineerName || 'HACKER MERT'} [KONSOL BİLGİSİ]
+                {state.players.muhendis.name || 'HACKER MERT'} [KONSOL BİLGİSİ]
               </span>
               <span className="font-mono text-[9px] text-[#9e8f78]">CANLI SES</span>
             </div>
             <p className="font-manrope text-xs text-white truncate font-medium mt-0.5">
-              “Önce mavi Beta soketini kilitle, voltajı 24.5 volta sabitle!”
+              “Hacker'ın telsiz talimatı bekleniyor (Port, Kablo Rengi & Hedef Voltaj)...”
             </p>
           </div>
           <div className="flex items-end gap-0.5 h-5 shrink-0 px-1">
@@ -234,10 +240,12 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
 
         {/* Live Situational Viewport */}
         <div className="relative w-full h-36 rounded-xl overflow-hidden shadow-lg bg-[#0f0c1e] border border-white/5">
-          <img 
+          <SafeAssetImage 
             className="w-full h-full object-cover" 
             alt="Fiziksel Panel POV" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6iGDm6P0-WtxdcuvFBI9rfbJbEbBbozUD9ATZLkw92UlG6__KyMXSp504ltUGgHGaGt53VNyeaXjxm2H7YU2bhvjXgqm1uolxDu7e9eXGxnUvsqjlKKmF1A_vs0Az2RadYLzOJyuwDMRziJTjdkO1vL8pz2uAxsEZXpq_ONtR_KK6MpYHKgGX5BRNGkr3fZoFLpkryjEmAzE4RjO2rMjIXQ9D6RO-eTMRyu2aDlY"
+            fallbackIcon="cable"
+            fallbackLabel="FİZİKSEL PANEL POV"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c1e] via-transparent to-transparent"></div>
           <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#0f0c1e]/80 backdrop-blur-sm border border-white/5">
@@ -471,24 +479,28 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
         </div>
 
         {/* Feedback message if any */}
-        {feedback.msg && (
-          <div className={`p-3 rounded-xl border flex items-center gap-2 ${
-            feedback.type === 'success' 
-              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' 
-              : 'bg-red-950/40 border-red-500/50 text-red-300'
-          }`}>
-            <span className="material-symbols-outlined text-[20px]">
-              {feedback.type === 'success' ? 'check_circle' : 'error'}
-            </span>
-            <span className="text-xs font-semibold leading-tight">{feedback.msg}</span>
-          </div>
-        )}
+        {(state.feedbackMessage || feedback.msg) && (() => {
+          const mode = state.feedbackMessage ? state.feedbackState : feedback.type;
+          const bannerClass =
+            mode === 'success'
+              ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
+              : mode === 'idle'
+              ? 'bg-cyan-950/40 border-cyan-500/50 text-cyan-200'
+              : 'bg-red-950/40 border-red-500/50 text-red-300';
+          const icon = mode === 'success' ? 'check_circle' : mode === 'idle' ? 'hourglass_top' : 'error';
+          return (
+            <div className={`p-3 rounded-xl border flex items-center gap-2 ${bannerClass}`}>
+              <span className="material-symbols-outlined text-[20px]">{icon}</span>
+              <span className="text-xs font-semibold leading-tight">{state.feedbackMessage || feedback.msg}</span>
+            </div>
+          );
+        })()}
 
         {/* Confirmation & Lock Bottom Action Button */}
         <div className="flex flex-col gap-1.5 pt-1">
           {diagnostic.isSolved ? (
             <button
-              onClick={() => onAdvancePhase({ roundId: state.currentRoundId || 'round1', expectedPhaseIndex: 0 })}
+              onClick={() => onAdvancePhase({ roundId: state.roundId, expectedPhaseIndex: state.currentPhaseIndex })}
               className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-stone-950 font-sora text-sm font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-1 transition-all"
               type="button"
             >
@@ -662,14 +674,18 @@ export const Screen05ReactorCaptain: React.FC<Props> = ({ state, onUpdate, onAdv
         <section className="w-full pt-1">
           <button
             onClick={() => {
-              if (selectedBreaker) {
-                handleUnlockAction();
-              } else {
-                handleSelectBreaker('K1');
-                setTimeout(() => {
-                  onAction?.('diagnostic_captain_breaker', { breaker: 'K1' });
-                }, 50);
+              if (onAction) {
+                onAction('theme_diagnostic_captain_sync', {});
+                return;
               }
+              onUpdate((prev) => ({
+                ...prev,
+                diagnostic: {
+                  ...prev.diagnostic,
+                  captainSelectedBreaker: prev.diagnostic.correctBreaker,
+                  unlockedBreaker: prev.diagnostic.correctBreaker,
+                },
+              }));
             }}
             className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ffba27] text-[#271900] font-sora font-extrabold text-xs uppercase tracking-wider shadow-lg active:translate-y-1 transition-all flex items-center justify-center gap-2 cursor-pointer"
             type="button"

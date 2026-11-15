@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   OperationTheme 
 } from '../../types/game';
+import { PWAInstallButton } from '../PWAInstallButton';
+import {
+  TEAM_OPERATION_THEMES,
+  isTeamOperationTheme,
+  getTeamOperationMeta,
+} from '../../services/omegaGameEngine';
 import { 
   Compass, 
   Radio, 
@@ -32,6 +38,8 @@ interface Props {
   onStartDualView: (theme?: OperationTheme) => void;
   onOpenRules: () => void;
   onOpenExplorer: () => void;
+  currentTheme?: OperationTheme;
+  onSelectTheme?: (theme: OperationTheme) => void;
 }
 
 export const Screen00Opening: React.FC<Props> = ({
@@ -39,10 +47,44 @@ export const Screen00Opening: React.FC<Props> = ({
   onStartDualView,
   onOpenRules,
   onOpenExplorer,
+  currentTheme,
+  onSelectTheme,
 }) => {
   const [activeCardTab, setActiveCardTab] = useState<'asymmetric' | 'themes' | 'tasks' | 'power' | 'routes'>('asymmetric');
-  const [selectedThemePreview, setSelectedThemePreview] = useState<OperationTheme>('derin_basinc');
+  const [selectedThemePreview, setSelectedThemePreview] = useState<OperationTheme>(currentTheme || 'derin_basinc');
   const [activeRoleView, setActiveRoleView] = useState<'all' | 'kaptan' | 'muhendis'>('all');
+
+  // Keep selected theme preview synchronized if parent changes
+  useEffect(() => {
+    if (currentTheme && currentTheme !== selectedThemePreview) {
+      setSelectedThemePreview(currentTheme);
+    }
+  }, [currentTheme]);
+
+  const handleThemeChange = (theme: OperationTheme) => {
+    setSelectedThemePreview(theme);
+    if (onSelectTheme) {
+      onSelectTheme(theme);
+    }
+  };
+
+  const isTeamOp = isTeamOperationTheme(selectedThemePreview);
+  const teamMeta = getTeamOperationMeta(selectedThemePreview);
+  const isKarantina = selectedThemePreview === 'karantina_2088';
+  const isDerin = selectedThemePreview === 'derin_basinc';
+  const isGolge = selectedThemePreview === 'golge_protokolu';
+
+  const themeDisplayTitle = isTeamOp ? teamMeta.title.toUpperCase() :
+                            isKarantina ? 'KARANTİNA 2088 // HAREKÂT' :
+                            isDerin ? 'DERİN BASINÇ // HAREKÂT' :
+                            isGolge ? 'GÖLGE PROTOKOLÜ // HAREKÂT' : 'KAYIP SİNYAL // HAREKÂT';
+
+  const themeBadgeText = isTeamOp
+    ? `🛡️ 3–4 KİŞİLİK · 5 AŞAMA · ${teamMeta.shortTitle}`
+    : isKarantina ? '☣️ 2 KİŞİLİK BİYOLOJİK İZOLASYON'
+    : isDerin ? '⚓ 2 KİŞİLİK SU ALTI (-850M)'
+    : isGolge ? '🕶️ 2 KİŞİLİK SİBER SIZMA'
+    : '🛸 2 KİŞİLİK UZAY İSTASYONU';
 
   return (
     <div className="w-full max-w-5xl mx-auto px-2 sm:px-6 py-2 sm:py-4 flex flex-col gap-4 sm:gap-6 animate-fadeIn text-[#e6dff9] select-none pb-28 sm:pb-8">
@@ -56,148 +98,232 @@ export const Screen00Opening: React.FC<Props> = ({
         <div className="relative z-10 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5 sm:gap-6">
           <div className="flex-1 flex flex-col items-start text-left">
             
-            {/* Mission Type Badges - Mobile compact */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-[#ffb703]/20 border border-[#ffb703]/40 text-[#ffb703] font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#ffb703] animate-ping"></span>
-                2 OYUNCULU EŞZAMANLI CO-OP
+            {/* Mission Type Metadata */}
+            <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3 font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase">
+              <span className={
+                isTeamOp ? 'text-emerald-300' :
+                isKarantina ? 'text-amber-300' :
+                isDerin ? 'text-cyan-300' :
+                isGolge ? 'text-purple-300' : 'text-[#ffb703]'
+              }>
+                {themeBadgeText}
               </span>
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-[#00eefc]/20 border border-[#00eefc]/40 text-[#00eefc] font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase">
-                ASİMETRİK İLETİŞİM
-              </span>
-              <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase hidden xs:inline-flex">
-                YEREL AĞ & ÇİFT CİHAZ
+              <span className="text-white/25">·</span>
+              <span className="text-[#00eefc]">ASİMETRİK İLETİŞİM</span>
+              <span className="text-white/25 hidden xs:inline">·</span>
+              <span className="text-emerald-300 hidden xs:inline">
+                {isTeamOp ? '3 VEYA 4 CİHAZ · 5 AŞAMA' : '2 CİHAZ'}
               </span>
             </div>
 
             <h1 className="font-sora text-2xl xs:text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
               PARTYVERSE <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-[#00eefc] via-[#ffb703] to-[#ef4444] bg-clip-text text-transparent">
-                KAYIP SİNYAL // HAREKÂT
+              <span className={`transition-all duration-300 bg-clip-text text-transparent ${
+                isTeamOp ? 'bg-gradient-to-r from-emerald-300 via-[#00eefc] to-[#ffb703]' :
+                isKarantina ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-red-500' :
+                isDerin ? 'bg-gradient-to-r from-[#00eefc] via-cyan-300 to-blue-500' :
+                isGolge ? 'bg-gradient-to-r from-purple-400 via-pink-400 to-[#00eefc]' :
+                'bg-gradient-to-r from-[#00eefc] via-[#ffb703] to-[#ef4444]'
+              }`}>
+                {themeDisplayTitle}
               </span>
             </h1>
 
             <p className="mt-2 sm:mt-3 text-xs sm:text-base text-[#c7beaf] max-w-2xl leading-relaxed">
-              İki farklı telefon, iki bağımsız rol ve sıfır ortak ekran! Biri kılavuz ve kuralları incelerken diğeri kontrol panellerini ve telemetriyi yönetir. Ekranlara bakmak kesinlikle yasaktır; sadece sesli iletişimle sistemi kurtarın.
+              {isTeamOp
+                ? 'Üç veya dört farklı telefon, bağımsız uzman rolleri ve sıfır ortak ekran! Komutan, Mühendis, Kriptolog ve Güvenlik birimleri telemetri ile şifreleri yalnızca telsizle paylaşır; 5 aşamalı krizi birlikte çözer.'
+                : 'İki farklı telefon, iki bağımsız rol ve sıfır ortak ekran! Biri kılavuz ve kuralları incelerken diğeri kontrol panellerini ve telemetriyi yönetir. Ekranlara bakmak kesinlikle yasaktır; sadece sesli iletişimle sistemi kurtarın.'}
             </p>
+
+            {/* Viral Rule #1 Hook Banner */}
+            <div className="w-full mt-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-red-950/60 via-[#1e1329] to-amber-950/60 border border-amber-400/40 shadow-lg flex items-center gap-3 text-left">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 flex-shrink-0 text-xl font-bold">
+                ⚠️
+              </div>
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] sm:text-[11px] text-amber-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  <span>KURAL #1: EKRANLARA BAKMAK KESİNLİKLE YASAKTIR!</span>
+                  <span className="px-1.5 py-0.2 rounded bg-amber-400 text-black text-[9px] font-black uppercase">İLİŞKİ TESTİ</span>
+                </span>
+                <p className="text-xs sm:text-sm text-slate-200 mt-0.5 leading-snug">
+                  Yan yana veya uzaktan oynayın; arkadaşınızın ekranını görmeden <strong>yalnızca ses ve telsizle</strong> koordinasyon kurun. Sevgilinizle veya arkadaşınızla kavga etmeden bitirebilir misiniz?
+                </p>
+              </div>
+            </div>
+
+            {/* 3 Steps Zero-Barrier Explainer */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full mt-3">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg bg-cyan-500/20 text-[#00eefc] flex items-center justify-center font-bold text-xs font-mono flex-shrink-0">1</span>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-white">Odayı Kur & Davet Et</span>
+                  <span className="text-[10px] text-slate-400 leading-tight">Oda kodunu veya davetini arkadaşına gönder.</span>
+                </div>
+              </div>
+              <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg bg-amber-500/20 text-[#ffb703] flex items-center justify-center font-bold text-xs font-mono flex-shrink-0">2</span>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-white">Ekranları Gizle</span>
+                  <span className="text-[10px] text-slate-400 leading-tight">Biri şifreyi çözer, diğeri vanaları kilitler.</span>
+                </div>
+              </div>
+              <div className="p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs font-mono flex-shrink-0">3</span>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-white">Telsizle Yönet</span>
+                  <span className="text-[10px] text-slate-400 leading-tight">Süre dolmadan bağırarak sistemi kurtarın!</span>
+                </div>
+              </div>
+            </div>
 
             {/* Quick Hero Actions - Desktop & Tablet */}
             <div className="mt-4 sm:mt-6 hidden sm:flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={() => onStartGame(selectedThemePreview)}
-                className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,183,3,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+                className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,183,3,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
               >
-                <Play className="w-4 h-4 fill-current" />
-                <span>OPERASYONA BAŞLA // ODA OLUŞTUR</span>
-                <ArrowRight className="w-4 h-4" />
+                <Play className="w-4 h-4 fill-current shrink-0" />
+                <span>
+                  {isTeamOp ? `${teamMeta.shortTitle} (3–4 KİŞİ) ODA OLUŞTUR` :
+                   isKarantina ? 'KARANTİNA 2088 (2 KİŞİ) BAŞLAT' :
+                   isDerin ? 'DERİN BASINÇ (2 KİŞİ) BAŞLAT' :
+                   isGolge ? 'GÖLGE PROTOKOLÜ (2 KİŞİ) BAŞLAT' :
+                   'KAYIP SİNYAL (2 KİŞİ) BAŞLAT'}
+                </span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
 
               <button
                 onClick={() => onStartDualView(selectedThemePreview)}
-                className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:bg-cyan-500/30 text-[#00eefc] border border-[#00eefc]/50 font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer"
+                className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:bg-cyan-500/30 text-[#00eefc] border border-[#00eefc]/50 font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
               >
-                <Columns2 className="w-4 h-4" />
-                <span>İKİLİ TELEFON (DUAL VIEW) MODU</span>
+                <Columns2 className="w-4 h-4 shrink-0" />
+                <span>{isTeamOp ? 'ÇOKLU TELEFON TEST MODU' : 'İKİLİ TELEFON TEST MODU'}</span>
               </button>
             </div>
           </div>
 
           {/* Theme Selector Widget - Mobile Horizontal, Desktop Vertical */}
-          <div className="w-full lg:w-72 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0e0b1c]/95 border border-white/10 shadow-xl flex flex-col gap-2.5">
+          <div className="w-full lg:w-80 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#0e0b1c]/95 border border-white/10 shadow-xl flex flex-col gap-2.5">
             <div className="flex items-center justify-between pb-1.5 border-b border-white/10 text-xs font-mono">
-              <span className="text-[#9e8f78] uppercase font-bold text-[10px] sm:text-xs">OPERASYON EVRENİ</span>
-              <span className="text-[#ffb703] font-bold text-[10px] sm:text-xs">4 TEMADAN BİRİNİ SEÇ</span>
+              <span className="text-[#9e8f78] uppercase font-bold text-[10px] sm:text-xs">OPERASYON SEÇ</span>
+              <span className="text-emerald-300 font-bold text-[10px] sm:text-xs">4×(3–4P) &amp; 4×(2P)</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-1 gap-1.5 sm:gap-2">
+            <div className="text-[9px] font-mono text-emerald-300/90 uppercase font-bold tracking-wider">
+              3–4 Kişilik Takım Oyunları (5 Aşama)
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-1.5">
+              {TEAM_OPERATION_THEMES.map((tId) => {
+                const meta = getTeamOperationMeta(tId);
+                const selected = selectedThemePreview === tId;
+                return (
+                  <button
+                    key={tId}
+                    onClick={() => handleThemeChange(tId)}
+                    className={`min-h-[44px] p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                      selected
+                        ? 'bg-emerald-950/90 border-emerald-400 text-white shadow-[0_0_12px_rgba(52,211,153,0.35)]'
+                        : 'bg-emerald-500/10 border-emerald-500/25 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+                        <Users className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[11px] font-bold font-sora text-white truncate">{meta.shortTitle}</span>
+                        <span className="text-[9px] text-emerald-300 font-mono truncate">3–4 Kişi · 5 Aşama</span>
+                      </div>
+                    </div>
+                    {selected && <span className="text-emerald-400 text-xs shrink-0">●</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="text-[9px] font-mono text-[#ffb703]/90 uppercase font-bold tracking-wider pt-1 border-t border-white/5">
+              2 Kişilik Düello Oyunları (Mevcut)
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
               {/* Theme 0: Karantina 2088 */}
               <button
-                onClick={() => setSelectedThemePreview('karantina_2088')}
-                className={`min-h-[48px] p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-2 ${
+                onClick={() => handleThemeChange('karantina_2088')}
+                className={`min-h-[44px] p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
                   selectedThemePreview === 'karantina_2088'
                     ? 'bg-amber-950/90 border-amber-400 text-white shadow-[0_0_12px_rgba(245,158,11,0.4)]'
                     : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-1.5 sm:gap-2 w-full">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-                    <FlaskConical className="w-4 h-4" />
-                  </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <FlaskConical className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[11px] sm:text-xs font-bold font-sora text-white truncate">Karantina 2088</span>
-                    <span className="text-[9px] sm:text-[10px] text-amber-300 font-mono truncate">KR88 // Bio</span>
+                    <span className="text-[11px] font-bold font-sora text-white truncate">Karantina</span>
+                    <span className="text-[9px] text-amber-300 font-mono truncate">2P · KR88</span>
                   </div>
                 </div>
-                {selectedThemePreview === 'karantina_2088' && <span className="text-amber-400 text-xs hidden sm:inline">●</span>}
               </button>
 
               {/* Theme 1: Derin Basınç */}
               <button
-                onClick={() => setSelectedThemePreview('derin_basinc')}
-                className={`min-h-[48px] p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-2 ${
+                onClick={() => handleThemeChange('derin_basinc')}
+                className={`min-h-[44px] p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
                   selectedThemePreview === 'derin_basinc'
                     ? 'bg-cyan-950/80 border-cyan-400 text-white shadow-[0_0_12px_rgba(0,238,252,0.3)]'
                     : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-1.5 sm:gap-2 w-full">
-                  <div className="w-7 h-7 rounded-lg bg-cyan-500/20 text-[#00eefc] flex items-center justify-center shrink-0">
-                    <Waves className="w-4 h-4" />
-                  </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Waves className="w-3.5 h-3.5 text-[#00eefc] shrink-0" />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[11px] sm:text-xs font-bold font-sora text-white truncate">Derin Basınç</span>
-                    <span className="text-[9px] sm:text-[10px] text-cyan-300 font-mono truncate">85.2 ATM</span>
+                    <span className="text-[11px] font-bold font-sora text-white truncate">Derin Basınç</span>
+                    <span className="text-[9px] text-cyan-300 font-mono truncate">2P · 85 ATM</span>
                   </div>
                 </div>
-                {selectedThemePreview === 'derin_basinc' && <span className="text-[#00eefc] text-xs hidden sm:inline">●</span>}
               </button>
 
               {/* Theme 2: Gölge Protokolü */}
               <button
-                onClick={() => setSelectedThemePreview('golge_protokolu')}
-                className={`min-h-[48px] p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-2 ${
+                onClick={() => handleThemeChange('golge_protokolu')}
+                className={`min-h-[44px] p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
                   selectedThemePreview === 'golge_protokolu'
                     ? 'bg-purple-950/80 border-purple-400 text-white shadow-[0_0_12px_rgba(168,85,247,0.3)]'
                     : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-1.5 sm:gap-2 w-full">
-                  <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-[#00eefc] flex items-center justify-center shrink-0">
-                    <Terminal className="w-4 h-4" />
-                  </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Terminal className="w-3.5 h-3.5 text-purple-300 shrink-0" />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[11px] sm:text-xs font-bold font-sora text-white truncate">Gölge</span>
-                    <span className="text-[9px] sm:text-[10px] text-purple-300 font-mono truncate">Kat 84</span>
+                    <span className="text-[11px] font-bold font-sora text-white truncate">Gölge</span>
+                    <span className="text-[9px] text-purple-300 font-mono truncate">2P · Kat 84</span>
                   </div>
                 </div>
-                {selectedThemePreview === 'golge_protokolu' && <span className="text-[#00eefc] text-xs hidden sm:inline">●</span>}
               </button>
 
               {/* Theme 3: Kayıp Sinyal */}
               <button
-                onClick={() => setSelectedThemePreview('kayip_sinyal')}
-                className={`min-h-[48px] p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-2 ${
+                onClick={() => handleThemeChange('kayip_sinyal')}
+                className={`min-h-[44px] p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
                   selectedThemePreview === 'kayip_sinyal'
                     ? 'bg-amber-950/80 border-amber-400 text-white shadow-[0_0_12px_rgba(255,183,3,0.3)]'
                     : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
                 }`}
               >
-                <div className="flex items-center gap-1.5 sm:gap-2 w-full">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-[#ffb703] flex items-center justify-center shrink-0">
-                    <Rocket className="w-4 h-4" />
-                  </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Rocket className="w-3.5 h-3.5 text-[#ffb703] shrink-0" />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[11px] sm:text-xs font-bold font-sora text-white truncate">Kayıp Sinyal</span>
-                    <span className="text-[9px] sm:text-[10px] text-amber-300 font-mono truncate">Aurora-7</span>
+                    <span className="text-[11px] font-bold font-sora text-white truncate">Kayıp Sinyal</span>
+                    <span className="text-[9px] text-amber-300 font-mono truncate">2P · Aurora</span>
                   </div>
                 </div>
-                {selectedThemePreview === 'kayip_sinyal' && <span className="text-[#ffb703] text-xs hidden sm:inline">●</span>}
               </button>
             </div>
 
-            <div className="pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px] sm:text-[11px] font-mono">
+            <div className="pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px] sm:text-[11px] font-mono tabular-nums">
               <span className="text-[#9e8f78]">Zaman Limiti:</span>
-              <span className="text-[#ffb703] font-bold">5 Dakika (300s)</span>
+              <span className="text-[#ffb703] font-bold">
+                {isTeamOp ? '8 Dakika (480s)' : '5 Dakika (300s)'}
+              </span>
             </div>
           </div>
         </div>
@@ -243,7 +369,7 @@ export const Screen00Opening: React.FC<Props> = ({
             }`}
           >
             <Compass className="w-3.5 h-3.5 shrink-0" />
-            <span>3 Operasyon</span>
+            <span>8 Operasyon</span>
           </button>
 
           <button
@@ -415,9 +541,51 @@ export const Screen00Opening: React.FC<Props> = ({
           </div>
         )}
 
-        {/* KART 2: 4 Farklı Operasyon Evreni */}
+        {/* KART 2: 8 Farklı Operasyon Evreni (4×3-4P + 4×2P) */}
         {activeCardTab === 'themes' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-fadeIn">
+          <div className="flex flex-col gap-4 animate-fadeIn">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {TEAM_OPERATION_THEMES.map((tId) => {
+                const meta = getTeamOperationMeta(tId);
+                return (
+                  <div
+                    key={tId}
+                    className="p-4 sm:p-5 rounded-2xl bg-[#141128] border border-emerald-400/50 shadow-[0_0_20px_rgba(52,211,153,0.12)] flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
+                          <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono text-[9px] font-bold">
+                          3–4 KİŞİ · 5 AŞAMA
+                        </span>
+                      </div>
+                      <h3 className="font-sora text-sm sm:text-base font-bold text-white mb-1">
+                        {meta.title}
+                      </h3>
+                      <p className="text-xs text-[#c7beaf] leading-relaxed mb-3">
+                        {meta.description}
+                      </p>
+                      <div className="space-y-1 text-[11px] font-mono text-emerald-200/80">
+                        {meta.stageTitles.map((st, i) => (
+                          <div key={i} className="truncate">• {st}</div>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onStartGame(tId)}
+                      className="mt-3 sm:mt-4 w-full min-h-[44px] py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/50 text-xs font-sora font-bold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                    >
+                      <span>Bu Ekip Göreviyle Başla</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Tema 0: Karantina 2088 */}
             <div className="p-4 sm:p-5 rounded-2xl bg-[#141128] border border-amber-400/60 shadow-[0_0_20px_rgba(245,158,11,0.15)] flex flex-col justify-between">
               <div>
@@ -581,6 +749,7 @@ export const Screen00Opening: React.FC<Props> = ({
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
+          </div>
           </div>
         )}
 
@@ -857,16 +1026,18 @@ export const Screen00Opening: React.FC<Props> = ({
         <div className="flex items-center gap-2 text-[11px]">
           <span className="text-[#00eefc]">⚡ Canlı WebSocket Senkronizasyonu</span>
           <span className="text-white/20">·</span>
-          <span className="text-[#9e8f78]">5 Dakika</span>
+          <span className="text-[#9e8f78]">{isTeamOp ? '8 Dakika (5 Aşama)' : '5 Dakika'}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <PWAInstallButton />
+
           <button
             onClick={onOpenExplorer}
             className="min-h-[40px] px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#ffb703] border border-white/10 flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>17 Ekran Gezgini</span>
+            <span>44 Ekran Gezgini</span>
           </button>
 
           <button
@@ -886,7 +1057,13 @@ export const Screen00Opening: React.FC<Props> = ({
           className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,183,3,0.35)] active:scale-[0.98] transition-transform cursor-pointer"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
-          <span>BAŞLA // ODA AÇ</span>
+          <span>
+            {isTeamOp ? `${teamMeta.shortTitle} (3-4P)` :
+             isKarantina ? 'KARANTİNA' :
+             isDerin ? 'DERİN BASINÇ' :
+             isGolge ? 'GÖLGE' :
+             'KAYIP SİNYAL'}
+          </span>
         </button>
 
         <button
@@ -894,7 +1071,7 @@ export const Screen00Opening: React.FC<Props> = ({
           className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl bg-cyan-500/20 text-[#00eefc] border border-cyan-400/50 font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform cursor-pointer"
         >
           <Columns2 className="w-3.5 h-3.5" />
-          <span>İKİLİ TELEFON</span>
+          <span>{isTeamOp ? 'ÇOKLU TELEFON' : 'İKİLİ TELEFON'}</span>
         </button>
       </div>
 
