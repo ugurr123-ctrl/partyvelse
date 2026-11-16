@@ -90,6 +90,12 @@ export default function App() {
   const [isShaking, setIsShaking] = useState(false);
   const [localReconnectCountdown, setLocalReconnectCountdown] = useState(45);
 
+  const contentRef = React.useRef<HTMLElement>(null);
+  React.useLayoutEffect(() => {
+    const content = contentRef.current;
+    if (content) content.scrollTop = 0;
+  }, [state.roundId, state.status, state.currentPhaseIndex, state.operationTheme]);
+
   const isOnlineRef = React.useRef(isOnline);
   const dualViewModeRef = React.useRef(dualViewMode);
   useEffect(() => {
@@ -1073,7 +1079,7 @@ export default function App() {
       />
 
       {/* Main Container with subtle screen shake */}
-      <main className="vokza-content flex-1 min-h-0 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-start">
+      <main ref={contentRef} className="vokza-content flex-1 min-h-0 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-start">
         <motion.div
           animate={isShaking ? {
             x: [0, -8, 8, -6, 6, -3, 3, 0],

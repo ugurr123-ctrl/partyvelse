@@ -94,7 +94,7 @@ export const TacticalRadioBanner: React.FC<Props> = ({ onOpenRadio, myRole }) =>
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -40, scale: 0.95 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md pointer-events-auto"
+          className="fixed top-[calc(0.75rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md pointer-events-auto"
         >
           <div className="p-3 rounded-2xl bg-[#14102b]/95 border-2 border-[#ffb703] shadow-[0_0_30px_rgba(255,183,3,0.45)] backdrop-blur-xl flex items-center justify-between gap-2.5 text-white">
             <div className="flex items-center gap-2.5 min-w-0">

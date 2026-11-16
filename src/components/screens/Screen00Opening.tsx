@@ -180,7 +180,7 @@ export const Screen00Opening: React.FC<Props> = ({
             <div className="mt-4 sm:mt-6 hidden sm:flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={() => onStartGame(selectedThemePreview)}
-                className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,183,3,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
+                className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-[0_4px_20px_rgba(255,183,3,0.4)] hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer whitespace-normal text-center"
               >
                 <Play className="w-4 h-4 fill-current shrink-0" />
                 <span>
