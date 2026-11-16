@@ -13,7 +13,7 @@ export const ScreenKarantinaSecRole: React.FC<Props> = ({ state, onConfirmRole }
   const helmetImg = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBilizEiIffwr8XJlo7TIJXj8YT9b25-lSyE7dR5UXD_y4jzqLVjhwbW_6wkDhNrNYU-uJ00aJesQWO4eIh9ZgfNd0-W-YAH4O8rhQApqV-nTT1Xoli3xXbpJ17J1wv3wVkidJCKkAP7ZJfgG0D_6S_oIMUIlJUZMsmVDB_sIm97mOFpHgpQPiEFM140wKiSMww6CuRnIdl5o5VNHNSa6P796rVpjCqPr-cdchB0AU';
 
   return (
-    <div className="w-full max-w-[440px] mx-auto min-h-[calc(100vh-80px)] bg-[#110e1e] text-[#e6dff9] flex flex-col justify-between select-none font-sans pb-6 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="w-full max-w-[440px] mx-auto vokza-screen-height bg-[#110e1e] text-[#e6dff9] flex flex-col justify-between select-none font-sans pb-6 rounded-2xl shadow-2xl overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[#141123]/95 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">

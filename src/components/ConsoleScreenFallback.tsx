@@ -20,7 +20,7 @@ export const ConsoleScreenFallback: React.FC<Props> = ({
     : isCaptain ? '#ffb703' : '#00f0ff';
 
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-130px)] rounded-[32px] bg-[#0d0a1d]/90 border border-white/10 p-4 sm:p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-md animate-pulse">
+    <div className="w-full max-w-[420px] mx-auto vokza-screen-height rounded-[32px] bg-[#0d0a1d]/90 border border-white/10 p-4 sm:p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-md animate-pulse">
       
       {/* Top Ambient Glow Accent */}
       <div 

@@ -67,7 +67,7 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full max-w-[440px] mx-auto min-h-[calc(100vh-80px)] bg-[#110e1e] text-[#e6dff9] flex flex-col font-sans select-none pb-12 shadow-2xl rounded-2xl overflow-hidden">
+    <div className="w-full max-w-[440px] mx-auto vokza-screen-height bg-[#110e1e] text-[#e6dff9] flex flex-col font-sans select-none pb-12 shadow-2xl rounded-2xl overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[#141123]/95 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">

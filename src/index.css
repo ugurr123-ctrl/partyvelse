@@ -415,6 +415,7 @@ body {
 }
 
 .vokza-content {
+  container-type: size;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -431,4 +432,10 @@ body {
   .vokza-content select {
     font-size: max(1rem, 1em);
   }
+}
+
+/* Match the scrolling area after the header, padding and safe areas. */
+.vokza-screen-height {
+  min-height: calc(100dvh - 5rem);
+  min-height: 100cqh;
 }

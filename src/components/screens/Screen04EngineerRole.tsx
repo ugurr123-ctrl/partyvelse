@@ -30,7 +30,7 @@ export const Screen04EngineerRole: React.FC<Props> = ({ state, onConfirmRole }) 
   // If Gölge Protokolü is chosen, render the exact official Gölge Hacker assignment card
   if (isGolgeProtokolu) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#141123] text-[#e6dff9] relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-[#2b273b] antialiased select-none animate-fadeIn font-sans pb-6">
+      <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#141123] text-[#e6dff9] relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-[#2b273b] antialiased select-none animate-fadeIn font-sans pb-6">
         
         {/* Fixed Top Bar */}
         <header className="w-full pt-4 px-4 bg-[#141123]/80 backdrop-blur-xl border-b border-white/5 pb-3">
@@ -272,7 +272,7 @@ export const Screen04EngineerRole: React.FC<Props> = ({ state, onConfirmRole }) 
   // If Derin Basınç is chosen, render the exact official Derin Basınç Makinist assignment card
   if (isDerinBasinc) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#141123] text-[#e6dff9] relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-[#2b273b] antialiased select-none animate-fadeIn font-sans pb-6">
+      <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#141123] text-[#e6dff9] relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-[#2b273b] antialiased select-none animate-fadeIn font-sans pb-6">
         
         {/* Fixed Top Bar */}
         <header className="w-full pt-4 px-4 bg-[#0f0c1e]/85 backdrop-blur-xl border-b border-white/5 pb-3">
@@ -538,7 +538,7 @@ export const Screen04EngineerRole: React.FC<Props> = ({ state, onConfirmRole }) 
 
   // Fallback / Space Mode (Kayıp Sinyal)
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#120f24] text-white relative flex flex-col justify-between overflow-hidden rounded-[44px] shadow-2xl border border-[#272347] antialiased select-none animate-fadeIn font-sans">
+    <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#120f24] text-white relative flex flex-col justify-between overflow-hidden rounded-[44px] shadow-2xl border border-[#272347] antialiased select-none animate-fadeIn font-sans">
       
       {/* Background Blueprint / Holo Grid Ambient Layer */}
       <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(#00eefc_1px,transparent_1px)] [background-size:24px_24px]"></div>

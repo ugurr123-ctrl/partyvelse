@@ -253,7 +253,7 @@ export const Screen02Lobby: React.FC<Props> = ({
 
   if (isGolgeProtokolu) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-screen bg-[#141123] text-[#e6dff9] flex flex-col justify-between pb-safe select-none overflow-x-hidden animate-fadeIn font-sans">
+      <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#141123] text-[#e6dff9] flex flex-col justify-between pb-safe select-none overflow-x-hidden animate-fadeIn font-sans">
         {/* Screen Header */}
         <header className="relative w-full z-20 bg-[#141123]/80 backdrop-blur-xl border-b border-white/5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <div className="h-16 px-5 flex items-center justify-between gap-3">
@@ -799,7 +799,7 @@ export const Screen02Lobby: React.FC<Props> = ({
   }
 
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#0a0815] text-white flex flex-col justify-between pb-6 rounded-[42px] border border-white/10 shadow-2xl relative select-none overflow-hidden animate-fadeIn font-sans">
+    <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#0a0815] text-white flex flex-col justify-between pb-6 rounded-[42px] border border-white/10 shadow-2xl relative select-none overflow-hidden animate-fadeIn font-sans">
       
       {/* Ambient background glows */}
       <div className="absolute -top-24 -left-24 w-80 h-80 bg-[#00eefc]/10 rounded-full blur-[80px] pointer-events-none"></div>

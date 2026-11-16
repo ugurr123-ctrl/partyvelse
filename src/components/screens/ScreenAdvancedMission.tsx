@@ -44,7 +44,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   // If advanced scenario data is not initialized
   if (!adv) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#0a0815] text-white flex items-center justify-center p-6 rounded-[36px] border border-white/10">
+      <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#0a0815] text-white flex items-center justify-center p-6 rounded-[36px] border border-white/10">
         <p className="text-sm font-mono text-cyan-400">Gelişmiş senaryo verisi yükleniyor...</p>
       </div>
     );
@@ -119,7 +119,7 @@ export const ScreenAdvancedMission: React.FC<Props> = ({
   displayedTabs.push('tahliye');
 
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#080711] text-white flex flex-col justify-between p-4 rounded-[40px] border border-white/10 shadow-2xl relative select-none font-sans overflow-hidden animate-fadeIn">
+    <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#080711] text-white flex flex-col justify-between p-4 rounded-[40px] border border-white/10 shadow-2xl relative select-none font-sans overflow-hidden animate-fadeIn">
       
       {/* Background ambient light */}
       <div className="absolute -top-20 -left-20 w-72 h-72 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none"></div>

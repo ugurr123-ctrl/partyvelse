@@ -450,7 +450,7 @@ export const Screen01Entry: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#141123] text-[#e6dff9] flex flex-col justify-between pb-6 rounded-[36px] border border-white/10 shadow-2xl overflow-hidden relative select-none animate-fadeIn">
+    <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#141123] text-[#e6dff9] flex flex-col justify-between pb-6 rounded-[36px] border border-white/10 shadow-2xl overflow-hidden relative select-none animate-fadeIn">
       {/* Background radial glows */}
       <div className="absolute -top-20 -left-20 w-72 h-72 bg-[#00eefc]/15 rounded-full blur-[80px] pointer-events-none"></div>
       <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-[#ffb703]/15 rounded-full blur-[80px] pointer-events-none"></div>

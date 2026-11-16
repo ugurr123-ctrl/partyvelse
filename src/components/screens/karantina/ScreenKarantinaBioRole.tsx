@@ -13,7 +13,7 @@ export const ScreenKarantinaBioRole: React.FC<Props> = ({ state, onConfirmRole }
   const visorImg = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCuBUbjzYWz2kxu_8NqGqLbrbNumu5sd_tkkfn6P7yJLnQUEVUeIS8hkXUIltC4rB9xx2YbVw728gGkhplUCq1_lnOE_9uTNHtmRUBL_mAZY5Xf7hz_wibd4xLh8n01vYTWgpRPIVGqqLqS7HVrChHd0d4iHEI1hF9k68bWVTcuq0nuXX4bi35NiHAI-OF_uBmIUXDBZxZUpbTfTlwEvQHu56JJ3sM4gKJfv6i09W8';
 
   return (
-    <div className="w-full max-w-[440px] mx-auto min-h-[calc(100vh-80px)] bg-[#110e1e] text-[#e6dff9] flex flex-col justify-between select-none font-sans pb-6 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="w-full max-w-[440px] mx-auto vokza-screen-height bg-[#110e1e] text-[#e6dff9] flex flex-col justify-between select-none font-sans pb-6 rounded-2xl shadow-2xl overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[#141123]/95 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">

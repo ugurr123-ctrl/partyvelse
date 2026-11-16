@@ -30,7 +30,7 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
   // Gölge Protokolü — Gizli Rol: Sahadaki Ajan
   if (isGolgeProtokolu) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-screen bg-[#141123] text-[#e6dff9] flex flex-col justify-between pb-safe select-none overflow-x-hidden animate-fadeIn font-sans">
+      <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#141123] text-[#e6dff9] flex flex-col justify-between pb-safe select-none overflow-x-hidden animate-fadeIn font-sans">
         {/* Screen Header */}
         <header className="relative w-full z-20 bg-[#141123]/80 backdrop-blur-xl border-b border-white/5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
           <div className="h-16 px-4 flex items-center justify-between gap-2">
@@ -254,7 +254,7 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
   // If Derin Basınç is chosen, render the exact official Derin Basınç Dümenci assignment card
   if (isDerinBasinc) {
     return (
-      <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#141123] text-[#e6dff9] relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-[#2b273b] antialiased select-none animate-fadeIn font-sans pb-6">
+      <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#141123] text-[#e6dff9] relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-[#2b273b] antialiased select-none animate-fadeIn font-sans pb-6">
         
         {/* Fixed Top Bar */}
         <header className="w-full pt-4 px-4 bg-[#0f0c1e]/85 backdrop-blur-xl border-b border-white/5 pb-3">
@@ -499,7 +499,7 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
 
   // Fallback / Space Mode (Kayıp Sinyal)
   return (
-    <div className="w-full max-w-[420px] mx-auto min-h-[calc(100vh-80px)] bg-[#0A0D18] text-slate-100 relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-slate-800/80 antialiased p-0 select-none animate-fadeIn">
+    <div className="w-full max-w-[420px] mx-auto vokza-screen-height bg-[#0A0D18] text-slate-100 relative flex flex-col justify-between overflow-hidden rounded-[40px] shadow-2xl border border-slate-800/80 antialiased p-0 select-none animate-fadeIn">
       
       {/* Background Graphic Hero Artwork */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -528,7 +528,7 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
       </div>
 
       {/* Main Content Wrapper */}
-      <div className="relative z-10 flex flex-col justify-between min-h-[calc(100vh-80px)] px-5 pt-3 pb-6">
+      <div className="relative z-10 flex flex-col justify-between vokza-screen-height px-5 pt-3 pb-6">
         
         {/* TopBar */}
         <header className="flex items-center justify-between w-full pt-1">
