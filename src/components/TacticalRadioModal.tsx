@@ -547,13 +547,13 @@ export const TacticalRadioModal: React.FC<Props> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-black/80 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-lg rounded-3xl bg-[#100d23] border-2 border-[#ffb703]/50 shadow-[0_0_50px_rgba(255,183,3,0.3)] flex flex-col overflow-hidden text-white font-manrope max-h-[92vh]"
+        className="w-full max-w-lg rounded-3xl bg-[#100d23] border-2 border-[#ffb703]/50 shadow-[0_0_50px_rgba(255,183,3,0.3)] flex flex-col overflow-hidden text-white font-manrope max-h-full"
       >
         {/* Walkie-Talkie Tactical Top Bar */}
         <div className="bg-[#191535] px-4 py-3 border-b border-white/10 flex items-center justify-between gap-2">

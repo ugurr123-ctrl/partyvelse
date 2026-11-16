@@ -87,7 +87,7 @@ export const Screen00Opening: React.FC<Props> = ({
     : '🛸 2 KİŞİLİK UZAY İSTASYONU';
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-2 sm:px-6 py-2 sm:py-4 flex flex-col gap-4 sm:gap-6 animate-fadeIn text-[#e6dff9] select-none pb-28 sm:pb-8">
+    <div className="w-full max-w-5xl mx-auto px-2 sm:px-6 py-2 sm:py-4 flex flex-col gap-4 sm:gap-6 animate-fadeIn text-[#e6dff9] select-none pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-8">
       
       {/* Hero Section - Optimized for Mobile & Desktop */}
       <div className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-b from-[#181335] via-[#120e28] to-[#0a0718] border border-white/10 shadow-2xl p-4 sm:p-8">
@@ -1037,7 +1037,7 @@ export const Screen00Opening: React.FC<Props> = ({
       </div>
 
       {/* MOBILE STICKY BOTTOM ACTION BAR (Thumb Zone - Ergonomic Launch Buttons) */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#0d0a21]/95 backdrop-blur-xl border-t border-white/15 flex items-center gap-2 sm:hidden pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.6)]">
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#0d0a21]/95 backdrop-blur-xl border-t border-white/15 flex items-center gap-2 sm:hidden pb-[calc(0.75rem+env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] shadow-[0_-8px_24px_rgba(0,0,0,0.6)]">
         <button
           onClick={() => onStartGame(selectedThemePreview)}
           className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#ffb703] via-[#ffba27] to-[#ffb703] text-[#271900] font-sora font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(255,183,3,0.35)] active:scale-[0.98] transition-transform cursor-pointer"

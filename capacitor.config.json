@@ -13,7 +13,7 @@
     "webContentsDebuggingEnabled": false
   },
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
     "allowsLinkPreview": false
   },
   "plugins": {

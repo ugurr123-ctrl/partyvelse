@@ -1049,7 +1049,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070510] text-[#e6dff9] flex flex-col font-manrope antialiased">
+    <div className="vokza-shell bg-[#070510] text-[#e6dff9] flex flex-col font-manrope antialiased">
       {/* Top Application Telemetry Navigation Bar */}
       <ConsoleHeader
         roomCode={state.roomCode}
@@ -1073,7 +1073,7 @@ export default function App() {
       />
 
       {/* Main Container with subtle screen shake */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-start overflow-x-hidden">
+      <main className="vokza-content flex-1 min-h-0 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-start">
         <motion.div
           animate={isShaking ? {
             x: [0, -8, 8, -6, 6, -3, 3, 0],
@@ -1241,7 +1241,7 @@ export default function App() {
       {state.status !== 'opening' && (
         <button
           onClick={() => setShowRadio(true)}
-          className="fixed bottom-5 right-5 z-40 p-3.5 rounded-2xl bg-gradient-to-tr from-[#191535] to-[#25204d] text-emerald-300 border-2 border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.45)] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer group"
+          className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-[calc(1.25rem+env(safe-area-inset-right))] z-40 p-3.5 rounded-2xl bg-gradient-to-tr from-[#191535] to-[#25204d] text-emerald-300 border-2 border-emerald-400/60 shadow-[0_0_25px_rgba(16,185,129,0.45)] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform cursor-pointer group"
           title="Telsiz İletişim Hattını Aç [142.85 MHz]"
         >
           <Radio className="w-6 h-6 text-emerald-400 animate-pulse group-hover:rotate-12 transition-transform" />

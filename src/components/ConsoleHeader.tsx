@@ -132,7 +132,7 @@ export const ConsoleHeader: React.FC<Props> = ({
   const inMission = status === 'phase_game' || status === 'phase_energy' || status === 'phase_rescue';
 
   return (
-    <header className="sticky top-0 z-40 w-full overflow-hidden bg-[#120f2d]/90 backdrop-blur-md border-b border-white/10 shadow-lg text-[#e6dff9]">
+    <header className="shrink-0 z-40 w-full overflow-hidden bg-[#120f2d]/90 backdrop-blur-md border-b border-white/10 shadow-lg text-[#e6dff9]">
       {/* Top telemetry bar */}
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-1 sm:gap-2 text-xs">
         
