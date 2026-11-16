@@ -56,7 +56,7 @@ export const RuleEvaluationDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
                 <span className="text-xs text-[#a59db8]">v3.0 Güncel Spesifikasyon</span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white font-sora">
-                PARTYVERSE: 8 Oyun Mimarisi, 3–4 Kişilik Takımlar & Çok Oyunculu Akış
+                VOKZA: 8 Oyun Mimarisi, 3–4 Kişilik Takımlar & Çok Oyunculu Akış
               </h2>
             </div>
           </div>
@@ -316,7 +316,7 @@ export const RuleEvaluationDrawer: React.FC<Props> = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="p-4 border-t border-white/10 bg-[#1a163b]/70 flex items-center justify-between">
-          <span className="text-xs text-[#9e8f78]">PARTYVERSE Kayıp Sinyal • Oyun Motoru Çekirdeği</span>
+          <span className="text-xs text-[#9e8f78]">VOKZA Kayıp Sinyal • Oyun Motoru Çekirdeği</span>
           <button 
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#ffb703] to-[#ff9e00] text-black font-bold text-xs tracking-wider uppercase shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all"

@@ -129,6 +129,8 @@ export const ConsoleHeader: React.FC<Props> = ({
     operationTheme === 'siber_kale' ? '🛡️' :
     operationTheme === 'buzul_ussu' ? '❄️' : '🛰️';
 
+  const inMission = status === 'phase_game' || status === 'phase_energy' || status === 'phase_rescue';
+
   return (
     <header className="sticky top-0 z-40 w-full overflow-hidden bg-[#120f2d]/90 backdrop-blur-md border-b border-white/10 shadow-lg text-[#e6dff9]">
       {/* Top telemetry bar */}
@@ -153,62 +155,12 @@ export const ConsoleHeader: React.FC<Props> = ({
             
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-[#ffb703] tracking-wider font-sora text-xs sm:text-sm shrink-0">
-                PARTYVERSE
-              </span>
-              <span className="text-white/30 text-xs hidden sm:inline font-mono">/</span>
-              <span className={`font-sora font-extrabold text-xs sm:text-sm tracking-tight flex items-center gap-1 ${
-                isTeamOp ? 'text-emerald-300' :
-                isKarantina ? 'text-[#ffb703]' :
-                isGolgeProtokolu ? 'text-[#00eefc]' :
-                isDerinBasinc ? 'text-[#00f0ff]' : 'text-amber-300'
-              }`}>
-                <span>{isTeamOp ? teamIcon : isKarantina ? '☣️' : isDerinBasinc ? '⚓' : isGolgeProtokolu ? '🕶️' : '🛸'}</span>
-                <span>{selectedGameName}</span>
+                VOKZA
               </span>
             </div>
-
-            {isTeamOp && (
-              <span className="px-1.5 py-0.2 rounded bg-emerald-950/80 border border-emerald-400/40 text-[9px] font-mono text-emerald-300 font-bold hidden md:inline">
-                {targetPlayerCount === 3 ? teamMeta.codePrefix3 : teamMeta.codePrefix4}
-              </span>
-            )}
-            {isKarantina && (
-              <span className="px-1.5 py-0.2 rounded bg-red-950/80 border border-red-500/40 text-[9px] font-mono text-amber-300 font-bold hidden md:inline">
-                SEC-04
-              </span>
-            )}
-            {isDerinBasinc && (
-              <span className="px-1.5 py-0.2 rounded bg-cyan-950/80 border border-cyan-400/40 text-[9px] font-mono text-cyan-300 font-bold hidden md:inline">
-                HİDRO-04
-              </span>
-            )}
-            {isGolgeProtokolu && (
-              <span className="px-1.5 py-0.2 rounded bg-purple-950/80 border border-[#00eefc]/40 text-[9px] font-mono text-[#00eefc] font-bold hidden md:inline">
-                KAT 84
-              </span>
-            )}
-            {!isTeamOp && !isKarantina && !isDerinBasinc && !isGolgeProtokolu && (
-              <span className="px-1.5 py-0.2 rounded bg-amber-950/80 border border-amber-400/40 text-[9px] font-mono text-amber-300 font-bold hidden md:inline">
-                AURORA-7
-              </span>
-            )}
           </button>
-          <span className="text-white/20 hidden xs:inline">|</span>
-          <div className="flex items-center gap-1 bg-[#1a163b] px-1.5 sm:px-2 py-0.5 rounded border border-white/10 shrink-0">
-            <span className="text-[9px] sm:text-[10px] text-[#9e8f78] uppercase font-mono">ODA:</span>
-            <span className="font-mono font-bold text-[10px] sm:text-xs text-[#00f0ff]">{roomCode}</span>
-          </div>
-
-          {/* Role badge */}
-          <button
-            onClick={onSwitchRole}
-            title={
-              isTeamOp ? 'Ekip Rolünü Değiştir' :
-              isKarantina ? 'Rolü Değiştir (Biyolog ⇄ Güvenlik Şefi)' :
-              isGolgeProtokolu ? 'Rolü Değiştir (Ajan ⇄ Hacker)' :
-              isDerinBasinc ? 'Rolü Değiştir (Dümenci ⇄ Makinist)' : 'Rolü Değiştir (Kaptan ⇄ Mühendis)'
-            }
-            className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold transition-all shadow-sm shrink-0 ${
+          {inMission && (
+          <div className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold transition-all shadow-sm shrink-0 ${
               myRole === 'kaptan'
                 ? 'bg-amber-500/20 text-[#ffb703] border border-[#ffb703]/40 hover:bg-amber-500/30'
                 : myRole === 'kriptolog'
@@ -228,13 +180,14 @@ export const ConsoleHeader: React.FC<Props> = ({
                 ? (isTeamOp ? 'KOMUTAN' : isKarantina ? 'BAŞ BİYOLOG' : isGolgeProtokolu ? 'AJAN' : (isDerinBasinc ? 'DÜMENCİ' : 'KAPTAN'))
                 : (isKarantina ? 'GÜVENLİK ŞEFİ' : isGolgeProtokolu ? 'HACKER' : (isDerinBasinc ? 'MAKİNİST' : 'MÜHENDİS'))}
             </span>
-            <ArrowRightLeft className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-70" />
-          </button>
+          </div>
+          )}
         </div>
 
         {/* Global Live Indicators (Timer, Hull Health, Phase) */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
           
+          {inMission && (<>
           {/* Time Remaining */}
           <div className="flex items-center gap-1 bg-[#0b081a] px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded border border-white/10 font-mono text-[11px] sm:text-xs shrink-0">
             <Clock className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${timeLeft < 60 ? 'text-rose-400 animate-pulse' : 'text-[#ffb703]'}`} />
@@ -244,16 +197,16 @@ export const ConsoleHeader: React.FC<Props> = ({
           </div>
 
           {/* Hull Integrity Bar */}
-          <div className="hidden md:flex items-center gap-2 bg-[#0b081a] px-2.5 py-1 rounded-md border border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2 bg-[#0b081a] px-2.5 py-1 rounded-md border border-white/10">
             <ShieldAlert className={`w-3.5 h-3.5 ${hullIntegrity < 40 ? 'text-rose-400 animate-bounce' : 'text-[#00f0ff]'}`} />
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center justify-between text-[10px] font-mono leading-none">
-                <span className="text-[#9e8f78]">BÜTÜNLÜK</span>
+                <span className="hidden sm:inline text-[#9e8f78] mr-1">BÜTÜNLÜK</span>
                 <span className={`font-bold tabular-nums ${hullIntegrity < 40 ? 'text-rose-400' : 'text-[#00f0ff]'}`}>
                   %{hullIntegrity}
                 </span>
               </div>
-              <div className="w-16 lg:w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="hidden sm:block w-16 lg:w-20 h-1.5 bg-white/10 rounded-full overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-300 ${
                     hullIntegrity > 60 ? 'bg-[#00f0ff]' :
@@ -265,37 +218,9 @@ export const ConsoleHeader: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Disconnect Simulation Toggle (Offline/Demo only) */}
-          {!isOnline && (
-            <button
-              onClick={onToggleDisconnect}
-              className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-[11px] font-mono transition-colors border ${
-                isDisconnected 
-                  ? 'bg-rose-500/30 text-rose-300 border-rose-500/50' 
-                  : 'bg-white/5 text-[#9e8f78] border-white/10 hover:text-white'
-              }`}
-              title="Bağlantı Kesintisini Test Et (Süreyi durdurur, kontrolleri kilitler)"
-            >
-              {isDisconnected ? <WifiOff className="w-3 h-3 text-rose-400" /> : <Wifi className="w-3 h-3 text-emerald-400" />}
-              <span className="hidden lg:inline">{isDisconnected ? 'Bağlantı Koptu' : 'Canlı Bağlantı'}</span>
-            </button>
-          )}
-
-          {/* Opening / Introduction Cards Trigger */}
-          {canNavigateToOpening && (
-            <button
-              onClick={onOpenOpening}
-              className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-[#00eefc]/10 hover:bg-[#00eefc]/20 border border-[#00eefc]/40 text-[#00eefc] text-[10px] sm:text-xs font-medium transition-all shadow-sm active:scale-95 shrink-0"
-              title="Açılış Ekranı ve Tanıtım Kartlarını Aç"
-            >
-              <Sparkles className="w-3 h-3 text-[#00eefc]" />
-              <span className="font-sora font-semibold hidden sm:inline">Tanıtım Kartları</span>
-              <span className="font-sora font-semibold sm:hidden">Tanıtım</span>
-            </button>
-          )}
-
+          </>)}
           {/* Tactical Radio Comms Trigger */}
-          {onOpenRadio && (
+          {inMission && onOpenRadio && (
             <button
               onClick={onOpenRadio}
               className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/60 text-emerald-300 text-[10px] sm:text-xs font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.3)] active:scale-95 shrink-0 cursor-pointer"
@@ -303,45 +228,9 @@ export const ConsoleHeader: React.FC<Props> = ({
             >
               <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span className="font-sora font-semibold hidden sm:inline">Telsiz</span>
-              <span className="font-mono text-[9px] text-emerald-400/90 hidden md:inline">142.85</span>
+              
             </button>
           )}
-
-          {/* Screen Explorer Trigger (Offline/Demo only) */}
-          {!isOnline && (
-            <button
-              onClick={onOpenScreenExplorer}
-              className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-[#1a163b] hover:bg-[#231e48] border border-[#ffb703]/40 text-[#ffb703] text-[10px] sm:text-xs font-medium transition-all shadow-sm active:scale-95 shrink-0"
-              title="Tüm Oyun Ekranlarını İncele & Dışa Aktar"
-            >
-              <Layers className="w-3 h-3 text-[#ffb703]" />
-              <span className="font-sora font-semibold hidden sm:inline">Ekran Gezgini</span>
-              <span className="font-sora font-semibold sm:hidden">Gezgin</span>
-            </button>
-          )}
-
-          {/* Epic Success Feedback Test Button (Offline/Demo only) */}
-          {!isOnline && onTestEpicSuccess && (
-            <button
-              onClick={onTestEpicSuccess}
-              className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-[#ffb703]/20 hover:bg-[#ffb703]/30 border border-[#ffb703]/60 text-[#ffb703] text-[10px] sm:text-xs font-semibold transition-all shadow-[0_0_12px_rgba(255,183,3,0.3)] active:scale-95 shrink-0"
-              title="Epik 'Görev Tamamlandı' Efektini Test Et (Altın Parlama & Ekran Sarsıntısı)"
-            >
-              <Trophy className="w-3 h-3 text-[#ffb703]" />
-              <span className="font-sora font-semibold hidden sm:inline">Zafer Efekti</span>
-              <span className="font-sora font-semibold sm:hidden">Zafer</span>
-            </button>
-          )}
-
-          {/* Rule Evaluation Drawer Trigger */}
-          <button
-            onClick={onOpenRules}
-            className="hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs transition-colors"
-            title="Oyun Kuralları & Çift Yönlü Akış Şeması"
-          >
-            <FileText className="w-3.5 h-3.5 text-[#00f0ff]" />
-            <span className="hidden lg:inline">Kural Özeti</span>
-          </button>
 
           {/* Audio toggle */}
           <button 
@@ -384,7 +273,6 @@ export const ConsoleHeader: React.FC<Props> = ({
 
           <div className="hidden sm:flex items-center gap-2 text-[11px] text-[#a59db8] font-mono shrink-0 ml-2 tabular-nums">
             <span>Aşama {Math.min(totalPhasesCount, currentPhaseIndex + 1)}/{totalPhasesCount}</span>
-            <span className="text-[#00f0ff]">• Gerçek Zamanlı Co-op</span>
           </div>
         </div>
       )}

@@ -1,0 +1,1 @@
+Mac üzerinde Node.js ve Xcode ile proje klasöründe npm ci, ardından npm run ios:prepare çalıştırın. ios/App/App.xcodeproj dosyasını Xcode ile açın ve Signing & Capabilities bölümünden Apple Developer takımınızı seçin. Product > Archive üzerinden TestFlight için yükleyin.

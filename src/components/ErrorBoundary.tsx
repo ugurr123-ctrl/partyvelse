@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[PARTYVERSE ErrorBoundary Catch]', error, errorInfo);
+    console.error('[VOKZA ErrorBoundary Catch]', error, errorInfo);
     this.setState({ errorInfo });
   }
 
@@ -93,7 +93,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <span className="mt-4 text-[10px] font-mono text-white/30">
-              PARTYVERSE SEC-PROTO • OTOMATİK VERİ KURTARMA AKTİF
+              VOKZA SEC-PROTO • OTOMATİK VERİ KURTARMA AKTİF
             </span>
           </div>
         </div>

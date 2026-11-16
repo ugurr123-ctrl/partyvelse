@@ -76,7 +76,7 @@ export const ScreenKarantinaLobby: React.FC<Props> = ({
     if (navigator?.share) {
       try {
         await navigator.share({
-          title: 'PARTYVERSE — Karantina 2088',
+          title: 'VOKZA — Karantina 2088',
           text,
           url: inviteUrl,
         });

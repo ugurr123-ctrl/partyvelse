@@ -1,0 +1,29 @@
+name: iOS build verification
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: macos-26
+    timeout-minutes: 25
+    env:
+      VITE_COLYSEUS_URL: wss://partyverse.partybox.cloud
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: xcodebuild -version
+      - run: npm ci
+      - run: npm run ios:prepare
+      - run: node scripts/verify-public-room.mjs wss://partyverse.partybox.cloud
+      - name: Compile the iOS app without signing
+        run: >
+          xcodebuild -project ios/App/App.xcodeproj -scheme App
+          -configuration Release -destination 'generic/platform=iOS'
+          -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build

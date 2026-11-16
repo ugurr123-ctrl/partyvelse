@@ -742,16 +742,6 @@ export const Screen02Lobby: React.FC<Props> = ({
               <span className="material-symbols-outlined text-[20px]">chevron_right</span>
             </button>
 
-            <button
-              onClick={handleTestRadio}
-              className="w-full bg-[#2b273b] hover:bg-[#363246] text-[#00eefc] py-2.5 px-4 rounded-xl font-sora text-xs flex items-center justify-center gap-2 transition-colors border border-white/5 cursor-pointer"
-              type="button"
-            >
-              <span className={`material-symbols-outlined text-[#00eefc] text-[18px] ${radioTesting ? 'animate-spin' : ''}`}>
-                {radioTesting ? 'sync' : 'sensors'}
-              </span>
-              <span>{radioTesting ? 'KRİPTO-LİNK DOĞRULANIYOR... [OK]' : 'Şifreli Telsiz Bağlantısını Sına (Kripto-Link)'}</span>
-            </button>
 
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -859,7 +849,7 @@ export const Screen02Lobby: React.FC<Props> = ({
                 </svg>
               </div>
               <span className="font-extrabold tracking-wider text-[15px] text-white/95 uppercase font-sora">
-                PARTYVERSE
+                VOKZA
               </span>
             </div>
           )}
@@ -875,18 +865,6 @@ export const Screen02Lobby: React.FC<Props> = ({
                 {(state.timeLeftSeconds % 60).toString().padStart(2, '0')}
               </span>
             </div>
-          )}
-          {!isOnline && (
-            <button
-              onClick={togglePartnerReady}
-              title="Eşlikçi hazır durumunu değiştir (Tek cihazda test için)"
-              className="w-9 h-9 rounded-xl bg-[#1d1b32]/80 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white shadow-inner active:scale-95 transition-transform cursor-pointer"
-              type="button"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </button>
           )}
           <button
             type="button"
@@ -1519,25 +1497,6 @@ export const Screen02Lobby: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Secondary Action: Deep Sea Radio Test Button */}
-        {isDerinBasinc && (
-          <button 
-            onClick={handleTestRadio}
-            className={`w-full py-2.5 px-4 rounded-xl border flex items-center justify-center space-x-2 transition-all shadow-md active:scale-[0.98] cursor-pointer ${
-              radioTesting 
-                ? 'bg-cyan-500/20 border-[#00eefc] text-[#00eefc] shadow-[0_0_15px_rgba(0,238,252,0.35)]' 
-                : 'bg-gradient-to-r from-[#17142b] via-[#211d3d] to-[#17142b] border-cyan-400/30 text-cyan-200 hover:text-white'
-            }`}
-            type="button"
-          >
-            <span className={`material-symbols-outlined text-[17px] ${radioTesting ? 'text-[#00eefc] animate-spin' : 'text-cyan-400'}`}>
-              cell_tower
-            </span>
-            <span className="text-xs font-bold tracking-wide font-sora">
-              {radioTesting ? '✓ Telsiz Sinyali Aktif (142.8 MHz)' : 'Telsiz Frekansını Test Et (142.8 MHz)'}
-            </span>
-          </button>
-        )}
 
         {/* Viral WhatsApp One-Click Invite Button */}
         <button 

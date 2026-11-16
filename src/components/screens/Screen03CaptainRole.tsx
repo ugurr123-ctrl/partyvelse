@@ -538,7 +538,7 @@ export const Screen03CaptainRole: React.FC<Props> = ({ state, onConfirmRole }) =
               <div className="absolute inset-0 border border-amber-300/80 rounded-full rotate-[32deg] scale-x-125 scale-y-75"></div>
             </div>
             <span className="text-sm tracking-[0.2em] font-extrabold uppercase text-white drop-shadow font-sora">
-              PARTYVERSE
+              VOKZA
             </span>
           </div>
 

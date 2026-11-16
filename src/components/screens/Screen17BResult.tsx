@@ -35,7 +35,7 @@ export const Screen17BResult: React.FC<Props> = ({ state, onRestartGame, onLobby
     if (navigator?.share) {
       try {
         await navigator.share({
-          title: `PARTYVERSE — ${themeName} Görev Karnesi`,
+          title: `VOKZA — ${themeName} Görev Karnesi`,
           text: shareText,
           url: hostUrl,
         });

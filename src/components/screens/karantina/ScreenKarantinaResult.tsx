@@ -37,7 +37,7 @@ export const ScreenKarantinaResult: React.FC<Props> = ({
     if (navigator?.share) {
       try {
         await navigator.share({
-          title: 'PARTYVERSE — Karantina 2088 Görev Karnesi',
+          title: 'VOKZA — Karantina 2088 Görev Karnesi',
           text: shareText,
           url: hostUrl,
         });

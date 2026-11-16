@@ -117,7 +117,7 @@ export const Screen00Opening: React.FC<Props> = ({
             </div>
 
             <h1 className="font-sora text-2xl xs:text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              PARTYVERSE <br className="hidden sm:inline" />
+              VOKZA <br className="hidden sm:inline" />
               <span className={`transition-all duration-300 bg-clip-text text-transparent ${
                 isTeamOp ? 'bg-gradient-to-r from-emerald-300 via-[#00eefc] to-[#ffb703]' :
                 isKarantina ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-red-500' :
@@ -193,13 +193,6 @@ export const Screen00Opening: React.FC<Props> = ({
                 <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
 
-              <button
-                onClick={() => onStartDualView(selectedThemePreview)}
-                className="w-full sm:w-auto min-h-[48px] px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:bg-cyan-500/30 text-[#00eefc] border border-[#00eefc]/50 font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Columns2 className="w-4 h-4 shrink-0" />
-                <span>{isTeamOp ? 'ÇOKLU TELEFON TEST MODU' : 'İKİLİ TELEFON TEST MODU'}</span>
-              </button>
             </div>
           </div>
 
@@ -1024,21 +1017,14 @@ export const Screen00Opening: React.FC<Props> = ({
       {/* Alt Bilgi & Hızlı Yardımcılar */}
       <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#100d24] border border-white/10 flex flex-wrap items-center justify-between gap-2.5 text-xs font-mono">
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="text-[#00eefc]">⚡ Canlı WebSocket Senkronizasyonu</span>
+          <span className="text-[#00eefc]">Herkes kendi telefonundan oynar</span>
           <span className="text-white/20">·</span>
-          <span className="text-[#9e8f78]">{isTeamOp ? '8 Dakika (5 Aşama)' : '5 Dakika'}</span>
+          <span className="text-[#9e8f78]">{isTeamOp ? 'Görev süresi 8 dakika (5 aşama)' : 'Görev süresi 5 dakika'}</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <PWAInstallButton />
 
-          <button
-            onClick={onOpenExplorer}
-            className="min-h-[40px] px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[#ffb703] border border-white/10 flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>44 Ekran Gezgini</span>
-          </button>
 
           <button
             onClick={onOpenRules}
@@ -1066,13 +1052,6 @@ export const Screen00Opening: React.FC<Props> = ({
           </span>
         </button>
 
-        <button
-          onClick={() => onStartDualView(selectedThemePreview)}
-          className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl bg-cyan-500/20 text-[#00eefc] border border-cyan-400/50 font-sora font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform cursor-pointer"
-        >
-          <Columns2 className="w-3.5 h-3.5" />
-          <span>{isTeamOp ? 'ÇOKLU TELEFON' : 'İKİLİ TELEFON'}</span>
-        </button>
       </div>
 
     </div>

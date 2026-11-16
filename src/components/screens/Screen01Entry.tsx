@@ -465,7 +465,7 @@ export const Screen01Entry: React.FC<Props> = ({
             </svg>
           </div>
           <div className="flex flex-col ml-0.5">
-            <span className="font-mono text-[10px] font-bold tracking-widest text-[#ffba27] uppercase">PARTYVERSE</span>
+            <span className="font-mono text-[10px] font-bold tracking-widest text-[#ffba27] uppercase">VOKZA</span>
             <h1 className="font-sora font-semibold text-sm text-white leading-none flex items-center gap-1.5">
               <span>{isSelectedTeamOp ? '🛡️' : selectedTheme === 'karantina_2088' ? '☣️' : selectedTheme === 'derin_basinc' ? '⚓' : selectedTheme === 'golge_protokolu' ? '🕶️' : '🛸'}</span>
               <span>

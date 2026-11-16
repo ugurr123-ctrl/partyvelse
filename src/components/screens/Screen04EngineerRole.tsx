@@ -558,7 +558,7 @@ export const Screen04EngineerRole: React.FC<Props> = ({ state, onConfirmRole }) 
               </svg>
             </div>
             <span className="font-black text-sm tracking-[0.2em] text-white uppercase drop-shadow-sm font-sora">
-              PARTYVERSE
+              VOKZA
             </span>
           </div>
 

@@ -576,7 +576,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PARTYVERSE — ${currentScreen.name}</title>
+  <title>VOKZA — ${currentScreen.name}</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-[#110e1e] text-[#e6dff9] flex items-center justify-center p-4 font-sans">
@@ -632,7 +632,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
 
   if (!isOpen) return null;
 
-  const activeHtmlCode = codeCache[currentScreen.id] || `<!-- PARTYVERSE — ${currentScreen.name} -->\n<!-- Kaynak dosya: ${currentScreen.htmlPath} -->\n<!-- Yükleniyor... -->`;
+  const activeHtmlCode = codeCache[currentScreen.id] || `<!-- VOKZA — ${currentScreen.name} -->\n<!-- Kaynak dosya: ${currentScreen.htmlPath} -->\n<!-- Yükleniyor... -->`;
 
   const handleCopyCode = () => {
     if (navigator?.clipboard) {
@@ -691,7 +691,7 @@ export const ScreenExplorerModal: React.FC<Props> = ({ isOpen, onClose, onNaviga
                 <span className="text-xs text-[#a59db8] hidden sm:inline">2P & 3–4P Takım Konsolları</span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white font-sora">
-                PARTYVERSE — Tüm Operasyon Ekranları & HTML Kaynağı
+                VOKZA — Tüm Operasyon Ekranları & HTML Kaynağı
               </h2>
             </div>
           </div>

@@ -15,6 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import { Role, OperationTheme } from '../types/game';
 import { syncService, RadioTransmission } from '../services/multiplayerSync';
+import { LiveRadio } from '../services/liveRadio';
 import { soundManager } from '../services/soundEffects';
 import { isTeamOperationTheme, getTeamOperationMeta } from '../services/omegaGameEngine';
 
@@ -43,6 +44,21 @@ export const TacticalRadioModal: React.FC<Props> = ({
   playerName,
 }) => {
   const [activeFreq, setActiveFreq] = useState('142.85');
+  const [liveReady, setLiveReady] = useState(false);
+  const [liveTransmitting, setLiveTransmitting] = useState(false);
+  const liveRadioRef = useRef<LiveRadio | null>(null);
+  const talkRadioRef = useRef<LiveRadio | null>(null);
+  const pressAttemptRef = useRef(0);
+
+  useEffect(() => {
+    const radio = new LiveRadio(activeFreq, setLiveReady);
+    liveRadioRef.current = radio;
+    return () => {
+      liveRadioRef.current = null;
+      radio.dispose();
+    };
+  }, [activeFreq]);
+
   const [isTransmitting, setIsTransmitting] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [voiceLevels, setVoiceLevels] = useState<number[]>([15, 25, 20, 30, 22, 18, 28, 16]);
@@ -136,6 +152,10 @@ export const TacticalRadioModal: React.FC<Props> = ({
   }, [autoPlayIncoming]);
 
   const cleanupRecordingResources = () => {
+    pressAttemptRef.current += 1;
+    talkRadioRef.current?.stop();
+    talkRadioRef.current = null;
+    setLiveTransmitting(false);
     if (pttTimeoutRef.current) {
       clearTimeout(pttTimeoutRef.current);
       pttTimeoutRef.current = null;
@@ -354,7 +374,7 @@ export const TacticalRadioModal: React.FC<Props> = ({
   };
 
   const handleStartPTT = async () => {
-    if (activeRecordingRef.current) return;
+    if (activeRecordingRef.current || mediaRecorderRef.current) return;
     setMicStatus('idle');
 
     if (
@@ -366,6 +386,7 @@ export const TacticalRadioModal: React.FC<Props> = ({
       return;
     }
 
+    const attempt = ++pressAttemptRef.current;
     activeRecordingRef.current = true;
     setIsTransmitting(true);
     setRecordSeconds(0);
@@ -383,12 +404,20 @@ export const TacticalRadioModal: React.FC<Props> = ({
       });
 
       // If user already released button while permission prompt was open
-      if (!activeRecordingRef.current) {
+      if (!activeRecordingRef.current || pressAttemptRef.current !== attempt) {
         stream.getTracks().forEach((t) => t.stop());
         return;
       }
 
       mediaStreamRef.current = stream;
+      recordStartRef.current = Date.now();
+      const transmitFrequency = activeFreqRef.current;
+      const track = stream.getAudioTracks()[0];
+      const liveRadio = liveRadioRef.current;
+      if (track && liveRadio?.start(track)) {
+        talkRadioRef.current = liveRadio;
+        setLiveTransmitting(true);
+      }
 
       // Setup live microphone visualizer
       try {
@@ -438,7 +467,9 @@ export const TacticalRadioModal: React.FC<Props> = ({
         const durationMs = Date.now() - recordStartRef.current;
         const chunks = audioChunksRef.current;
         const chosenMime = recorder.mimeType || mimeType || 'audio/webm';
+        const sentLive = talkRadioRef.current?.stop();
         cleanupRecordingResources();
+        if (sentLive) return;
 
         if (durationMs < 350 || chunks.length === 0) {
           setMicStatus('too_short');
@@ -468,7 +499,7 @@ export const TacticalRadioModal: React.FC<Props> = ({
             senderRole: myRoleRef.current,
             senderName: getRoleDisplayName(myRoleRef.current),
             message: `🎙️ Canlı Sesli Telsiz Yayını (${secsLabel} sn)`,
-            frequency: `${activeFreqRef.current} MHz`,
+            frequency: `${transmitFrequency} MHz`,
             timestamp: Date.now(),
             isVoice: true,
             audioDataUrl: dataUrl,
@@ -491,6 +522,7 @@ export const TacticalRadioModal: React.FC<Props> = ({
         handleStopPTT();
       }, MAX_PTT_SECONDS * 1000);
     } catch {
+      if (pressAttemptRef.current !== attempt) return;
       cleanupRecordingResources();
       setMicStatus('denied');
     }
@@ -535,12 +567,10 @@ export const TacticalRadioModal: React.FC<Props> = ({
                   SESLİ TELSİZ KONSOLU
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[9px] font-bold border border-emerald-500/40 shrink-0">
-                  CANLI SES
+                  {liveReady ? 'CANLI TELSİZ' : 'KAYITLI TELSİZ MODU'}
                 </span>
               </div>
               <span className="text-[10px] font-mono text-[#a59db8] flex items-center gap-1 truncate">
-                <span>AES-256</span>
-                <span>•</span>
                 <span className="text-[#00eefc]">KANAL: {activeFreq} MHz</span>
               </span>
             </div>
@@ -794,6 +824,20 @@ export const TacticalRadioModal: React.FC<Props> = ({
             }}
             onPointerUp={handleStopPTT}
             onPointerCancel={handleStopPTT}
+            onLostPointerCapture={handleStopPTT}
+            onBlur={handleStopPTT}
+            onKeyDown={(event) => {
+              if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+                event.preventDefault();
+                void handleStartPTT();
+              }
+            }}
+            onKeyUp={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                handleStopPTT();
+              }
+            }}
             onContextMenu={(e) => e.preventDefault()}
             className={`w-full py-4 rounded-2xl font-sora font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3 transition-all select-none touch-none shadow-xl cursor-pointer ${
               isTransmitting
@@ -804,7 +848,7 @@ export const TacticalRadioModal: React.FC<Props> = ({
             {isTransmitting ? (
               <>
                 <Mic className="w-6 h-6 animate-pulse text-white" />
-                <span className="tracking-widest">SES KAYDEDİLİYOR... ({recordSeconds}s)</span>
+                <span className="tracking-widest">{liveTransmitting ? 'CANLI YAYINDA' : 'SES KAYDEDİLİYOR...'} ({recordSeconds}s)</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
               </>
             ) : (

@@ -230,6 +230,36 @@ export class LostSignalRoom extends Room {
       }
     });
 
+    this.onMessage('radio_signal', (client, signal) => {
+      if (!signal || typeof signal !== 'object') return;
+      const { kind, channel, to, description, candidate, ready } = signal;
+      if (!['142.85', '108.40', '415.00', '084.20'].includes(channel)) return;
+      let details: object = {};
+      if (kind === 'offer' || kind === 'answer') {
+        if (description?.type !== kind || typeof description.sdp !== 'string' || description.sdp.length > 16000) return;
+        details = { description: { type: kind, sdp: description.sdp } };
+      } else if (kind === 'ice') {
+        if (typeof candidate?.candidate !== 'string' || candidate.candidate.length > 2048) return;
+        details = { candidate: {
+          candidate: candidate.candidate,
+          sdpMid: typeof candidate.sdpMid === 'string' ? candidate.sdpMid.slice(0, 64) : null,
+          sdpMLineIndex: Number.isInteger(candidate.sdpMLineIndex) ? candidate.sdpMLineIndex : null,
+        } };
+      } else if (kind === 'ready') {
+        if (typeof ready !== 'boolean') return;
+        details = { ready };
+      } else if (!['hello', 'welcome', 'bye'].includes(kind)) {
+        return;
+      }
+
+      const message = { kind, channel, from: client.sessionId, ...details };
+      if (kind === 'hello' || kind === 'bye') {
+        this.broadcast('radio_signal', message, { except: client });
+      } else if (typeof to === 'string' && to !== client.sessionId) {
+        this.clients.find((peer) => peer.sessionId === to)?.send('radio_signal', message);
+      }
+    });
+
     // 0B. Live Tactical Radio Transmission (Text & Push-to-Talk Voice Clips)
     this.onMessage('radio_transmission', (_client, transmission) => {
       if (!transmission || typeof transmission !== 'object') return;
@@ -1602,6 +1632,9 @@ export class LostSignalRoom extends Room {
   }
 
   async onLeave(client: Client, consented: boolean) {
+    for (const channel of ['142.85', '108.40', '415.00', '084.20']) {
+      this.broadcast('radio_signal', { kind: 'bye', channel, from: client.sessionId }, { except: client });
+    }
     const player = this.playerSessions.get(client.sessionId);
     if (!player) return;
 

@@ -1,13 +1,8 @@
 import express from 'express';
 import http from 'http';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { Server } from 'colyseus';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { LostSignalRoom } from './server/LostSignalRoom';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const isProd = process.env.NODE_ENV === 'production';
@@ -40,11 +35,9 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // Production mode: serve built assets from dist
-    const distPath = path.resolve(__dirname, 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    // Mobile builds bundle their own UI. This host serves room connections.
+    app.get('/', (_req, res) => {
+      res.type('html').send('<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PARTYVERSE</title><main><h1>PARTYVERSE</h1><p>Oynamak veya bir odaya katılmak için Partyverse mobil uygulamasını aç.</p></main></html>');
     });
   }
 

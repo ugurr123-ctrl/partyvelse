@@ -1,3 +1,4 @@
+import type { RadioSignal } from './radioSignal';
 import { Client, Room } from 'colyseus.js';
 import { MissionState, Role, EnvironmentType, GameMode, OperationTheme } from '../types/game';
 import { getTeamThemeFromCode, isTeamOperationTheme } from './omegaGameEngine';
@@ -14,6 +15,7 @@ class ColyseusClientService {
   private errorCallbacks: Set<ErrorCallback> = new Set();
   private connectionCallbacks: Set<ConnectionCallback> = new Set();
   private radioCallbacks: Set<RadioCallback> = new Set();
+  private radioSignalCallbacks = new Set<(signal: RadioSignal) => void>();
   private actionCounter: number = 0;
   private intentionalLeave: boolean = false;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -41,20 +43,9 @@ class ColyseusClientService {
 
   private getServerUrl(): string {
     if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
       const protocol = window.location.protocol;
-      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-      
-      // If running inside a standalone mobile APK wrapper (Capacitor/Cordova/file://)
-      const isNativeAppWrapper = 
-        protocol === 'file:' || 
-        protocol === 'capacitor:' || 
-        protocol === 'ionic:' ||
-        (isLocalhost && window.location.port !== '3000');
-
-      if (isNativeAppWrapper) {
-        return 'wss://ais-pre-7auzhp5svziwyjbxp35hez-984295935198.europe-west2.run.app';
-      }
+      const configuredUrl = import.meta.env.VITE_COLYSEUS_URL?.trim();
+      if (configuredUrl) return configuredUrl;
 
       const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
       return `${wsProtocol}//${window.location.host}`;
@@ -309,6 +300,10 @@ class ColyseusClientService {
       this.notifyError(msg);
     });
 
+    this.room.onMessage('radio_signal', (signal: RadioSignal) => {
+      this.radioSignalCallbacks.forEach((callback) => callback(signal));
+    });
+
     this.room.onMessage('radio_transmission', (transmission: any) => {
       this.notifyRadio(transmission);
     });
@@ -443,6 +438,19 @@ class ColyseusClientService {
   public onError(cb: ErrorCallback): () => void {
     this.errorCallbacks.add(cb);
     return () => this.errorCallbacks.delete(cb);
+  }
+
+  public getRadioSessionId() {
+    return this.isConnected() ? this.room?.sessionId : undefined;
+  }
+
+  public sendRadioSignal(signal: RadioSignal) {
+    if (this.isConnected()) this.room?.send('radio_signal', signal);
+  }
+
+  public onRadioSignal(callback: (signal: RadioSignal) => void) {
+    this.radioSignalCallbacks.add(callback);
+    return () => { this.radioSignalCallbacks.delete(callback); };
   }
 
   public sendRadio(transmission: any) {
